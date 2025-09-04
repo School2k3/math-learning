@@ -13,66 +13,228 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 1. User Management
 model User {
-  id          Int          @id @default(autoincrement())
-  email       String       @unique
-  name        String?
-  password    String
-  role        String       @default("student") // student, teacher, admin
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  enrollments Enrollment[]
-  attempts    Attempt[]
+  id                Int               @id @default(autoincrement()) @map("user_id")
+  username          String            @unique
+  passwordHash      String            @map("password_hash")
+  email             String            @unique
+  fullName          String            @map("full_name")
+  role              String            // student, admin
+  grade             Int?              // 1-5, null for admin
+  avatarUrl         String?           @map("avatar_url")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  
+  // Relations
+  practiceSessions  PracticeSession[]
+  examResults       ExamResult[]
+  userRewards       UserReward[]
+  progressHistory   ProgressHistory[]
+
+  @@map("Users")
 }
 
-model Course {
-  id          Int          @id @default(autoincrement())
-  title       String
-  description String?
-  level       String       // beginner, intermediate, advanced
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  problems    Problem[]
-  enrollments Enrollment[]
+// 2. Lesson Content
+model Chapter {
+  id            Int       @id @default(autoincrement()) @map("chapter_id")
+  grade         Int
+  volume        Int       // 1 or 2
+  chapterNumber Int       @map("chapter_number")
+  title         String
+  
+  // Relations
+  lessons       Lesson[]
+
+  @@map("Chapters")
 }
 
-model Problem {
-  id          Int       @id @default(autoincrement())
-  title       String
-  description String
-  difficulty  String    // easy, medium, hard
-  mathField   String    // algebra, geometry, calculus, etc.
-  content     String    // JSON or formatted content of the problem
-  solution    String    // Solution explanation 
-  courseId    Int
-  course      Course    @relation(fields: [courseId], references: [id])
-  attempts    Attempt[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model Lesson {
+  id            Int               @id @default(autoincrement()) @map("lesson_id")
+  chapterId     Int               @map("chapter_id")
+  lessonNumber  Int               @map("lesson_number")
+  title         String
+  contentText   String            @map("content_text")
+  videoUrl      String?           @map("video_url")
+  imageUrl      String?           @map("image_url")
+  
+  // Relations
+  chapter       Chapter           @relation(fields: [chapterId], references: [id])
+  progressHistory ProgressHistory[]
+
+  @@map("Lessons")
 }
 
-model Enrollment {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  courseId  Int
-  user      User     @relation(fields: [userId], references: [id])
-  course    Course   @relation(fields: [courseId], references: [id])
-  progress  Float    @default(0) // Percentage of course completed
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// 3. Questions & Answers
+model Question {
+  id            Int               @id @default(autoincrement()) @map("question_id")
+  questionText  String            @map("question_text")
+  imageUrl      String?           @map("image_url")
+  audioUrl      String?           @map("audio_url")
+  grade         Int
+  topic         String
+  difficulty    String            // easy, medium, hard
+  type          String            // practice, exam, both
+  createdAt     DateTime          @default(now()) @map("created_at")
+  
+  // Relations
+  answers       Answer[]
+  practiceAnswers PracticeAnswer[]
+  examQuestions ExamQuestion[]
+  examAnswers   ExamAnswer[]
 
-  @@unique([userId, courseId])
+  @@map("Questions")
 }
 
-model Attempt {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  problemId Int
-  user      User     @relation(fields: [userId], references: [id])
-  problem   Problem  @relation(fields: [problemId], references: [id])
-  answer    String   // User's submitted answer
-  isCorrect Boolean
-  createdAt DateTime @default(now())
+model Answer {
+  id            Int               @id @default(autoincrement()) @map("answer_id")
+  questionId    Int               @map("question_id")
+  answerText    String            @map("answer_text")
+  isCorrect     Boolean           @map("is_correct")
+  
+  // Relations
+  question      Question          @relation(fields: [questionId], references: [id])
+  practiceAnswers PracticeAnswer[] @relation("ChosenAnswer")
+  examAnswers   ExamAnswer[]      @relation("ChosenAnswer")
 
-  @@index([userId, problemId])
+  @@map("Answers")
+}
+
+// 4. Practice
+model PracticeSession {
+  id              Int               @id @default(autoincrement()) @map("practice_id")
+  userId          Int               @map("user_id")
+  topic           String
+  score           Float
+  totalQuestions  Int               @map("total_questions")
+  startedAt       DateTime          @map("started_at")
+  finishedAt      DateTime?         @map("finished_at")
+  
+  // Relations
+  user            User              @relation(fields: [userId], references: [id])
+  practiceAnswers PracticeAnswer[]
+  progressHistory ProgressHistory[]
+
+  @@map("PracticeSessions")
+}
+
+model PracticeAnswer {
+  id              Int               @id @default(autoincrement()) @map("practice_answer_id")
+  practiceId      Int               @map("practice_id")
+  questionId      Int               @map("question_id")
+  chosenAnswerId  Int               @map("chosen_answer_id")
+  isCorrect       Boolean           @map("is_correct")
+  
+  // Relations
+  practiceSession PracticeSession   @relation(fields: [practiceId], references: [id])
+  question        Question          @relation(fields: [questionId], references: [id])
+  chosenAnswer    Answer            @relation("ChosenAnswer", fields: [chosenAnswerId], references: [id])
+
+  @@map("PracticeAnswers")
+}
+
+// 5. Exams
+model Exam {
+  id              Int               @id @default(autoincrement()) @map("exam_id")
+  title           String
+  grade           Int
+  topic           String
+  durationMinutes Int               @map("duration_minutes")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  
+  // Relations
+  examQuestions   ExamQuestion[]
+  examResults     ExamResult[]
+
+  @@map("Exams")
+}
+
+model ExamQuestion {
+  id              Int               @id @default(autoincrement()) @map("exam_question_id")
+  examId          Int               @map("exam_id")
+  questionId      Int               @map("question_id")
+  
+  // Relations
+  exam            Exam              @relation(fields: [examId], references: [id])
+  question        Question          @relation(fields: [questionId], references: [id])
+
+  @@map("ExamQuestions")
+}
+
+model ExamResult {
+  id              Int               @id @default(autoincrement()) @map("result_id")
+  examId          Int               @map("exam_id")
+  userId          Int               @map("user_id")
+  score           Float
+  startedAt       DateTime          @map("started_at")
+  finishedAt      DateTime?         @map("finished_at")
+  
+  // Relations
+  exam            Exam              @relation(fields: [examId], references: [id])
+  user            User              @relation(fields: [userId], references: [id])
+  examAnswers     ExamAnswer[]
+  progressHistory ProgressHistory[]
+
+  @@map("ExamResults")
+}
+
+model ExamAnswer {
+  id              Int               @id @default(autoincrement()) @map("exam_answer_id")
+  resultId        Int               @map("result_id")
+  questionId      Int               @map("question_id")
+  chosenAnswerId  Int               @map("chosen_answer_id")
+  isCorrect       Boolean           @map("is_correct")
+  isFlagged       Boolean           @map("is_flagged")
+  
+  // Relations
+  examResult      ExamResult        @relation(fields: [resultId], references: [id])
+  question        Question          @relation(fields: [questionId], references: [id])
+  chosenAnswer    Answer            @relation("ChosenAnswer", fields: [chosenAnswerId], references: [id])
+
+  @@map("ExamAnswers")
+}
+
+// 6. Rewards
+model Reward {
+  id              Int               @id @default(autoincrement()) @map("reward_id")
+  name            String
+  cost            Int               // points needed to redeem
+  type            String            // badge, item, decoration
+  
+  // Relations
+  userRewards     UserReward[]
+
+  @@map("Rewards")
+}
+
+model UserReward {
+  id              Int               @id @default(autoincrement()) @map("user_reward_id")
+  userId          Int               @map("user_id")
+  rewardId        Int               @map("reward_id")
+  acquiredAt      DateTime          @map("acquired_at")
+  
+  // Relations
+  user            User              @relation(fields: [userId], references: [id])
+  reward          Reward            @relation(fields: [rewardId], references: [id])
+
+  @@map("UserRewards")
+}
+
+// 7. Learning History
+model ProgressHistory {
+  id              Int               @id @default(autoincrement()) @map("history_id")
+  userId          Int               @map("user_id")
+  lessonId        Int?              @map("lesson_id")
+  practiceId      Int?              @map("practice_id")
+  examResultId    Int?              @map("exam_result_id")
+  status          String            // completed, in-progress, failed
+  createdAt       DateTime          @default(now()) @map("created_at")
+  
+  // Relations
+  user            User              @relation(fields: [userId], references: [id])
+  lesson          Lesson?           @relation(fields: [lessonId], references: [id])
+  practiceSession PracticeSession?  @relation(fields: [practiceId], references: [id])
+  examResult      ExamResult?       @relation(fields: [examResultId], references: [id])
+
+  @@map("ProgressHistory")
 }
