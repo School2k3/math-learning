@@ -5,9 +5,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Import routes
-const userRoutes = require('./routes/userRoutes');
-const courseRoutes = require('./routes/courseRoutes');
-const problemRoutes = require('./routes/problemRoutes');
+const chapterRoutes = require('./routes/chapterRoutes');
+const lessonRoutes = require('./routes/lessonRoutes');
 
 // Middleware
 app.use(cors());
@@ -18,9 +17,8 @@ app.get('/', (req, res) => {
   res.send('Math Learning API is running!');
 });
 
-app.use('/api/users', userRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/problems', problemRoutes);
+app.use('/api/chapters', chapterRoutes);
+app.use('/api/lessons', lessonRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
