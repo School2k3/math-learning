@@ -1,6 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./config/swagger');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -19,6 +22,13 @@ app.get('/', (req, res) => {
 
 app.use('/api/chapters', chapterRoutes);
 app.use('/api/lessons', lessonRoutes);
+
+// Swagger UI setup
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, { 
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "Math Learning API Documentation"
+}));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

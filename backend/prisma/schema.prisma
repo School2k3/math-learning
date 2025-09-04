@@ -54,7 +54,6 @@ model Lesson {
   chapterId     Int               @map("chapter_id")
   lessonNumber  Int               @map("lesson_number")
   title         String
-  contentText   String            @map("content_text")
   videoUrl      String?           @map("video_url")
   imageUrl      String?           @map("image_url")
   
