@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: math-learning-postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: math-learning
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - math-learning-network
+
+  # Uncomment if you want to use pgAdmin as well
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: math-learning-pgadmin
+  #   restart: always
+  #   ports:
+  #     - "5050:80"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@example.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   volumes:
+  #     - pgadmin-data:/var/lib/pgadmin
+  #   networks:
+  #     - math-learning-network
+
+volumes:
+  postgres-data:
+  # pgadmin-data:
+
+networks:
+  math-learning-network:
+    driver: bridge

@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  name        String?
+  password    String
+  role        String       @default("student") // student, teacher, admin
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  enrollments Enrollment[]
+  attempts    Attempt[]
+}
+
+model Course {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  level       String       // beginner, intermediate, advanced
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  problems    Problem[]
+  enrollments Enrollment[]
+}
+
+model Problem {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  difficulty  String    // easy, medium, hard
+  mathField   String    // algebra, geometry, calculus, etc.
+  content     String    // JSON or formatted content of the problem
+  solution    String    // Solution explanation 
+  courseId    Int
+  course      Course    @relation(fields: [courseId], references: [id])
+  attempts    Attempt[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Enrollment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  courseId  Int
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id])
+  progress  Float    @default(0) // Percentage of course completed
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+}
+
+model Attempt {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  problemId Int
+  user      User     @relation(fields: [userId], references: [id])
+  problem   Problem  @relation(fields: [problemId], references: [id])
+  answer    String   // User's submitted answer
+  isCorrect Boolean
+  createdAt DateTime @default(now())
+
+  @@index([userId, problemId])
+}
