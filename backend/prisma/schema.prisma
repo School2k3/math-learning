@@ -72,12 +72,12 @@ model Question {
   audioUrl      String?           @map("audio_url")
   grade         Int
   topic         String
-  difficulty    String            // easy, medium, hard
   type          String            // practice, exam, both
   createdAt     DateTime          @default(now()) @map("created_at")
   
   // Relations
   answers       Answer[]
+  explanations  Explanation[]
   practiceAnswers PracticeAnswer[]
   examQuestions ExamQuestion[]
   examAnswers   ExamAnswer[]
@@ -98,6 +98,20 @@ model Answer {
 
   @@map("Answers")
 }
+
+model Explanation {
+  id           Int       @id @default(autoincrement()) @map("explanation_id")
+  questionId   Int       @map("question_id")
+  content      String    @map("content_text")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  question     Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("Explanations")
+}
+
 
 // 4. Practice
 model PracticeSession {

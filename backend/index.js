@@ -10,6 +10,8 @@ const PORT = process.env.PORT || 3000;
 // Import routes
 const chapterRoutes = require('./routes/chapterRoutes');
 const lessonRoutes = require('./routes/lessonRoutes');
+const questionRoutes = require('./routes/questionRoutes');
+const answerRoutes = require('./routes/answerRoutes');
 
 // Middleware
 app.use(cors());
@@ -22,6 +24,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/chapters', chapterRoutes);
 app.use('/api/lessons', lessonRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/answers', answerRoutes);
 
 // Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, { 
@@ -41,4 +45,5 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  console.log(`You can read API Document on Swagger UI: ${'localhost:3000/api-docs'}`);
 });
