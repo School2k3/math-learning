@@ -1,7 +1,6 @@
-const express = require('express');
+import express from 'express';
+import questionController from '../controllers/questionController.js';
 const router = express.Router();
-const questionController = require('../controllers/questionController');
-
 /**
  * @swagger
  * /api/questions:
@@ -27,11 +26,19 @@ const questionController = require('../controllers/questionController');
  *     responses:
  *       200:
  *         description: A list of questions with their answers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 questions:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Question'
  *       500:
  *         description: Server error
  */
 router.get('/', questionController.getAllQuestions);
-
 /**
  * @swagger
  * /api/questions/{id}:
@@ -48,13 +55,19 @@ router.get('/', questionController.getAllQuestions);
  *     responses:
  *       200:
  *         description: Question details with answers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 question:
+ *                   $ref: '#/components/schemas/Question'
  *       404:
  *         description: Question not found
  *       500:
  *         description: Server error
  */
 router.get('/:id', questionController.getQuestionById);
-
 /**
  * @swagger
  * /api/questions/grade/{grade}:
@@ -75,7 +88,6 @@ router.get('/:id', questionController.getQuestionById);
  *         description: Server error
  */
 router.get('/grade/:grade', questionController.getQuestionsByGrade);
-
 /**
  * @swagger
  * /api/questions/topic/{topic}:
@@ -96,5 +108,4 @@ router.get('/grade/:grade', questionController.getQuestionsByGrade);
  *         description: Server error
  */
 router.get('/topic/:topic', questionController.getQuestionsByTopic);
-
-module.exports = router;
+export default router;

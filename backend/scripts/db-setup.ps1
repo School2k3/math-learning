@@ -1,16 +1,15 @@
-# Database setup script for Windows
+# TypeScript database setup script for Windows
 # PowerShell script
 
 # Wait for PostgreSQL to be ready
 Write-Host "Waiting for PostgreSQL to start..."
 Start-Sleep -s 5
 
-# Run Prisma migrations
+# Run database setup commands using package.json scripts
 Write-Host "Running Prisma migrations..."
-npx prisma migrate dev --name init
+npm run db:migrate
 
-# Generate Prisma client
 Write-Host "Generating Prisma client..."
-npx prisma generate
+npm run prisma:generate
 
 Write-Host "Database setup completed!"

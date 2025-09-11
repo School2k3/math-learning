@@ -1,12 +1,18 @@
-const prisma = require('../prisma/prisma');
+import prisma from '../prisma/prisma.js';
+import { Request, Response } from 'express';
+import { Controller, RequestWithQuery, QuestionQuery } from '../types/index.js';
 
-const questionController = {
+const questionController: Controller = {
   // Get all questions with optional filtering
-  getAllQuestions: async (req, res) => {
+  getAllQuestions: async (req: RequestWithQuery<QuestionQuery>, res: Response): Promise<void> => {
     try {
       const { grade, topic, type } = req.query;
       
-      const whereClause = {};
+      const whereClause: {
+        grade?: number;
+        topic?: string;
+        type?: string;
+      } = {};
       
       if (grade) {
         whereClause.grade = parseInt(grade);
@@ -34,12 +40,12 @@ const questionController = {
       res.status(200).json({ questions });
     } catch (error) {
       console.error('Error getting questions:', error);
-      res.status(500).json({ message: 'Error getting questions', error: error.message });
+      res.status(500).json({ message: 'Error getting questions', error: (error as Error).message });
     }
   },
   
   // Get a specific question by ID
-  getQuestionById: async (req, res) => {
+  getQuestionById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
       
@@ -47,22 +53,24 @@ const questionController = {
         where: { id: parseInt(id) },
         include: {
           answers: true, // Include associated answers
+          explanations: true, // Include explanations
         },
       });
       
       if (!question) {
-        return res.status(404).json({ message: 'Question not found' });
+        res.status(404).json({ message: 'Question not found' });
+        return;
       }
       
       res.status(200).json({ question });
     } catch (error) {
       console.error('Error getting question:', error);
-      res.status(500).json({ message: 'Error getting question', error: error.message });
+      res.status(500).json({ message: 'Error getting question', error: (error as Error).message });
     }
   },
   
   // Get questions by grade
-  getQuestionsByGrade: async (req, res) => {
+  getQuestionsByGrade: async (req: Request, res: Response): Promise<void> => {
     try {
       const { grade } = req.params;
       
@@ -79,12 +87,12 @@ const questionController = {
       res.status(200).json({ questions });
     } catch (error) {
       console.error('Error getting questions by grade:', error);
-      res.status(500).json({ message: 'Error getting questions by grade', error: error.message });
+      res.status(500).json({ message: 'Error getting questions by grade', error: (error as Error).message });
     }
   },
 
   // Get questions by topic
-  getQuestionsByTopic: async (req, res) => {
+  getQuestionsByTopic: async (req: Request, res: Response): Promise<void> => {
     try {
       const { topic } = req.params;
       
@@ -101,9 +109,9 @@ const questionController = {
       res.status(200).json({ questions });
     } catch (error) {
       console.error('Error getting questions by topic:', error);
-      res.status(500).json({ message: 'Error getting questions by topic', error: error.message });
+      res.status(500).json({ message: 'Error getting questions by topic', error: (error as Error).message });
     }
   },
 };
 
-module.exports = questionController;
+export default questionController;

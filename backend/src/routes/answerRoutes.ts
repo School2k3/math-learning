@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import answerController from '../controllers/answerController.js';
+
 const router = express.Router();
-const answerController = require('../controllers/answerController');
 
 /**
  * @swagger
@@ -18,6 +19,15 @@ const answerController = require('../controllers/answerController');
  *     responses:
  *       200:
  *         description: List of answers for the question
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 answers:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Answer'
  *       500:
  *         description: Server error
  */
@@ -39,6 +49,13 @@ router.get('/question/:questionId', answerController.getAnswersByQuestionId);
  *     responses:
  *       200:
  *         description: Answer details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 answer:
+ *                   $ref: '#/components/schemas/Answer'
  *       404:
  *         description: Answer not found
  *       500:
@@ -67,4 +84,4 @@ router.get('/:id', answerController.getAnswerById);
  */
 router.get('/correct/:questionId', answerController.getCorrectAnswers);
 
-module.exports = router;
+export default router;

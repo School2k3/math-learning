@@ -1,15 +1,16 @@
 #!/bin/bash
 
+# TypeScript database setup script for Unix-based systems
+
 # Wait for PostgreSQL to be ready
 echo "Waiting for PostgreSQL to start..."
 sleep 5
 
-# Run Prisma migrations
+# Run database setup commands using package.json scripts
 echo "Running Prisma migrations..."
-npx prisma migrate dev --name init
+npm run db:migrate
 
-# Generate Prisma client
 echo "Generating Prisma client..."
-npx prisma generate
+npm run prisma:generate
 
 echo "Database setup completed!"

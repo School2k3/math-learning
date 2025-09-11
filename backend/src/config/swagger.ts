@@ -1,6 +1,6 @@
-const swaggerJsdoc = require('swagger-jsdoc');
+import swaggerJsdoc from 'swagger-jsdoc';
 
-const options = {
+const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -33,11 +33,11 @@ const options = {
             },
             volume: {
               type: 'integer',
-              description: 'Book volume (1 or 2)',
+              description: 'Volume number (1 or 2)',
             },
             chapterNumber: {
               type: 'integer',
-              description: 'Chapter sequence number',
+              description: 'Chapter number within grade and volume',
             },
             title: {
               type: 'string',
@@ -54,117 +54,113 @@ const options = {
             },
             chapterId: {
               type: 'integer',
-              description: 'ID of the chapter this lesson belongs to',
+              description: 'ID of the parent chapter',
             },
             lessonNumber: {
               type: 'integer',
-              description: 'Lesson sequence number within the chapter',
+              description: 'Lesson number within chapter',
             },
             title: {
               type: 'string',
               description: 'Lesson title',
             },
-            contentText: {
-              type: 'string',
-              description: 'Main content text of the lesson',
-            },
             videoUrl: {
               type: 'string',
-              description: 'URL to lesson video (optional)',
+              description: 'URL to lesson video',
               nullable: true,
             },
             imageUrl: {
               type: 'string',
-              description: 'URL to lesson image (optional)',
+              description: 'URL to lesson image',
               nullable: true,
             },
           },
         },
-        User: {
+        Question: {
           type: 'object',
           properties: {
             id: {
               type: 'integer',
-              description: 'User ID',
+              description: 'Question ID',
             },
-            username: {
+            questionText: {
               type: 'string',
-              description: 'Username',
+              description: 'The text of the question',
             },
-            email: {
+            imageUrl: {
               type: 'string',
-              description: 'User email',
+              description: 'URL to question image',
+              nullable: true,
             },
-            fullName: {
+            audioUrl: {
               type: 'string',
-              description: 'User full name',
-            },
-            role: {
-              type: 'string',
-              description: 'User role (student, admin)',
-              enum: ['student', 'admin'],
+              description: 'URL to question audio',
+              nullable: true,
             },
             grade: {
               type: 'integer',
-              description: 'Student grade level (1-5), null for admin',
-              nullable: true,
+              description: 'Grade level',
             },
-            avatarUrl: {
+            topic: {
               type: 'string',
-              description: 'URL to user avatar image',
-              nullable: true,
+              description: 'Question topic',
+            },
+            type: {
+              type: 'string',
+              description: 'Question type (practice, exam, both)',
+            },
+            answers: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/Answer',
+              },
             },
           },
         },
-        Error: {
+        Answer: {
           type: 'object',
           properties: {
-            message: {
+            id: {
+              type: 'integer',
+              description: 'Answer ID',
+            },
+            questionId: {
+              type: 'integer',
+              description: 'ID of the question this answer belongs to',
+            },
+            answerText: {
               type: 'string',
+              description: 'Text of the answer',
             },
-            error: {
+            isCorrect: {
+              type: 'boolean',
+              description: 'Whether this answer is correct',
+            },
+          },
+        },
+        Explanation: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'Explanation ID',
+            },
+            questionId: {
+              type: 'integer',
+              description: 'ID of the question this explanation is for',
+            },
+            content: {
               type: 'string',
+              description: 'Explanation content',
             },
           },
-        },
-      },
-      responses: {
-        BadRequest: {
-          description: 'Bad Request',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Error',
-              },
-            },
-          },
-        },
-        NotFound: {
-          description: 'Not Found',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Error',
-              },
-            },
-          },
-        },
-        InternalServerError: {
-          description: 'Internal Server Error',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Error',
-              },
-            },
-          },
-        },
+        }
       },
     },
   },
-  apis: ['./routes/*.js'], // Path to the API routes files
+  apis: ['./src/routes/*.ts', './routes/*.ts'], // Support both dev and build environments
 };
 
-const specs = swaggerJsdoc(options);
+const swaggerSpecs = swaggerJsdoc(options);
 
-module.exports = specs;
+export default swaggerSpecs;
