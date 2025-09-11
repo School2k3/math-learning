@@ -1,6 +1,6 @@
 # Math Learning Project
 
-This project consists of a backend API built with Node.js, Express, and PostgreSQL with Prisma ORM.
+This project consists of a backend API built with TypeScript, Node.js, Express, and PostgreSQL with Prisma ORM.
 
 ## Setup with Docker
 
@@ -23,7 +23,15 @@ This project consists of a backend API built with Node.js, Express, and PostgreS
 
 3. Start the backend development server:
    ```
+   cd backend
    npm run dev
+   ```
+   
+   Or for production build:
+   ```
+   cd backend
+   npm run build
+   npm start
    ```
 
 ### Accessing the Database
@@ -57,6 +65,12 @@ You can connect to the PostgreSQL database using HeidiSQL with these credentials
 ### Backend Commands
 
 ```bash
+# Build the TypeScript code
+npm run build
+
+# Start production server
+npm start
+
 # Start development server with hot reload
 npm run dev
 
