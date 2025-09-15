@@ -27,7 +27,7 @@ const lessonController: Controller = {
         },
         orderBy: [
           { chapterId: 'asc' },
-          { lessonNumber: 'asc' },
+          { id: 'asc' },
         ],
       });
       
@@ -72,7 +72,7 @@ const lessonController: Controller = {
           chapterId: parseInt(chapterId),
         },
         orderBy: {
-          lessonNumber: 'asc',
+          id: 'asc',
         },
       });
       

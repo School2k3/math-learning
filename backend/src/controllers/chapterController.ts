@@ -47,7 +47,7 @@ const chapterController: Controller = {
         include: {
           lessons: {
             orderBy: {
-              lessonNumber: 'asc',
+              id: 'asc',
             },
           },
         },
@@ -81,7 +81,7 @@ const chapterController: Controller = {
         include: {
           lessons: {
             orderBy: {
-              lessonNumber: 'asc',
+              id: 'asc',
             },
           },
         },

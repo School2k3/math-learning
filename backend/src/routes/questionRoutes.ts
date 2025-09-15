@@ -44,6 +44,27 @@ router.get('/', questionController.getAllQuestions);
 
 /**
  * @swagger
+ * /api/questions/grade/{grade}:
+ *   get:
+ *     summary: Get questions by grade
+ *     description: Retrieve all questions for a specific grade level.
+ *     parameters:
+ *       - in: path
+ *         name: grade
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Grade level
+ *     responses:
+ *       200:
+ *         description: List of questions for the specified grade
+ *       500:
+ *         description: Server error
+ */
+router.get('/grade/:grade', questionController.getQuestionsByGrade);
+
+/**
+ * @swagger
  * /api/questions/{id}:
  *   get:
  *     summary: Get a question by ID
@@ -71,47 +92,5 @@ router.get('/', questionController.getAllQuestions);
  *         description: Server error
  */
 router.get('/:id', questionController.getQuestionById);
-
-/**
- * @swagger
- * /api/questions/grade/{grade}:
- *   get:
- *     summary: Get questions by grade
- *     description: Retrieve all questions for a specific grade level.
- *     parameters:
- *       - in: path
- *         name: grade
- *         required: true
- *         schema:
- *           type: integer
- *         description: Grade level
- *     responses:
- *       200:
- *         description: List of questions for the specified grade
- *       500:
- *         description: Server error
- */
-router.get('/grade/:grade', questionController.getQuestionsByGrade);
-
-/**
- * @swagger
- * /api/questions/topic/{topic}:
- *   get:
- *     summary: Get questions by topic
- *     description: Retrieve all questions for a specific topic.
- *     parameters:
- *       - in: path
- *         name: topic
- *         required: true
- *         schema:
- *           type: string
- *         description: Topic name
- *     responses:
- *       200:
- *         description: List of questions for the specified topic
- *       500:
- *         description: Server error
- */
-router.get('/topic/:topic', questionController.getQuestionsByTopic);
 
 export default router;

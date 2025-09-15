@@ -35,8 +35,8 @@ export interface ChapterQuery extends GradeQuery {
 }
 
 export interface QuestionQuery extends GradeQuery {
-  topic?: string;
   type?: string;
+  lessonId?: string;
 }
 
 // Type for controller objects

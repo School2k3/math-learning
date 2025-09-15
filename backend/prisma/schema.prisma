@@ -52,7 +52,6 @@ model Chapter {
 model Lesson {
   id            Int               @id @default(autoincrement()) @map("lesson_id")
   chapterId     Int               @map("chapter_id")
-  lessonNumber  Int               @map("lesson_number")
   title         String
   videoUrl      String?           @map("video_url")
   imageUrl      String?           @map("image_url")
@@ -72,7 +71,6 @@ model Question {
   imageUrl      String?           @map("image_url")
   audioUrl      String?           @map("audio_url")
   grade         Int
-  topic         String
   type          String            // practice, exam, both
   lessonId      Int?              @map("lesson_id")
   createdAt     DateTime          @default(now()) @map("created_at")

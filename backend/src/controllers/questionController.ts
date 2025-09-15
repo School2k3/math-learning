@@ -6,20 +6,15 @@ const questionController: Controller = {
   // Get all questions with optional filtering
   getAllQuestions: async (req: RequestWithQuery<QuestionQuery>, res: Response): Promise<void> => {
     try {
-      const { grade, topic, type } = req.query;
+      const { grade, type } = req.query;
       
       const whereClause: {
         grade?: number;
-        topic?: string;
         type?: string;
       } = {};
       
       if (grade) {
         whereClause.grade = parseInt(grade);
-      }
-      
-      if (topic) {
-        whereClause.topic = topic;
       }
       
       if (type) {
@@ -91,13 +86,15 @@ const questionController: Controller = {
     }
   },
 
-  // Get questions by topic
-  getQuestionsByTopic: async (req: Request, res: Response): Promise<void> => {
+  // Get questions by lesson
+  getQuestionsByLesson: async (req: Request, res: Response): Promise<void> => {
     try {
-      const { topic } = req.params;
+      const { lessonId } = req.params;
       
       const questions = await prisma.question.findMany({
-        where: { topic },
+        where: { 
+          lessonId: parseInt(lessonId)
+        },
         include: {
           answers: true, // Include associated answers
         },
@@ -108,8 +105,8 @@ const questionController: Controller = {
       
       res.status(200).json({ questions });
     } catch (error) {
-      console.error('Error getting questions by topic:', error);
-      res.status(500).json({ message: 'Error getting questions by topic', error: (error as Error).message });
+      console.error('Error getting questions by lesson:', error);
+      res.status(500).json({ message: 'Error getting questions by lesson', error: (error as Error).message });
     }
   },
 };
