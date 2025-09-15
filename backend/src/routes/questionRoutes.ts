@@ -65,6 +65,27 @@ router.get('/grade/:grade', questionController.getQuestionsByGrade);
 
 /**
  * @swagger
+ * /api/questions/lesson/{lessonId}:
+ *   get:
+ *     summary: Get questions by lesson
+ *     description: Retrieve all questions for a specific lesson.
+ *     parameters:
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Lesson ID
+ *     responses:
+ *       200:
+ *         description: List of questions for the specified lesson
+ *       500:
+ *         description: Server error
+ */
+router.get('/lesson/:lessonId', questionController.getQuestionsByLesson);
+
+/**
+ * @swagger
  * /api/questions/{id}:
  *   get:
  *     summary: Get a question by ID
