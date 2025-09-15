@@ -48,7 +48,6 @@ const questionController: Controller = {
         where: { id: parseInt(id) },
         include: {
           answers: true, // Include associated answers
-          explanations: true, // Include explanations
         },
       });
       

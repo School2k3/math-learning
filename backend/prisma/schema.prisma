@@ -66,22 +66,23 @@ model Lesson {
 
 // 3. Questions & Answers
 model Question {
-  id            Int               @id @default(autoincrement()) @map("question_id")
-  questionText  String            @map("question_text")
-  imageUrl      String?           @map("image_url")
-  audioUrl      String?           @map("audio_url")
-  grade         Int
-  type          String            // practice, exam, both
-  lessonId      Int?              @map("lesson_id")
-  createdAt     DateTime          @default(now()) @map("created_at")
+  id             Int               @id @default(autoincrement()) @map("question_id")
+  questionText   String            @map("question_text")
+  imageUrl       String?           @map("image_url")
+  audioUrl       String?           @map("audio_url")
+  explanationText String?          @map("explanation_text")
+  explanationImg String?           @map("explanation_img")
+  grade          Int
+  type           String            // practice, exam, both
+  lessonId       Int?              @map("lesson_id")
+  createdAt      DateTime          @default(now()) @map("created_at")
   
   // Relations
-  lesson        Lesson?           @relation(fields: [lessonId], references: [id])
-  answers       Answer[]
-  explanations  Explanation[]
+  lesson         Lesson?           @relation(fields: [lessonId], references: [id])
+  answers        Answer[]
   practiceAnswers PracticeAnswer[]
-  examQuestions ExamQuestion[]
-  examAnswers   ExamAnswer[]
+  examQuestions  ExamQuestion[]
+  examAnswers    ExamAnswer[]
 
   @@map("Questions")
 }
@@ -100,18 +101,7 @@ model Answer {
   @@map("Answers")
 }
 
-model Explanation {
-  id           Int       @id @default(autoincrement()) @map("explanation_id")
-  questionId   Int       @map("question_id")
-  content      String    @map("content_text")
-  createdAt    DateTime  @default(now()) @map("created_at")
-
-  // Relations
-  question     Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@index([questionId])
-  @@map("Explanations")
-}
+// Explanation model removed - explanation fields added to Question model
 
 
 // 4. Practice

@@ -101,9 +101,15 @@ const options: swaggerJsdoc.Options = {
               type: 'integer',
               description: 'Grade level',
             },
-            topic: {
+            explanationText: {
               type: 'string',
-              description: 'Question topic',
+              description: 'Explanation text for the question',
+              nullable: true,
+            },
+            explanationImg: {
+              type: 'string',
+              description: 'URL to explanation image',
+              nullable: true,
             },
             type: {
               type: 'string',
@@ -135,23 +141,6 @@ const options: swaggerJsdoc.Options = {
             isCorrect: {
               type: 'boolean',
               description: 'Whether this answer is correct',
-            },
-          },
-        },
-        Explanation: {
-          type: 'object',
-          properties: {
-            id: {
-              type: 'integer',
-              description: 'Explanation ID',
-            },
-            questionId: {
-              type: 'integer',
-              description: 'ID of the question this explanation is for',
-            },
-            content: {
-              type: 'string',
-              description: 'Explanation content',
             },
           },
         }
