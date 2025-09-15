@@ -9,6 +9,7 @@ import chapterRoutes from './routes/chapterRoutes.js';
 import lessonRoutes from './routes/lessonRoutes.js';
 import questionRoutes from './routes/questionRoutes.js';
 import answerRoutes from './routes/answerRoutes.js';
+import explanationRoutes from './routes/explanationRoutes.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -29,6 +30,7 @@ app.use('/api/chapters', chapterRoutes);
 app.use('/api/lessons', lessonRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/answers', answerRoutes);
+app.use('/api/explanations', explanationRoutes);
 
 // Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, { 
