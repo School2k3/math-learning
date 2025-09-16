@@ -6,11 +6,12 @@ const questionController: Controller = {
   // Get all questions with optional filtering
   getAllQuestions: async (req: RequestWithQuery<QuestionQuery>, res: Response): Promise<void> => {
     try {
-      const { grade, type } = req.query;
+      const { grade, type, answerType } = req.query;
       
       const whereClause: {
         grade?: number;
         type?: string;
+        answerType?: string;
       } = {};
       
       if (grade) {
@@ -19,6 +20,10 @@ const questionController: Controller = {
       
       if (type) {
         whereClause.type = type;
+      }
+      
+      if (answerType) {
+        whereClause.answerType = answerType;
       }
       
       const questions = await prisma.question.findMany({

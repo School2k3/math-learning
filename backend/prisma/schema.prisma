@@ -45,6 +45,7 @@ model Chapter {
   
   // Relations
   lessons       Lesson[]
+  exams         Exam[]
 
   @@map("Chapters")
 }
@@ -73,7 +74,8 @@ model Question {
   explanationText String?          @map("explanation_text")
   explanationImg String?           @map("explanation_img")
   grade          Int
-  type           String            // practice, exam, both
+  type           String            // practice, exam
+  answerType     String            @map("answer_type") // combobox, text, choice
   lessonId       Int?              @map("lesson_id")
   createdAt      DateTime          @default(now()) @map("created_at")
   
@@ -142,11 +144,12 @@ model Exam {
   id              Int               @id @default(autoincrement()) @map("exam_id")
   title           String
   grade           Int
-  topic           String
+  chapterId       Int?              @map("chapter_id")
   durationMinutes Int               @map("duration_minutes")
   createdAt       DateTime          @default(now()) @map("created_at")
   
   // Relations
+  chapter         Chapter?          @relation(fields: [chapterId], references: [id])
   examQuestions   ExamQuestion[]
   examResults     ExamResult[]
 

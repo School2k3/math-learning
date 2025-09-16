@@ -115,6 +115,10 @@ const options: swaggerJsdoc.Options = {
               type: 'string',
               description: 'Question type (practice, exam, both)',
             },
+            answerType: {
+              type: 'string',
+              description: 'Answer type (combobox, text, choice)',
+            },
             answers: {
               type: 'array',
               items: {
@@ -141,6 +145,131 @@ const options: swaggerJsdoc.Options = {
             isCorrect: {
               type: 'boolean',
               description: 'Whether this answer is correct',
+            },
+          },
+        },
+        Exam: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'Exam ID',
+            },
+            title: {
+              type: 'string',
+              description: 'Exam title',
+            },
+            grade: {
+              type: 'integer',
+              description: 'Grade level',
+            },
+            chapterId: {
+              type: 'integer',
+              description: 'ID of the chapter this exam belongs to',
+              nullable: true,
+            },
+            chapter: {
+              $ref: '#/components/schemas/Chapter',
+              nullable: true,
+            },
+            durationMinutes: {
+              type: 'integer',
+              description: 'Duration of the exam in minutes',
+            },
+            examQuestions: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/ExamQuestion',
+              },
+              description: 'Questions included in this exam',
+            },
+          },
+        },
+        ExamQuestion: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'Exam Question ID',
+            },
+            examId: {
+              type: 'integer',
+              description: 'ID of the exam this question belongs to',
+            },
+            questionId: {
+              type: 'integer',
+              description: 'ID of the question',
+            },
+            question: {
+              $ref: '#/components/schemas/Question',
+            },
+          },
+        },
+        ExamResult: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'Result ID',
+            },
+            examId: {
+              type: 'integer',
+              description: 'ID of the exam taken',
+            },
+            userId: {
+              type: 'integer',
+              description: 'ID of the user who took the exam',
+            },
+            score: {
+              type: 'number',
+              description: 'Score achieved in the exam',
+            },
+            startedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Time when the exam was started',
+            },
+            finishedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Time when the exam was finished',
+              nullable: true,
+            },
+            examAnswers: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/ExamAnswer',
+              },
+              description: 'Answers submitted for this exam',
+            },
+          },
+        },
+        ExamAnswer: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'Exam Answer ID',
+            },
+            resultId: {
+              type: 'integer',
+              description: 'ID of the exam result this answer belongs to',
+            },
+            questionId: {
+              type: 'integer',
+              description: 'ID of the question being answered',
+            },
+            chosenAnswerId: {
+              type: 'integer',
+              description: 'ID of the answer chosen by the user',
+            },
+            isCorrect: {
+              type: 'boolean',
+              description: 'Whether the chosen answer was correct',
+            },
+            isFlagged: {
+              type: 'boolean',
+              description: 'Whether the question was flagged by the user for review',
             },
           },
         }

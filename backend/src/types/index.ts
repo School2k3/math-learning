@@ -3,8 +3,7 @@ import {
   Chapter, 
   Lesson, 
   Question, 
-  Answer, 
-  Explanation, 
+  Answer,
   PracticeSession,
   PracticeAnswer,
   Exam,
@@ -36,6 +35,7 @@ export interface ChapterQuery extends GradeQuery {
 
 export interface QuestionQuery extends GradeQuery {
   type?: string;
+  answerType?: string;
   lessonId?: string;
 }
 

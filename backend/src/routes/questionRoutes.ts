@@ -16,15 +16,15 @@ const router = express.Router();
  *           type: integer
  *         description: Filter by grade level
  *       - in: query
- *         name: topic
- *         schema:
- *           type: string
- *         description: Filter by topic
- *       - in: query
  *         name: type
  *         schema:
  *           type: string
  *         description: Filter by question type (practice, exam, both)
+ *       - in: query
+ *         name: answerType
+ *         schema:
+ *           type: string
+ *         description: Filter by answer type (combobox, text, choice)
  *     responses:
  *       200:
  *         description: A list of questions with their answers
