@@ -113,6 +113,35 @@ const questionController: Controller = {
       res.status(500).json({ message: 'Error getting questions by lesson', error: (error as Error).message });
     }
   },
+
+  // Get questions by exam
+  getQuestionsByExamId: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { examId } = req.params;
+      
+      // Find all questions associated with the specified exam through the join table
+      const examQuestions = await prisma.examQuestion.findMany({
+        where: { 
+          examId: parseInt(examId)
+        },
+        include: {
+          question: {
+            include: {
+              answers: true, // Include answers for each question
+            }
+          }
+        },
+      });
+      
+      // Extract just the questions from the results
+      const questions = examQuestions.map(eq => eq.question);
+      
+      res.status(200).json({ questions });
+    } catch (error) {
+      console.error('Error getting questions by exam:', error);
+      res.status(500).json({ message: 'Error getting questions by exam', error: (error as Error).message });
+    }
+  },
 };
 
 export default questionController;
