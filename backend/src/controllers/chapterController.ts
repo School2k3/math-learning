@@ -26,7 +26,6 @@ const chapterController: Controller = {
         orderBy: [
           { grade: 'asc' },
           { volume: 'asc' },
-          { chapterNumber: 'asc' },
         ],
       });
       
@@ -76,7 +75,6 @@ const chapterController: Controller = {
         },
         orderBy: [
           { volume: 'asc' },
-          { chapterNumber: 'asc' },
         ],
         include: {
           lessons: {

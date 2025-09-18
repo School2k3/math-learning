@@ -40,7 +40,6 @@ model Chapter {
   id            Int       @id @default(autoincrement()) @map("chapter_id")
   grade         Int
   volume        Int       // 1 or 2
-  chapterNumber Int       @map("chapter_number")
   title         String
   
   // Relations
