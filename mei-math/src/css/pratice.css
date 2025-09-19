@@ -1,0 +1,142 @@
+.pratice-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.pratice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.pratice-title-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.pratice-star {
+  color: #49bbbd;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.pratice-title {
+  color: #23bdee;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.pratice-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #eaf6fb;
+  border-radius: 20px;
+  padding: 4px 16px;
+  font-size: 16px;
+  color: #252641;
+}
+
+.pratice-progress-bar {
+  margin-left: 32px;
+}
+
+.pratice-progress {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.pratice-progress-track {
+  display: flex;
+  gap: 4px;
+}
+
+.pratice-progress-dot {
+  width: 16px;
+  height: 16px;
+  background: #eaf6fb;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pratice-progress-score {
+  font-size: 16px;
+  color: #252641;
+  font-weight: 600;
+}
+
+.pratice-progress-correct {
+  color: #49bbbd;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pratice-progress-wrong {
+  color: #ff5252;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pratice-question-block {
+  margin: 32px 0 0 0;
+}
+
+.pratice-question {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #252641;
+}
+
+.pratice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pratice-option {
+  display: flex;
+  align-items: center;
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.pratice-option input[type="radio"] {
+  margin-right: 16px;
+  accent-color: #49bbbd;
+  width: 20px;
+  height: 20px;
+}
+
+.pratice-option-text {
+  color: #252641;
+}
+
+.pratice-action-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.pratice-submit-btn {
+  background: #49bbbd;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 80px;
+  cursor: pointer;
+}
+.pratice-finish-modal {
+  margin-top: 0;
+  /* hoặc margin-top: 32px; nếu muốn cách nhỏ */
+}

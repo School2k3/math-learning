@@ -1,0 +1,118 @@
+html,
+body {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.banner-home {
+  position: relative;
+  width: 100vw; /* Sửa từ 100% thành 100vw */
+  min-width: 100vw; /* Đảm bảo không bị co lại */
+  left: 50%;
+  right: 50%;
+  transform: translateX(-50%); /* Căn giữa tuyệt đối */
+  height: 500px;
+  background: #00cbbb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 80px;
+  border-bottom-left-radius: 80px;
+  border-bottom-right-radius: 80px;
+  box-sizing: border-box;
+}
+
+.banner-home__content {
+  max-width: 600px;
+  margin-left: 0; /* hoặc margin-left: 40px; */
+  color: #fff;
+}
+
+.banner-home__highlight {
+  color: #ffb800;
+  font-weight: bold;
+}
+
+.banner-home__actions {
+  margin: 32px 0 24px 0;
+  display: flex;
+  gap: 16px;
+}
+
+.banner-home__btn-primary {
+  background: #fff;
+  color: #00cbbb;
+  border: none;
+  border-radius: 24px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.banner-home__btn-secondary {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #fff;
+  border-radius: 24px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.banner-home__info {
+  display: flex;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.banner-home__card {
+  position: absolute;
+  left:800px;
+  bottom: 350px;
+  z-index: 2; /* lớn hơn hình */
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-size: 12px;
+  min-width: 100px;
+}
+.banner-home__card_mail {
+  position: absolute;
+  left: 800px;
+  bottom: 40px;
+  z-index: 2; /* lớn hơn hình */
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-size: 12px;
+  min-width: 100px;
+}
+.banner-home__img {
+  position: relative;
+  height: 512px; /* hoặc lớn hơn, ví dụ 600px */
+  max-width: 100%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+.banner-home__icon-box {
+  width: 50px;
+  height: 50px;
+  background: #ff9800; /* màu cam */
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
