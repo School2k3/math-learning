@@ -327,4 +327,43 @@ router.post('/finish/:resultId', examController.finishExam);
  */
 router.get('/progress/:resultId', examController.getExamProgress);
 
+/**
+ * @swagger
+ * /api/exams/active/{userId}:
+ *   get:
+ *     summary: Get active exam for user
+ *     description: Get the currently active exam for a user, if one exists. This enables resuming exams if accidentally navigated away.
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the user
+ *     responses:
+ *       200:
+ *         description: Active exam found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 activeExam:
+ *                   $ref: '#/components/schemas/ExamResult'
+ *                 timeRemaining:
+ *                   type: integer
+ *                   description: Time remaining in seconds
+ *                 answeredQuestions:
+ *                   type: integer
+ *                 totalQuestions:
+ *                   type: integer
+ *       400:
+ *         description: Exam time has expired
+ *       404:
+ *         description: No active exam found for this user
+ *       500:
+ *         description: Server error
+ */
+router.get('/active/:userId', examController.getActiveExamForUser);
+
 export default router;

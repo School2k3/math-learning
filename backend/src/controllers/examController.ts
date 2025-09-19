@@ -227,13 +227,53 @@ const examController: Controller = {
         where: {
           examId: examId,
           userId: userId,
+          isActive: true,
           finishedAt: null, // Not finished yet
         },
+        include: {
+          exam: true,
+          examAnswers: {
+            include: {
+              question: true,
+              chosenAnswer: true,
+            }
+          }
+        }
       });
       
+      // If there's an active exam, check if it's still within the time limit
       if (existingResult) {
-        res.status(400).json({ message: 'User already has an active exam for this test' });
-        return;
+        const startTime = existingResult.startedAt.getTime();
+        const currentTime = Date.now();
+        const durationInMs = existingResult.exam.durationMinutes * 60 * 1000;
+        
+        // Check if the exam is still within time limit
+        if (currentTime - startTime < durationInMs) {
+          // Exam is still active and within time limit, return it for continuation
+          const timeRemaining = Math.max(0, durationInMs - (currentTime - startTime));
+          
+          res.status(200).json({ 
+            message: 'Resuming existing exam',
+            isResumed: true,
+            examResult: existingResult,
+            totalQuestions: exam.examQuestions.length,
+            answeredQuestions: existingResult.examAnswers.length,
+            timeRemaining: Math.floor(timeRemaining / 1000), // in seconds
+            durationMinutes: exam.durationMinutes
+          });
+          return;
+        } else {
+          // Time's up for the existing exam, mark it as finished automatically
+          await prisma.examResult.update({
+            where: { id: existingResult.id },
+            data: {
+              finishedAt: new Date(startTime + durationInMs),
+              isActive: false,
+            }
+          });
+          
+          // Continue below to create a new exam
+        }
       }
       
       // Create new exam result
@@ -243,6 +283,7 @@ const examController: Controller = {
           userId: userId,
           score: 0,
           startedAt: new Date(),
+          isActive: true,
         },
         include: {
           exam: true,
@@ -251,6 +292,7 @@ const examController: Controller = {
       
       res.status(201).json({ 
         message: 'Exam started successfully',
+        isResumed: false,
         examResult,
         totalQuestions: exam.examQuestions.length,
         durationMinutes: exam.durationMinutes,
@@ -396,6 +438,7 @@ const examController: Controller = {
         data: {
           score: score,
           finishedAt: new Date(),
+          isActive: false,
         },
         include: {
           exam: true,
@@ -491,6 +534,84 @@ const examController: Controller = {
     } catch (error) {
       console.error('Error getting exam progress:', error);
       res.status(500).json({ message: 'Error getting exam progress', error: (error as Error).message });
+    }
+  },
+  
+  // Get active exam for a user
+  getActiveExamForUser: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      
+      // Find active exam for the user
+      const activeExam = await prisma.examResult.findFirst({
+        where: {
+          userId: parseInt(userId),
+          isActive: true,
+          finishedAt: null
+        },
+        include: {
+          exam: {
+            include: {
+              examQuestions: {
+                include: {
+                  question: {
+                    include: {
+                      answers: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          examAnswers: {
+            include: {
+              question: true,
+              chosenAnswer: true,
+            },
+          },
+        },
+        orderBy: {
+          startedAt: 'desc',
+        },
+      });
+      
+      if (!activeExam) {
+        res.status(404).json({ message: 'No active exam found for this user' });
+        return;
+      }
+      
+      // Check if the exam is still within time limit
+      const startTime = activeExam.startedAt.getTime();
+      const currentTime = Date.now();
+      const durationInMs = activeExam.exam.durationMinutes * 60 * 1000;
+      
+      // If the exam time has expired but hasn't been marked as finished
+      if (currentTime - startTime > durationInMs) {
+        // Time's up, mark it as finished automatically
+        await prisma.examResult.update({
+          where: { id: activeExam.id },
+          data: {
+            finishedAt: new Date(startTime + durationInMs),
+            isActive: false,
+          }
+        });
+        
+        res.status(400).json({ message: 'Exam time has expired', examResultId: activeExam.id });
+        return;
+      }
+      
+      // Calculate time remaining
+      const timeRemaining = Math.max(0, durationInMs - (currentTime - startTime));
+      
+      res.status(200).json({ 
+        activeExam,
+        timeRemaining: Math.floor(timeRemaining / 1000), // in seconds
+        answeredQuestions: activeExam.examAnswers.length,
+        totalQuestions: activeExam.exam.examQuestions.length,
+      });
+    } catch (error) {
+      console.error('Error getting active exam:', error);
+      res.status(500).json({ message: 'Error getting active exam', error: (error as Error).message });
     }
   }
 };
