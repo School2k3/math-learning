@@ -40,7 +40,6 @@ model Chapter {
   id            Int       @id @default(autoincrement()) @map("chapter_id")
   grade         Int
   volume        Int       // 1 or 2
-  chapterNumber Int       @map("chapter_number")
   title         String
   
   // Relations
@@ -175,6 +174,7 @@ model ExamResult {
   score           Float
   startedAt       DateTime          @map("started_at")
   finishedAt      DateTime?         @map("finished_at")
+  isActive        Boolean           @default(true) @map("is_active")
   
   // Relations
   exam            Exam              @relation(fields: [examId], references: [id])

@@ -86,6 +86,27 @@ router.get('/lesson/:lessonId', questionController.getQuestionsByLesson);
 
 /**
  * @swagger
+ * /api/questions/exam/{examId}:
+ *   get:
+ *     summary: Get questions by exam
+ *     description: Retrieve all questions for a specific exam.
+ *     parameters:
+ *       - in: path
+ *         name: examId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Exam ID
+ *     responses:
+ *       200:
+ *         description: List of questions for the specified exam
+ *       500:
+ *         description: Server error
+ */
+router.get('/exam/:examId', questionController.getQuestionsByExamId);
+
+/**
+ * @swagger
  * /api/questions/{id}:
  *   get:
  *     summary: Get a question by ID
