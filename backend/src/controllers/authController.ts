@@ -11,8 +11,12 @@ import { generateToken, generateRefreshToken, verifyToken } from '../utils/jwt.j
 import { 
   RegisterRequestBody, 
   LoginRequestBody, 
-  RefreshTokenRequestBody 
+  RefreshTokenRequestBody,
+  OtpRequestBody,
+  OtpVerificationRequestBody
 } from '../types/auth.js';
+import { generateOtp, saveOtp, verifyOtp as validateOtp } from '../services/otpStore.js';
+import { sendOtpEmail } from '../services/emailService.js';
 
 const prisma = new PrismaClient();
 
@@ -55,7 +59,7 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Create user
+    // Create user but set isVerified to false until OTP verification
     const newUser = await prisma.user.create({
       data: {
         username,
@@ -64,15 +68,31 @@ export const register = async (req: Request<{}, {}, RegisterRequestBody>, res: R
         fullName,
         role,
         grade,
-        isVerified: true, // For simplicity, auto-verify users for now
+        isVerified: false, // User needs to verify email with OTP
         avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`
       }
     });
 
+    // Generate and send OTP
+    const otp = generateOtp();
+    saveOtp(email, otp);
+    
+    try {
+      await sendOtpEmail(email, otp);
+    } catch (emailError) {
+      console.error('Failed to send OTP email:', emailError);
+      // Continue with registration process even if email sending fails
+    }
+
     // Remove password hash from response
     const { passwordHash: _, ...userWithoutPassword } = newUser;
 
-    sendSuccessResponse(res, userWithoutPassword, 'User registered successfully', 201);
+    sendSuccessResponse(
+      res, 
+      userWithoutPassword, 
+      'User registered successfully. Please verify your email with the OTP sent to your email.', 
+      201
+    );
   } catch (error) {
     console.error('Registration error:', error);
     sendErrorResponse(res, 'Failed to register user');
@@ -236,5 +256,114 @@ export const logout = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Logout error:', error);
     sendErrorResponse(res, 'Failed to logout');
+  }
+};
+
+/**
+ * Request an OTP to verify email
+ * 
+ * @route POST /api/auth/request-otp
+ * @param {OtpRequestBody} req.body - Email for OTP request
+ * @returns {Object} Success message
+ */
+export const requestOtp = async (req: Request<{}, {}, OtpRequestBody>, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return sendBadRequestResponse(res, 'Email is required');
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return sendBadRequestResponse(res, 'Invalid email format');
+    }
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return sendBadRequestResponse(res, 'User not found');
+    }
+
+    // Generate and save OTP
+    const otp = generateOtp();
+    saveOtp(email, otp);
+
+    // Send OTP email
+    try {
+      await sendOtpEmail(email, otp);
+    } catch (error) {
+      console.error('Failed to send OTP email:', error);
+      return sendErrorResponse(res, 'Failed to send OTP email');
+    }
+
+    sendSuccessResponse(res, null, 'OTP sent to your email');
+  } catch (error) {
+    console.error('Request OTP error:', error);
+    sendErrorResponse(res, 'Failed to send OTP');
+  }
+};
+
+/**
+ * Verify OTP and mark user as verified
+ * 
+ * @route POST /api/auth/verify-otp
+ * @param {OtpVerificationRequestBody} req.body - Email and OTP
+ * @returns {Object} User data with tokens
+ */
+export const verifyOtp = async (req: Request<{}, {}, OtpVerificationRequestBody>, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return sendBadRequestResponse(res, 'Email and OTP are required');
+    }
+
+    // Verify OTP
+    const isValid = validateOtp(email, otp);
+    if (!isValid) {
+      return sendBadRequestResponse(res, 'Invalid or expired OTP');
+    }
+
+    // Update user to verified status
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return sendBadRequestResponse(res, 'User not found');
+    }
+
+    // Mark user as verified
+    await prisma.user.update({
+      where: { email },
+      data: { isVerified: true }
+    });
+
+    // Generate tokens for automatic login after verification
+    const tokenPayload = { id: user.id, username: user.username, role: user.role };
+    const accessToken = generateToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
+
+    sendSuccessResponse(res, {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        grade: user.grade,
+        avatarUrl: user.avatarUrl
+      }
+    }, 'Email verified successfully');
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    sendErrorResponse(res, 'Failed to verify OTP');
   }
 };

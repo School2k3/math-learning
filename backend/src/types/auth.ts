@@ -17,6 +17,21 @@ export interface RegisterRequestBody {
   grade?: number;
 }
 
+// Registration response after OTP verification
+export interface RegisterResponseBody {
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    fullName: string;
+    role: string;
+    grade?: number;
+    avatarUrl?: string;
+  };
+  accessToken: string;
+  refreshToken: string;
+}
+
 // Login request body
 export interface LoginRequestBody {
   username: string;
@@ -32,4 +47,15 @@ export interface TokenResponse {
 // Refresh token request body
 export interface RefreshTokenRequestBody {
   refreshToken: string;
+}
+
+// OTP request body
+export interface OtpRequestBody {
+  email: string;
+}
+
+// OTP verification request body
+export interface OtpVerificationRequestBody {
+  email: string;
+  otp: string;
 }

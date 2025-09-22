@@ -4,7 +4,9 @@ import {
   login, 
   refreshToken, 
   getMe,
-  logout
+  logout,
+  requestOtp,
+  verifyOtp
 } from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -210,5 +212,67 @@ router.get('/me', authenticate, getMe);
  *         description: Server error
  */
 router.post('/logout', authenticate, logout);
+
+/**
+ * @swagger
+ * /api/auth/request-otp:
+ *   post:
+ *     summary: Request an OTP to verify email
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: john@example.com
+ *     responses:
+ *       200:
+ *         description: OTP sent to email
+ *       400:
+ *         description: Bad request - Invalid input or user not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/request-otp', requestOtp);
+
+/**
+ * @swagger
+ * /api/auth/verify-otp:
+ *   post:
+ *     summary: Verify OTP and mark user as verified
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: john@example.com
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *       400:
+ *         description: Bad request - Invalid input, OTP expired, or user not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/verify-otp', verifyOtp);
 
 export default router;
