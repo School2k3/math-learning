@@ -19,10 +19,25 @@ This is the backend for a math learning application that uses TypeScript, Node.j
    npm install
    ```
 
-2. Configure your PostgreSQL database in `.env` file:
+2. Set up your environment variables:
+   
+   Copy the example environment file to create your own:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Then edit the `.env` file with your specific configuration:
    ```
    DATABASE_URL="postgresql://username:password@localhost:5432/math-learning"
+   JWT_SECRET="your_secure_random_secret_key"
    ```
+   
+   Generate a secure random JWT secret with:
+   ```bash
+   npm run generate:jwt-secret
+   ```
+   
+   ⚠️ **Important**: Make sure to set a secure `JWT_SECRET` for production environments.
 
 3. Database setup - choose one method:
    
