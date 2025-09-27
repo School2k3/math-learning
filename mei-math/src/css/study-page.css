@@ -18,6 +18,7 @@
   display: flex;
   gap: 16px;
   margin-bottom: 24px;
+  margin-left: 30px;
 }
 .study-semester-btns button {
   background: #eaf6fb;
@@ -68,6 +69,7 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
+  margin-left: 20px;
 }
 .study-content-info {
   background: #b6e6e6;
@@ -94,11 +96,12 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  margin-top: 30px; /* nếu muốn cả cụm lên cao */
+  margin-top: 30px;
+  margin-right: 80px; /* nếu muốn cả cụm lên cao */
 }
 
 .study-content-selects select + select {
-  margin-left: 12px;
+  margin-right: 12px;
 }
 
 .study-content-selects select {

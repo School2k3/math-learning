@@ -95,15 +95,16 @@ const Exams: React.FC = () => {
 
   return (
     <div>
-      <div style={{ marginTop: "-80px" }}>
+      <div style={{ marginTop: "-30px" }}>
           <Header bgWhite />
         </div>
       <div className="exams-container">
-        <div className="exams-title" style={{ textAlign: "center", fontWeight: 700, fontSize: "24px", color: "#23bdee", marginBottom: "24px" }}>
-          {examTitle}
-        </div>
+        
         <div className="exams-main-row">
           <div className="exams-main-left">
+            <div className="exams-title" style={{ textAlign: "center", fontWeight: 700, fontSize: "24px", color: "#23bdee", marginBottom: "24px" }}>
+          {examTitle}
+        </div>
             <div className="exams-question-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 {/* SVG và tiêu đề */}
@@ -127,6 +128,15 @@ const Exams: React.FC = () => {
               {/* Hiển thị câu hỏi hiện tại */}
               <div className="exams-question">
                 {examQuestions[current]?.question?.questionText}
+                {examQuestions[current]?.question?.imageUrl && (
+                  <div style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
+                    <img
+                      src={examQuestions[current].question.imageUrl}
+                      alt="Hình minh họa"
+                      style={{ maxWidth: 400, maxHeight: 140, display: "block" }}
+                    />
+                  </div>
+                )}
               </div>
               <div className="exams-options">
                 {examQuestions[current]?.question?.answers?.map((opt: any, idx: number) => (
@@ -155,10 +165,11 @@ const Exams: React.FC = () => {
                   borderRadius: "12px",
                   padding: "12px 48px",
                   marginTop: "18px",
-                  cursor: "pointer"
+                  cursor: "pointer",
+                  height: 48
                 }}
               >
-                Câu trước
+                Câu hỏi phía trước
               </button>
               <button
                 className="exams-next-btn"

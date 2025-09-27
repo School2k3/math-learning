@@ -60,8 +60,12 @@ const Pratice: React.FC = () => {
         <div style={{ marginTop: "-360px" }}>
           <Header bgWhite />
         </div>
+      ) : showIncorrect ? (
+        <div style={{ marginTop: "-270px" }}>
+          <Header bgWhite />
+        </div>
       ) : (
-        <div style={{ marginTop: "-250px" }}>
+        <div style={{ marginTop: "-30px" }}>
           <Header bgWhite />
         </div>
       )}
@@ -112,7 +116,42 @@ const Pratice: React.FC = () => {
         ) : !showIncorrect ? (
           <div className="pratice-question-block">
             <div className="pratice-question">
-              {questions[current]?.questionText}
+              <span
+                style={{
+                  fontWeight: 700,
+                  marginLeft: -22,
+                  color: "#1fdaf3ff",
+                  background: "#e0f7fa",
+                  borderRadius: "8px",
+                  padding: "4px 14px",
+                  fontSize: "20px",
+                  display: "inline-block",
+                  minWidth: 80,
+                  textAlign: "center",
+                  boxShadow: "0 1px 4px #0001",
+                }}
+              >
+                Câu {current + 1}:
+              </span>
+              <span style={{ fontSize: "18px", color: "#252641" }}>
+                {questions[current]?.questionText}
+              </span>
+              {questions[current]?.imageUrl && (
+                <div
+                  style={{
+                    marginTop: 22,
+                    alignItems: "center",
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <img
+                    src={questions[current].imageUrl}
+                    alt="Hình minh họa"
+                    style={{ maxWidth: 550, display: "block" }}
+                  />
+                </div>
+              )}
             </div>
             <div className="pratice-options">
               {questions[current]?.answers.map((ans: any, idx: number) => (

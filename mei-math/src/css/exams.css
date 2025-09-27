@@ -8,11 +8,11 @@
   gap: 48px;
 }
 .exams-main-left {
-  flex: 3;         /* Tăng chiều rộng phần bên trái */
+  flex: 3; /* Tăng chiều rộng phần bên trái */
   min-width: 0;
 }
 .exams-main-right {
-  flex: 1;         /* Giảm chiều rộng phần bên phải */
+  flex: 1; /* Giảm chiều rộng phần bên phải */
   min-width: 220px;
   max-width: 300px;
 }
@@ -25,7 +25,7 @@
   margin-bottom: 18px;
 }
 .exams-question-block {
-  margin-bottom: 24px;
+  margin-bottom: 12px; /* giảm margin */
 }
 .exams-question {
   font-size: 18px;
@@ -33,19 +33,32 @@
   margin-bottom: 18px;
   color: #252641;
 }
+.exams-question img {
+  margin-top: 8px;
+  max-width: 220px;
+  max-height: 140px;
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px #0001;
+  margin-left: auto;
+  margin-right: auto;
+}
 .exams-options {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px; /* giảm gap */
 }
 .exams-option {
   display: flex;
   align-items: center;
   background: #f7f7f7;
   border-radius: 8px;
-  padding: 12px 18px;
-  font-size: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 8px 12px; /* giảm padding */
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 .exams-option input[type="radio"] {
   margin-right: 16px;
@@ -58,8 +71,14 @@
 }
 .exams-action-row {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 18px;
+  justify-content: space-between;
+  margin-top: 10px; /* giảm margin */
+}
+.exams-prev-btn,
+.exams-next-btn {
+  padding: 8px 24px !important; /* giảm padding */
+  font-size: 15px !important;
+  margin-top: 0 !important;
 }
 .exams-question-list {
   margin-top: 12px;

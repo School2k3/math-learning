@@ -69,7 +69,7 @@ const [loadingExams, setLoadingExams] = useState(false);
       <Header bgWhite />
       <div className="study-main">
         <div className="study-sidebar">
-          <h2 className="study-title">Danh sách chủ điểm</h2>
+          <h2 className="study-title">Danh sách chương học</h2>
           <div className="study-semester-btns">
             {semesterOptions.map((sem) => (
               <button
@@ -103,12 +103,7 @@ const [loadingExams, setLoadingExams] = useState(false);
                   </span>
                   <div>
                     <div>{topic.title}</div> {/* Sửa lại từ topic.name thành topic.title */}
-                    <div className="study-topic-desc">
-                      Chủ điểm: {topic.topics ?? topic.chapterNumber}
-                    </div>
-                    <div className="study-topic-desc">
-                      Bài kiểm tra: {topic.tests ?? ""}
-                    </div>
+                    
                   </div>
                 </div>
               ))
@@ -125,11 +120,7 @@ const [loadingExams, setLoadingExams] = useState(false);
                 <option key={cls}>{cls}</option>
               ))}
             </select>
-            <select>
-              <option>Toàn bộ đề tài</option>
-              <option>Chủ điểm</option>
-              <option>Bài kiểm tra</option>
-            </select>
+
           </div>
           {/* Hiển thị title chapter đang chọn */}
           <div className="study-content-header">
@@ -171,7 +162,7 @@ const [loadingExams, setLoadingExams] = useState(false);
                     .map((lesson) => (
                       <div className="study-card" key={lesson.id}>
                         <div className="study-card-img">
-                          <img src="/public/mei-is.png" alt="card" />
+                          <img src={lesson.imageUrl || "/mei-is.png"} alt="card" />
                           <div className="study-card-label">Mei-Math</div>
                         </div>
                         <div

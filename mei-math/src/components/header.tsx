@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, NavLink } from "react-router-dom"; // Thêm NavLink
 import "../css/header.css";
 
 
@@ -20,22 +20,30 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
           placeholder="Tìm kiếm chủ điểm"
         />
         <nav className="header__nav">
-          <a href="/">Trang chủ</a>
-          <a href="/study">Vào học</a>
-          <a href="#">Đánh giá</a>
-          <a href="#">Tin tức</a>
-          <a href="#">Đổi quà</a>
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              isActive && location.pathname !== "/" ? "active" : ""
+            }
+          >
+            Trang chủ
+          </NavLink>
+          <NavLink to="/study" className={({ isActive }) => isActive ? "active" : ""}>Vào học</NavLink>
+          <NavLink to="/no" className={({ isActive }) => isActive ? "active" : ""}>Đánh giá</NavLink>
+          <NavLink to="/no" className={({ isActive }) => isActive ? "active" : ""}>Tin tức</NavLink>
+          <NavLink to="/no" className={({ isActive }) => isActive ? "active" : ""}>Đổi quà</NavLink>
         </nav>
         <div className="header__actions">
           <button
             className="header__login"
-            onClick={() => navigate("/auth?mode=login")}
+            onClick={() => navigate("/auth/login")}
           >
             Đăng nhập
           </button>
           <button
             className="header__register"
-            onClick={() => navigate("/src/auth/auth?mode=register")}
+            onClick={() => navigate("/auth/register")}
           >
             Đăng ký
           </button>

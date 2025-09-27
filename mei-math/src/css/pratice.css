@@ -1,7 +1,8 @@
 .pratice-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 32px 0;
+  padding: 12px 0; /* giảm padding */
+  min-height: 80vh; /* đảm bảo nội dung nằm trong 1 màn hình */
 }
 
 .pratice-header {
@@ -83,20 +84,35 @@
 }
 
 .pratice-question-block {
-  margin: 32px 0 0 0;
+  margin: 12px 0 0 0; /* giảm margin */
 }
 
 .pratice-question {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  margin-bottom: 24px;
+  margin-bottom: 10px; /* giảm margin */
   color: #252641;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.pratice-question img {
+  margin-top: 8px;
+  max-width: 360px;
+  max-height: 260px;
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px #0001;
 }
 
 .pratice-options {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 8px; /* giảm gap */
 }
 
 .pratice-option {
@@ -104,8 +120,8 @@
   align-items: center;
   background: #f7f7f7;
   border-radius: 8px;
-  padding: 12px 18px;
-  font-size: 16px;
+  padding: 8px 12px; /* giảm padding */
+  font-size: 15px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -123,19 +139,36 @@
 .pratice-action-row {
   display: flex;
   justify-content: center;
-  margin-top: 32px;
+  margin-top: 14px; /* giảm margin */
 }
 
 .pratice-submit-btn {
   background: #49bbbd;
   color: #fff;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   border: none;
   border-radius: 12px;
-  padding: 16px 80px;
+  padding: 10px 40px; /* giảm padding */
   cursor: pointer;
 }
+
+/* Style cho số thứ tự câu hỏi nổi bật hơn */
+.pratice-question-number {
+  font-weight: 700;
+  margin-right: 40px;
+  color: #21867a;
+  background: #e0f7fa;
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-size: 20px;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
+  box-shadow: 0 1px 4px #0001;
+  margin-bottom: 4px;
+}
+
 .pratice-finish-modal {
   margin-top: 0;
   /* hoặc margin-top: 32px; nếu muốn cách nhỏ */
