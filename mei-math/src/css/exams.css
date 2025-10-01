@@ -1,0 +1,91 @@
+.exams-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+.exams-main-row {
+  display: flex;
+  gap: 48px;
+}
+.exams-main-left {
+  flex: 3; /* Tăng chiều rộng phần bên trái */
+  min-width: 0;
+}
+.exams-main-right {
+  flex: 1; /* Giảm chiều rộng phần bên phải */
+  min-width: 220px;
+  max-width: 300px;
+}
+.exams-question-header {
+  display: flex;
+  align-items: center;
+  background: #b6e6e6;
+  border-radius: 8px;
+  padding: 16px 24px;
+  margin-bottom: 18px;
+}
+.exams-question-block {
+  margin-bottom: 12px; /* giảm margin */
+}
+.exams-question {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  color: #252641;
+}
+.exams-question img {
+  margin-top: 8px;
+  max-width: 220px;
+  max-height: 140px;
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px #0001;
+  margin-left: auto;
+  margin-right: auto;
+}
+.exams-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* giảm gap */
+}
+.exams-option {
+  display: flex;
+  align-items: center;
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 8px 12px; /* giảm padding */
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.exams-option input[type="radio"] {
+  margin-right: 16px;
+  accent-color: #49bbbd;
+  width: 20px;
+  height: 20px;
+}
+.exams-option-text {
+  color: #252641;
+}
+.exams-action-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px; /* giảm margin */
+}
+.exams-prev-btn,
+.exams-next-btn {
+  padding: 8px 24px !important; /* giảm padding */
+  font-size: 15px !important;
+  margin-top: 0 !important;
+}
+.exams-question-list {
+  margin-top: 12px;
+}
+.exams-question-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 12px;
+}
