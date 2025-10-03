@@ -1,10 +1,19 @@
-import React from "react";
-import { useNavigate, NavLink } from "react-router-dom"; // Thêm NavLink
+import React, { useState } from "react";
+import { useNavigate, NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import "../css/header.css";
-
 
 const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    setShowDropdown(false);
+    navigate("/");
+  };
 
   return (
     <header className={`header${bgWhite ? " header--white" : ""}`}>
@@ -35,18 +44,43 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
           <NavLink to="/no" className={({ isActive }) => isActive ? "active" : ""}>Đổi quà</NavLink>
         </nav>
         <div className="header__actions">
-          <button
-            className="header__login"
-            onClick={() => navigate("/auth/login")}
-          >
-            Đăng nhập
-          </button>
-          <button
-            className="header__register"
-            onClick={() => navigate("/auth/register")}
-          >
-            Đăng ký
-          </button>
+          {isAuthenticated && user ? (
+            <div className="header__user" onClick={() => setShowDropdown(!showDropdown)}>
+              <img
+                src={user.avatar || "/default-avatar.png"}
+                alt="User Avatar"
+                className="header__avatar"
+              />
+              <div className="header__user-info">
+                <span className="header__username">{user.fullName}</span>
+                <span className="header__grade">Lớp {user.grade}</span>
+              </div>
+              <span className="header__dropdown-arrow">▼</span>
+              
+              {showDropdown && (
+                <div className="header__dropdown">
+                  <button onClick={() => navigate("/profile")}>Thông tin cá nhân</button>
+                  <button onClick={() => navigate("/settings")}>Cài đặt</button>
+                  <button onClick={handleLogout}>Đăng xuất</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <button
+                className="header__login"
+                onClick={() => navigate("/auth/login")}
+              >
+                Đăng nhập
+              </button>
+              <button
+                className="header__register"
+                onClick={() => navigate("/auth/register")}
+              >
+                Đăng ký
+              </button>
+            </>
+          )}
         </div>
       </div>
     </header>

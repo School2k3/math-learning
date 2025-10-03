@@ -1,10 +1,11 @@
-.register-page {
+.otp-page {
   display: flex;
   min-height: 100vh;
   background: #fff;
 }
-.register-left {
-  flex: 1.7; /* tăng flex để ảnh chiếm nhiều không gian hơn */
+
+.otp-left {
+  flex: 1.7;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -14,15 +15,17 @@
   margin: 32px 0 32px 32px;
   position: relative;
 }
-.register-img {
-  width: 98%; /* tăng width */
-  max-width: 600px; /* tăng max-width */
-  height: 420px; /* đặt chiều cao cố định để ảnh luôn lớn */
+
+.otp-img {
+  width: 98%;
+  max-width: 600px;
+  height: 420px;
   object-fit: cover;
   border-radius: 32px;
   margin-bottom: 12px;
 }
-.register-img-caption {
+
+.otp-img-caption {
   position: absolute;
   bottom: 36px;
   left: 50%;
@@ -33,107 +36,125 @@
   text-shadow: 0 2px 8px #0006;
   text-align: center;
   width: 90%;
-  margin-bottom: 140px;
+  margin-bottom: 120px;
 }
-.register-right {
-  flex: 1.2; /* giảm flex để form nhỏ lại một chút */
+
+.otp-right {
+  flex: 1.2;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 0 48px;
 }
-.register-welcome {
+
+.otp-welcome {
   display: flex;
   gap: 12px;
   margin-bottom: 18px;
+  justify-content: center;
 }
-.register-tab {
-  background: #e0f7fa;
+
+.otp-tab {
+  background: #00cbbb;
   border: none;
   border-radius: 20px 20px 0 0;
   padding: 8px 28px;
   font-size: 1.1rem;
   font-weight: 500;
-  color: #00b6b6;
+  color: #fff;
   cursor: pointer;
   outline: none;
   transition: background 0.2s;
-  margin-left: 80px;
 }
-.register-tab-active {
-  background: #00cbbb;
-  color: #fff;
-}
-.register-desc {
+
+.otp-desc {
   margin-bottom: 24px;
   color: #666;
   font-size: 1rem;
+  text-align: center;
+  line-height: 1.5;
 }
-.register-form {
+
+.otp-form {
   display: flex;
   flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.otp-inputs {
+  display: flex;
   gap: 12px;
+  justify-content: center;
+  margin-bottom: 10px;
 }
-.register-label {
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 2px;
-  margin-top: 8px;
-  text-align: left;
-}
-.register-input {
-  border: 1.5px solid #b6e6e6;
-  border-radius: 20px;
-  padding: 10px 18px;
-  font-size: 1rem;
+
+.otp-input {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #b6e6e6;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
   outline: none;
-  margin-bottom: 4px;
-  transition: border 0.2s;
+  transition: border-color 0.2s;
 }
-.register-input:focus {
+
+.otp-input:focus {
   border-color: #00cbbb;
 }
-.register-password-row {
-  display: flex;
-  align-items: center;
-  position: relative;
+
+.otp-timer {
+  color: #666;
+  font-size: 0.9rem;
+  text-align: center;
 }
-.register-eye {
-  position: absolute;
-  right: 18px;
+
+.otp-resend-btn {
+  background: none;
+  border: none;
+  color: #00cbbb;
   cursor: pointer;
-  font-size: 1.2rem;
-  color: #00b6b6;
-  user-select: none;
+  text-decoration: underline;
+  font-size: 0.9rem;
 }
-.register-submit-btn {
+
+.otp-submit-btn {
   background: #23bdee;
   color: #fff;
   border: none;
   border-radius: 20px;
-  padding: 12px 0;
+  padding: 12px 40px;
   font-size: 1.1rem;
   font-weight: 600;
-  margin-top: 10px;
   cursor: pointer;
   transition: background 0.2s;
+  min-width: 200px;
 }
-.register-submit-btn:hover {
+
+.otp-submit-btn:hover {
   background: #00cbbb;
 }
-.register-login-btn {
-  width: 100%;
-  margin-top: 10px;
+
+.otp-submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.otp-back-btn {
   background: #f2f2f2;
   color: #252641;
   border: none;
   border-radius: 20px;
-  padding: 12px 0;
+  padding: 12px 40px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
+  min-width: 200px;
 }
-.register-login-btn:hover {
+
+.otp-back-btn:hover {
   background: #e0e0e0;
 }

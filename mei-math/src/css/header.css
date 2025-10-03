@@ -109,3 +109,79 @@ body {
 .header--practice {
   margin-top: -280px !important;
 }
+
+.header__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: #f0f8ff;
+  cursor: pointer;
+  position: relative;
+  border: 1px solid #00cbbb;
+}
+
+.header__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.header__user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.header__username {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.header__grade {
+  font-size: 12px;
+  color: #666;
+}
+
+.header__dropdown-arrow {
+  font-size: 10px;
+  color: #00cbbb;
+  margin-left: 4px;
+}
+
+.header__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 150px;
+  margin-top: 4px;
+}
+
+.header__dropdown button {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.header__dropdown button:hover {
+  background: #f8f8f8;
+}
+
+.header__dropdown button:last-child {
+  border-bottom: none;
+  color: #e74c3c;
+}

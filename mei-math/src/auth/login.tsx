@@ -1,10 +1,56 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { loginAPI } from "../api/loginAPI";
+import type { LoginRequest } from "../api/loginAPI"; // Thử import type
+import { useAuth } from "../contexts/AuthContext";
 import "../css/login.css";
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  // Lấy message từ OTP page
+  const successMessage = location.state?.message || "";
+  const prefillEmail = location.state?.email || "";
+
+  useEffect(() => {
+    // Prefill username nếu có email từ register
+    if (prefillEmail) {
+      setUsername(prefillEmail);
+    }
+  }, [prefillEmail]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const loginData: LoginRequest = {
+        username: username,
+        password: password,
+      };
+
+      const result = await loginAPI(loginData);
+
+      if (result.success && result.data) {
+        login(result.data.user, result.data.token, result.data.refreshToken);
+        navigate("/");
+      } else {
+        setError(result.message || "Đăng nhập thất bại");
+      }
+    } catch (error) {
+      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="login-page">
@@ -19,12 +65,28 @@ const Login: React.FC = () => {
         <div className="login-desc">
           Nền tảng tự học và ôn tập toán trực tuyến cho học sinh tiểu học
         </div>
-        <form className="login-form">
+        
+        {successMessage && (
+          <div style={{ color: "green", marginBottom: 10, textAlign: "center" }}>
+            {successMessage}
+          </div>
+        )}
+
+        {error && (
+          <div style={{ color: "red", marginBottom: 10, textAlign: "center" }}>
+            {error}
+          </div>
+        )}
+
+        <form className="login-form" onSubmit={handleLogin}>
           <label className="login-label">Tên đăng nhập</label>
           <input
             type="text"
             className="login-input"
             placeholder="Enter your User name"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
           />
           <label className="login-label">Mật khẩu</label>
           <div className="login-password-row">
@@ -32,6 +94,9 @@ const Login: React.FC = () => {
               type={showPassword ? "text" : "password"}
               className="login-input"
               placeholder="Enter your Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
             <span
               className="login-eye"
@@ -49,8 +114,12 @@ const Login: React.FC = () => {
               Quên mật khẩu
             </a>
           </div>
-          <button className="login-submit-btn" type="submit">
-            Đăng nhập
+          <button 
+            className="login-submit-btn" 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
           <button
             type="button"
