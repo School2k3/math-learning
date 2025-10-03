@@ -2,12 +2,51 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import "../css/pratice.css";
 import { fetchQuestionsByLesson } from "../api/praticeAPI";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
+
+// Component ScoreBar
+const ScoreBar: React.FC<{ 
+  score: number; 
+  correctCount: number; 
+  incorrectCount: number; 
+}> = ({ score, correctCount, incorrectCount }) => {
+  const progress = Math.min(score, 100);
+  
+  return (
+    <div className="score-bar-container">
+      <div className="score-progress-track">
+        <div className="score-indicators">
+          {[...Array(11)].map((_, i) => (
+            <div key={i} className="score-indicator" />
+          ))}
+        </div>
+        <div 
+          className="score-progress-fill"
+          style={{ width: `${progress}%` }}
+        />
+        <div 
+          className="score-trophy"
+          style={{ left: `${progress}%` }}
+        >
+          🏆
+        </div>
+      </div>
+      <div className="score-stats">
+        <span className="score-value">{score}/100</span>
+        <div className="score-counts">
+          <span className="correct-count">✅ {correctCount}</span>
+          <span className="incorrect-count">❌ {incorrectCount}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Pratice: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const lessonId = Number(searchParams.get("lessonId"));
 
   useEffect(() => {
@@ -23,23 +62,54 @@ const Pratice: React.FC = () => {
   const [showIncorrect, setShowIncorrect] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
+  const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const [usedQuestions, setUsedQuestions] = useState<Set<number>>(new Set());
+
+  // Hàm để chọn câu hỏi random
+  const getRandomQuestion = () => {
+    if (questions.length === 0) return 0;
+    
+    // Nếu đã dùng hết tất cả câu hỏi, reset lại
+    if (usedQuestions.size >= questions.length) {
+      setUsedQuestions(new Set());
+    }
+    
+    let randomIndex;
+    do {
+      randomIndex = Math.floor(Math.random() * questions.length);
+    } while (usedQuestions.has(randomIndex) && usedQuestions.size < questions.length);
+    
+    setUsedQuestions(prev => new Set([...prev, randomIndex]));
+    return randomIndex;
+  };
 
   // Sửa lại hàm handleSubmit cho đúng dữ liệu
   const handleSubmit = () => {
     if (selected === null) return;
     const isCorrect = questions[current].answers[selected]?.isCorrect;
     if (isCorrect) {
-      setCorrectCount(correctCount + 1);
+      const newCorrectCount = correctCount + 1;
+      const newScore = score + 10;
+      setCorrectCount(newCorrectCount);
+      setScore(newScore);
       setSelected(null);
       setShowIncorrect(false);
-      if (current < questions.length - 1) {
+      
+      // Kết thúc game khi đạt 100 điểm
+      if (newScore >= 100) {
+        setIsFinished(true);
+      } else if (current < questions.length - 1) {
         setCurrent(current + 1);
       } else {
-        setIsFinished(true);
+        // Hết câu hỏi nhưng chưa đạt 100 điểm, random câu hỏi mới
+        setCurrent(getRandomQuestion());
       }
     } else {
-      setIncorrectCount(incorrectCount + 1);
+      const newIncorrectCount = incorrectCount + 1;
+      const newScore = Math.max(0, score - 2); // Không cho điểm âm
+      setIncorrectCount(newIncorrectCount);
+      setScore(newScore);
       setShowIncorrect(true);
     }
   };
@@ -50,7 +120,12 @@ const Pratice: React.FC = () => {
     if (current < questions.length - 1) {
       setCurrent(current + 1);
     } else {
-      setIsFinished(true);
+      // Hết câu hỏi nhưng chưa đạt 100 điểm, random câu hỏi mới
+      if (score < 100) {
+        setCurrent(getRandomQuestion());
+      } else {
+        setIsFinished(true);
+      }
     }
   };
 
@@ -74,7 +149,7 @@ const Pratice: React.FC = () => {
           <div>Đang tải câu hỏi...</div>
         ) : isFinished ? (
           <div className="pratice-finish-modal">
-            <div style={{ textAlign: "center" }}>
+            <div style={{ marginTop: "28px", textAlign: "center" }}>
               {/* SVG pháo hoa đơn giản */}
               <svg width="120" height="120" viewBox="0 0 120 120">
                 <circle cx="60" cy="60" r="40" fill="#FFD700" opacity="0.5" />
@@ -96,10 +171,10 @@ const Pratice: React.FC = () => {
                   fontSize: "24px",
                   color: "#21867a",
                   fontWeight: "bold",
-                  marginTop: "18px",
+                  marginTop: "28px",
                 }}
               >
-                Chúc mừng bạn đã hoàn thành bài thực hành!
+                {score >= 100 ? "🎉 Xuất sắc! Bạn đã đạt 100 điểm!" : "Chúc mừng bạn đã hoàn thành bài thực hành!"}
               </div>
               <div
                 style={{
@@ -108,32 +183,72 @@ const Pratice: React.FC = () => {
                   color: "#252641",
                 }}
               >
-                Số câu đúng: <b>{correctCount}</b> &nbsp;|&nbsp; Số câu sai:{" "}
-                <b>{incorrectCount}</b>
+                Điểm số: <b style={{ color: "#FFD700", fontSize: "22px" }}>{score}/100</b>
+                <br />
+                Số câu đúng: <b style={{ color: "#4CAF50" }}>{correctCount}</b> &nbsp;|&nbsp; Số câu sai:{" "}
+                <b style={{ color: "#F44336" }}>{incorrectCount}</b>
               </div>
+              
+              {/* Nút về trang học tập */}
+              <button
+                onClick={() => navigate('/study')}
+                style={{
+                  background: "#49BBBD",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: "18px",
+                  border: "none",
+                  borderRadius: "12px",
+                  padding: "12px 32px",
+                  marginTop: "24px",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 8px rgba(73, 187, 189, 0.3)"
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = "#3da5a7";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = "#49BBBD";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                📚 Về trang học tập
+              </button>
             </div>
           </div>
         ) : !showIncorrect ? (
           <div className="pratice-question-block">
             <div className="pratice-question">
-              <span
-                style={{
-                  fontWeight: 700,
-                  marginLeft: -22,
-                  color: "#1fdaf3ff",
-                  background: "#e0f7fa",
-                  borderRadius: "8px",
-                  padding: "4px 14px",
-                  fontSize: "20px",
-                  display: "inline-block",
-                  minWidth: 80,
-                  textAlign: "center",
-                  boxShadow: "0 1px 4px #0001",
-                }}
-              >
-                Câu {current + 1}:
-              </span>
-              <span style={{ fontSize: "18px", color: "#252641" }}>
+              <div className="question-header-row">
+                <span
+                  style={{
+                    fontWeight: 700,
+                    color: "#1fdaf3ff",
+                    background: "#e0f7fa",
+                    borderRadius: "8px",
+                    padding: "4px 14px",
+                    fontSize: "30px",
+                    display: "inline-block",
+                    minWidth: 110,
+                    textAlign: "center",
+                    boxShadow: "0 1px 4px #0001",
+                  }}
+                >
+                  Câu {current + 1}:
+                </span>
+                
+                {/* Thanh điểm nằm bên phải */}
+                <div className="score-bar-inline">
+                  <ScoreBar 
+                    score={score} 
+                    correctCount={correctCount} 
+                    incorrectCount={incorrectCount} 
+                  />
+                </div>
+              </div>
+              <span style={{ fontSize: "28px", color: "#252641" }}>
                 {questions[current]?.questionText}
               </span>
               {questions[current]?.imageUrl && (

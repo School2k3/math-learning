@@ -22,9 +22,7 @@ export interface LoginResponse {
 }
 
 
-export const loginAPI = async (
-  loginData: LoginRequest
-): Promise<LoginResponse> => {
+
 
 export const loginAPI = async (loginData: LoginRequest): Promise<LoginResponse> => {
 
@@ -46,5 +44,5 @@ export const loginAPI = async (loginData: LoginRequest): Promise<LoginResponse> 
 
 };
 
-};
+
 
