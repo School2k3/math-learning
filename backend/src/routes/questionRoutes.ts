@@ -86,6 +86,27 @@ router.get('/lesson/:lessonId', questionController.getQuestionsByLesson);
 
 /**
  * @swagger
+ * /api/questions/lesson/{lessonId}/practice:
+ *   get:
+ *     summary: Get practice questions by lesson
+ *     description: Retrieve all practice questions for a specific lesson.
+ *     parameters:
+ *       - in: path
+ *         name: lessonId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Lesson ID
+ *     responses:
+ *       200:
+ *         description: List of practice questions for the specified lesson
+ *       500:
+ *         description: Server error
+ */
+router.get('/lesson/:lessonId/practice', questionController.getPracticeQuestionsByLesson);
+
+/**
+ * @swagger
  * /api/questions/exam/{examId}:
  *   get:
  *     summary: Get questions by exam
@@ -134,5 +155,37 @@ router.get('/exam/:examId', questionController.getQuestionsByExamId);
  *         description: Server error
  */
 router.get('/:id', questionController.getQuestionById);
+
+/**
+ * @swagger
+ * /api/questions/{id}/audio:
+ *   get:
+ *     summary: Get audio for a question
+ *     description: Retrieve the audio URL for a specific question by ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Question ID
+ *     responses:
+ *       200:
+ *         description: Question audio URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 audioUrl:
+ *                   type: string
+ *       404:
+ *         description: Question not found or audio not available
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id/audio', questionController.getQuestionAudio);
 
 export default router;
