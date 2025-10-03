@@ -21,9 +21,7 @@ export interface LoginResponse {
   };
 }
 
-export const loginAPI = async (
-  loginData: LoginRequest
-): Promise<LoginResponse> => {
+export const loginAPI = async (loginData: LoginRequest): Promise<LoginResponse> => {
   try {
     const response = await fetch("http://localhost:3000/api/auth/login", {
       method: "POST",
