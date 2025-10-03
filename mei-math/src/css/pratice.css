@@ -1,0 +1,175 @@
+.pratice-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 12px 0; /* giảm padding */
+  min-height: 80vh; /* đảm bảo nội dung nằm trong 1 màn hình */
+}
+
+.pratice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.pratice-title-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.pratice-star {
+  color: #49bbbd;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.pratice-title {
+  color: #23bdee;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.pratice-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #eaf6fb;
+  border-radius: 20px;
+  padding: 4px 16px;
+  font-size: 16px;
+  color: #252641;
+}
+
+.pratice-progress-bar {
+  margin-left: 32px;
+}
+
+.pratice-progress {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.pratice-progress-track {
+  display: flex;
+  gap: 4px;
+}
+
+.pratice-progress-dot {
+  width: 16px;
+  height: 16px;
+  background: #eaf6fb;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pratice-progress-score {
+  font-size: 16px;
+  color: #252641;
+  font-weight: 600;
+}
+
+.pratice-progress-correct {
+  color: #49bbbd;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pratice-progress-wrong {
+  color: #ff5252;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pratice-question-block {
+  margin: 12px 0 0 0; /* giảm margin */
+}
+
+.pratice-question {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 10px; /* giảm margin */
+  color: #252641;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.pratice-question img {
+  margin-top: 8px;
+  max-width: 360px;
+  max-height: 260px;
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px #0001;
+}
+
+.pratice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* giảm gap */
+}
+
+.pratice-option {
+  display: flex;
+  align-items: center;
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 8px 12px; /* giảm padding */
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.pratice-option input[type="radio"] {
+  margin-right: 16px;
+  accent-color: #49bbbd;
+  width: 20px;
+  height: 20px;
+}
+
+.pratice-option-text {
+  color: #252641;
+}
+
+.pratice-action-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px; /* giảm margin */
+}
+
+.pratice-submit-btn {
+  background: #49bbbd;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 40px; /* giảm padding */
+  cursor: pointer;
+}
+
+/* Style cho số thứ tự câu hỏi nổi bật hơn */
+.pratice-question-number {
+  font-weight: 700;
+  margin-right: 40px;
+  color: #21867a;
+  background: #e0f7fa;
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-size: 20px;
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
+  box-shadow: 0 1px 4px #0001;
+  margin-bottom: 4px;
+}
+
+.pratice-finish-modal {
+  margin-top: 0;
+  /* hoặc margin-top: 32px; nếu muốn cách nhỏ */
+}
