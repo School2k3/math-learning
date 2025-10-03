@@ -18,6 +18,10 @@ body {
   transform: translateX(-50%);
   background: #00cbbb;
   margin-top: -35px;
+
+
+  z-index: 1000; /* Thêm z-index cho header */
+
 }
 
 .header--white {
@@ -61,7 +65,11 @@ body {
 .header__nav a {
   color: #333;
   text-decoration: none;
+
   font-size: 18px;
+
+  font-size: 20px;
+
   font-weight: 500;
   transition: color 0.2s;
 }
@@ -120,6 +128,10 @@ body {
   cursor: pointer;
   position: relative;
   border: 1px solid #00cbbb;
+
+
+  z-index: 10000; /* Thêm z-index cho container */
+
 }
 
 .header__avatar {
@@ -160,7 +172,11 @@ body {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
   z-index: 1000;
+
+  z-index: 9999; /* Tăng z-index cao hơn */
+
   min-width: 150px;
   margin-top: 4px;
 }

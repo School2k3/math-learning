@@ -18,7 +18,11 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
   return (
     <header className={`header${bgWhite ? " header--white" : ""}`}>
       <div className="header__container">
-        <img
+
+      
+
+        <img style={{width:'100px',height:'100px',marginLeft: '100px'}}
+
           src="/public/logo-Photoroom.png"
           alt="MEI Logo"
           className="header__logo"
@@ -47,7 +51,10 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
           {isAuthenticated && user ? (
             <div className="header__user" onClick={() => setShowDropdown(!showDropdown)}>
               <img
+
                 src={user.avatar || "/default-avatar.png"}
+                src={user.avatar || "/public/defaut_avatar.jpg"}
+
                 alt="User Avatar"
                 className="header__avatar"
               />

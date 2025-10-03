@@ -21,9 +21,13 @@ export interface LoginResponse {
   };
 }
 
+
 export const loginAPI = async (
   loginData: LoginRequest
 ): Promise<LoginResponse> => {
+
+export const loginAPI = async (loginData: LoginRequest): Promise<LoginResponse> => {
+
   try {
     const response = await fetch("http://localhost:3000/api/auth/login", {
       method: "POST",
@@ -39,4 +43,8 @@ export const loginAPI = async (
     console.error("Lỗi khi gọi API đăng nhập:", error);
     throw new Error("Không thể kết nối đến server");
   }
+
 };
+
+};
+
