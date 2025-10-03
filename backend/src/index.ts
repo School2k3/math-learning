@@ -10,6 +10,7 @@ import lessonRoutes from './routes/lessonRoutes.js';
 import questionRoutes from './routes/questionRoutes.js';
 import answerRoutes from './routes/answerRoutes.js';
 import examRoutes from './routes/examRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -26,6 +27,7 @@ app.get('/', (_req: Request, res: Response) => {
   res.send('Math Learning API is running!');
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/chapters', chapterRoutes);
 app.use('/api/lessons', lessonRoutes);
 app.use('/api/questions', questionRoutes);
