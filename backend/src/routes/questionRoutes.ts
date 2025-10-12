@@ -1,5 +1,11 @@
 import express from 'express';
 import questionController from '../controllers/questionController.js';
+import { validateRequest } from '../middleware/validation.js';
+import { 
+  createQuestionSchema, 
+  updateQuestionSchema,
+  updateAnswersSchema
+} from '../schemas/question.schema.js';
 
 const router = express.Router();
 
@@ -187,5 +193,220 @@ router.get('/:id', questionController.getQuestionById);
  *         description: Server error
  */
 router.get('/:id/audio', questionController.getQuestionAudio);
+
+/**
+ * @swagger
+ * /api/questions:
+ *   post:
+ *     summary: Create a new question with answers
+ *     description: Create a new question with associated answers.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - questionText
+ *               - grade
+ *               - type
+ *               - answers
+ *             properties:
+ *               questionText:
+ *                 type: string
+ *                 description: Text of the question
+ *               imageUrl:
+ *                 type: string
+ *                 nullable: true
+ *                 description: URL to the question image
+ *               audioUrl:
+ *                 type: string
+ *                 nullable: true
+ *                 description: URL to the question audio
+ *               explanationText:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Text explaining the answer
+ *               explanationImg:
+ *                 type: string
+ *                 nullable: true
+ *                 description: URL to explanation image
+ *               grade:
+ *                 type: integer
+ *                 description: Grade level (1-5)
+ *               type:
+ *                 type: string
+ *                 enum: [practice, exam]
+ *                 description: Question type
+ *               answerType:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [combobox, text, choice]
+ *                 description: Type of answer mechanism
+ *               lessonId:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: ID of the related lesson
+ *               answers:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - answerText
+ *                     - isCorrect
+ *                   properties:
+ *                     answerText:
+ *                       type: string
+ *                       description: Text of the answer
+ *                     isCorrect:
+ *                       type: boolean
+ *                       description: Whether this is the correct answer
+ *     responses:
+ *       201:
+ *         description: Question created successfully
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
+ */
+router.post('/', validateRequest(createQuestionSchema), questionController.createQuestion);
+
+/**
+ * @swagger
+ * /api/questions/{id}:
+ *   put:
+ *     summary: Update a question
+ *     description: Update an existing question by ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Question ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               questionText:
+ *                 type: string
+ *                 description: Text of the question
+ *               imageUrl:
+ *                 type: string
+ *                 nullable: true
+ *                 description: URL to the question image
+ *               audioUrl:
+ *                 type: string
+ *                 nullable: true
+ *                 description: URL to the question audio
+ *               explanationText:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Text explaining the answer
+ *               explanationImg:
+ *                 type: string
+ *                 nullable: true
+ *                 description: URL to explanation image
+ *               grade:
+ *                 type: integer
+ *                 description: Grade level (1-5)
+ *               type:
+ *                 type: string
+ *                 enum: [practice, exam]
+ *                 description: Question type
+ *               answerType:
+ *                 type: string
+ *                 nullable: true
+ *                 enum: [combobox, text, choice]
+ *                 description: Type of answer mechanism
+ *               lessonId:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: ID of the related lesson
+ *     responses:
+ *       200:
+ *         description: Question updated successfully
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: Question not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id', validateRequest(updateQuestionSchema), questionController.updateQuestion);
+
+/**
+ * @swagger
+ * /api/questions/{id}/answers:
+ *   put:
+ *     summary: Update answers for a question
+ *     description: Update, add, or delete answers for an existing question.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Question ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   description: Answer ID (required for updating existing answers)
+ *                 answerText:
+ *                   type: string
+ *                   description: Text of the answer
+ *                 isCorrect:
+ *                   type: boolean
+ *                   description: Whether this is the correct answer
+ *                 _delete:
+ *                   type: boolean
+ *                   description: Set to true to delete this answer
+ *     responses:
+ *       200:
+ *         description: Answers updated successfully
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: Question not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id/answers', validateRequest(updateAnswersSchema), questionController.updateQuestionAnswers);
+
+/**
+ * @swagger
+ * /api/questions/{id}:
+ *   delete:
+ *     summary: Delete a question
+ *     description: Delete an existing question by ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Question ID
+ *     responses:
+ *       200:
+ *         description: Question deleted successfully
+ *       400:
+ *         description: Cannot delete question with existing practice or exam answers
+ *       404:
+ *         description: Question not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/:id', questionController.deleteQuestion);
 
 export default router;

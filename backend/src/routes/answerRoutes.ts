@@ -1,5 +1,11 @@
 import express from 'express';
 import answerController from '../controllers/answerController.js';
+import { validateRequest } from '../middleware/validation.js';
+import { 
+  createAnswerSchema,
+  updateAnswerSchema,
+  createMultipleAnswersSchema
+} from '../schemas/answer.schema.js';
 
 const router = express.Router();
 
@@ -83,5 +89,189 @@ router.get('/:id', answerController.getAnswerById);
  *         description: Server error
  */
 router.get('/correct/:questionId', answerController.getCorrectAnswers);
+
+/**
+ * @swagger
+ * /api/answers:
+ *   post:
+ *     summary: Create a new answer
+ *     description: Create a new answer for a specific question.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - questionId
+ *               - answerText
+ *               - isCorrect
+ *             properties:
+ *               questionId:
+ *                 type: integer
+ *                 description: ID of the question this answer belongs to
+ *               answerText:
+ *                 type: string
+ *                 description: Text of the answer
+ *               isCorrect:
+ *                 type: boolean
+ *                 description: Whether this is the correct answer
+ *     responses:
+ *       201:
+ *         description: Answer created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Answer'
+ *       400:
+ *         description: Validation error or question not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/', validateRequest(createAnswerSchema), answerController.createAnswer);
+
+/**
+ * @swagger
+ * /api/answers/batch:
+ *   post:
+ *     summary: Create multiple answers
+ *     description: Create multiple answers at once.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               required:
+ *                 - questionId
+ *                 - answerText
+ *                 - isCorrect
+ *               properties:
+ *                 questionId:
+ *                   type: integer
+ *                   description: ID of the question this answer belongs to
+ *                 answerText:
+ *                   type: string
+ *                   description: Text of the answer
+ *                 isCorrect:
+ *                   type: boolean
+ *                   description: Whether this is the correct answer
+ *     responses:
+ *       201:
+ *         description: Answers created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     answers:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Answer'
+ *       400:
+ *         description: Validation error or one or more questions not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/batch', validateRequest(createMultipleAnswersSchema), answerController.createMultipleAnswers);
+
+/**
+ * @swagger
+ * /api/answers/{id}:
+ *   put:
+ *     summary: Update an answer
+ *     description: Update an existing answer by ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Answer ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               answerText:
+ *                 type: string
+ *                 description: Text of the answer
+ *               isCorrect:
+ *                 type: boolean
+ *                 description: Whether this is the correct answer
+ *     responses:
+ *       200:
+ *         description: Answer updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Answer'
+ *       400:
+ *         description: Validation error or cannot change correctness of answers used in practice or exams
+ *       404:
+ *         description: Answer not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id', validateRequest(updateAnswerSchema), answerController.updateAnswer);
+
+/**
+ * @swagger
+ * /api/answers/{id}:
+ *   delete:
+ *     summary: Delete an answer
+ *     description: Delete an existing answer by ID. Cannot delete answers used in practice or exams, the only answer for a question, or the only correct answer.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Answer ID
+ *     responses:
+ *       200:
+ *         description: Answer deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Cannot delete the only answer, only correct answer, or answers used in practice or exams
+ *       404:
+ *         description: Answer not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/:id', answerController.deleteAnswer);
 
 export default router;

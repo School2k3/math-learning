@@ -366,4 +366,166 @@ router.get('/progress/:resultId', examController.getExamProgress);
  */
 router.get('/active/:userId', examController.getActiveExamForUser);
 
+/**
+ * @swagger
+ * /api/exams:
+ *   post:
+ *     summary: Create a new exam
+ *     description: Create a new exam with the specified details
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - grade
+ *               - durationMinutes
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Title of the exam
+ *               grade:
+ *                 type: integer
+ *                 description: Grade level for the exam
+ *               chapterId:
+ *                 type: integer
+ *                 description: ID of the chapter this exam is associated with (optional)
+ *               durationMinutes:
+ *                 type: integer
+ *                 description: Duration of the exam in minutes
+ *     responses:
+ *       201:
+ *         description: Exam created successfully
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Server error
+ */
+router.post('/', examController.createExam);
+
+/**
+ * @swagger
+ * /api/exams/{id}:
+ *   put:
+ *     summary: Update an exam
+ *     description: Update an existing exam with new details
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Exam ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: New title for the exam
+ *               grade:
+ *                 type: integer
+ *                 description: New grade level for the exam
+ *               chapterId:
+ *                 type: integer
+ *                 description: New chapter ID for the exam
+ *               durationMinutes:
+ *                 type: integer
+ *                 description: New duration of the exam in minutes
+ *     responses:
+ *       200:
+ *         description: Exam updated successfully
+ *       404:
+ *         description: Exam not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id', examController.updateExam);
+
+/**
+ * @swagger
+ * /api/exams/{id}:
+ *   delete:
+ *     summary: Delete an exam
+ *     description: Delete an exam and all its related questions
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Exam ID
+ *     responses:
+ *       200:
+ *         description: Exam deleted successfully
+ *       400:
+ *         description: Cannot delete exam with existing results
+ *       404:
+ *         description: Exam not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/:id', examController.deleteExam);
+
+/**
+ * @swagger
+ * /api/exams/questions:
+ *   post:
+ *     summary: Add a question to an exam
+ *     description: Associate an existing question with an exam
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - examId
+ *               - questionId
+ *             properties:
+ *               examId:
+ *                 type: integer
+ *                 description: ID of the exam
+ *               questionId:
+ *                 type: integer
+ *                 description: ID of the question to add
+ *     responses:
+ *       201:
+ *         description: Question added to exam successfully
+ *       400:
+ *         description: Missing required fields or question already in exam
+ *       404:
+ *         description: Exam or question not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/questions', examController.addQuestionToExam);
+
+/**
+ * @swagger
+ * /api/exams/questions/{id}:
+ *   delete:
+ *     summary: Remove a question from an exam
+ *     description: Delete the association between a question and an exam
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ExamQuestion ID
+ *     responses:
+ *       200:
+ *         description: Question removed from exam successfully
+ *       404:
+ *         description: Exam question not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/questions/:id', examController.removeQuestionFromExam);
+
 export default router;

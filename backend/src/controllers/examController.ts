@@ -613,6 +613,214 @@ const examController: Controller = {
       console.error('Error getting active exam:', error);
       res.status(500).json({ message: 'Error getting active exam', error: (error as Error).message });
     }
+  },
+
+  // Create a new exam
+  createExam: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { title, grade, chapterId, durationMinutes } = req.body;
+      
+      // Validate request body
+      if (!title || !grade || !durationMinutes) {
+        res.status(400).json({ message: 'Missing required fields: title, grade, or durationMinutes' });
+        return;
+      }
+
+      // Create new exam
+      const exam = await prisma.exam.create({
+        data: {
+          title,
+          grade,
+          chapterId: chapterId ? parseInt(chapterId) : null,
+          durationMinutes: parseInt(durationMinutes)
+        }
+      });
+      
+      res.status(201).json({ 
+        message: 'Exam created successfully',
+        exam 
+      });
+    } catch (error) {
+      console.error('Error creating exam:', error);
+      res.status(500).json({ message: 'Error creating exam', error: (error as Error).message });
+    }
+  },
+
+  // Update an existing exam
+  updateExam: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { title, grade, chapterId, durationMinutes } = req.body;
+      
+      // Find the exam to update
+      const exam = await prisma.exam.findUnique({
+        where: { id: parseInt(id) }
+      });
+      
+      if (!exam) {
+        res.status(404).json({ message: 'Exam not found' });
+        return;
+      }
+      
+      // Update the exam
+      const updatedExam = await prisma.exam.update({
+        where: { id: parseInt(id) },
+        data: {
+          title: title || exam.title,
+          grade: grade !== undefined ? parseInt(grade) : exam.grade,
+          chapterId: chapterId !== undefined ? (chapterId ? parseInt(chapterId) : null) : exam.chapterId,
+          durationMinutes: durationMinutes !== undefined ? parseInt(durationMinutes) : exam.durationMinutes
+        }
+      });
+      
+      res.status(200).json({ 
+        message: 'Exam updated successfully',
+        exam: updatedExam
+      });
+    } catch (error) {
+      console.error('Error updating exam:', error);
+      res.status(500).json({ message: 'Error updating exam', error: (error as Error).message });
+    }
+  },
+
+  // Delete an exam
+  deleteExam: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      
+      // Check if exam exists
+      const exam = await prisma.exam.findUnique({
+        where: { id: parseInt(id) }
+      });
+      
+      if (!exam) {
+        res.status(404).json({ message: 'Exam not found' });
+        return;
+      }
+      
+      // Check if exam is associated with any exam results
+      const examResults = await prisma.examResult.count({
+        where: { examId: parseInt(id) }
+      });
+      
+      if (examResults > 0) {
+        res.status(400).json({ 
+          message: 'Cannot delete exam that has associated results. Delete the exam results first.'
+        });
+        return;
+      }
+      
+      // Delete related examQuestions first
+      await prisma.examQuestion.deleteMany({
+        where: { examId: parseInt(id) }
+      });
+      
+      // Delete the exam
+      await prisma.exam.delete({
+        where: { id: parseInt(id) }
+      });
+      
+      res.status(200).json({ message: 'Exam deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting exam:', error);
+      res.status(500).json({ message: 'Error deleting exam', error: (error as Error).message });
+    }
+  },
+
+  // Add a question to an exam
+  addQuestionToExam: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { examId, questionId } = req.body;
+      
+      // Validate request body
+      if (!examId || !questionId) {
+        res.status(400).json({ message: 'Missing required fields: examId or questionId' });
+        return;
+      }
+      
+      // Check if exam exists
+      const exam = await prisma.exam.findUnique({
+        where: { id: parseInt(examId) }
+      });
+      
+      if (!exam) {
+        res.status(404).json({ message: 'Exam not found' });
+        return;
+      }
+      
+      // Check if question exists
+      const question = await prisma.question.findUnique({
+        where: { id: parseInt(questionId) }
+      });
+      
+      if (!question) {
+        res.status(404).json({ message: 'Question not found' });
+        return;
+      }
+      
+      // Check if the question is already in the exam
+      const existingExamQuestion = await prisma.examQuestion.findFirst({
+        where: {
+          examId: parseInt(examId),
+          questionId: parseInt(questionId)
+        }
+      });
+      
+      if (existingExamQuestion) {
+        res.status(400).json({ message: 'Question is already in the exam' });
+        return;
+      }
+      
+      // Add question to exam
+      const examQuestion = await prisma.examQuestion.create({
+        data: {
+          examId: parseInt(examId),
+          questionId: parseInt(questionId)
+        },
+        include: {
+          question: {
+            include: {
+              answers: true
+            }
+          }
+        }
+      });
+      
+      res.status(201).json({ 
+        message: 'Question added to exam successfully',
+        examQuestion
+      });
+    } catch (error) {
+      console.error('Error adding question to exam:', error);
+      res.status(500).json({ message: 'Error adding question to exam', error: (error as Error).message });
+    }
+  },
+
+  // Remove a question from an exam
+  removeQuestionFromExam: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      
+      // Check if exam question exists
+      const examQuestion = await prisma.examQuestion.findUnique({
+        where: { id: parseInt(id) }
+      });
+      
+      if (!examQuestion) {
+        res.status(404).json({ message: 'Exam question not found' });
+        return;
+      }
+      
+      // Delete the exam question
+      await prisma.examQuestion.delete({
+        where: { id: parseInt(id) }
+      });
+      
+      res.status(200).json({ message: 'Question removed from exam successfully' });
+    } catch (error) {
+      console.error('Error removing question from exam:', error);
+      res.status(500).json({ message: 'Error removing question from exam', error: (error as Error).message });
+    }
   }
 };
 
