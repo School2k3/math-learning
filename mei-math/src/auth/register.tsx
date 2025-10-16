@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+
 import { registerAPI,  } from "../api/registerAPI";
 import type { RegisterResponse } from "../api/registerAPI";
+
+
+
+
 import "../css/register.css";
 
 const Register: React.FC = () => {

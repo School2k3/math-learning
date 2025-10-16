@@ -6,9 +6,14 @@ import Pratice from "./pages/pratice";
 import Exams from "./pages/exams";
 import Login from "./auth/login";
 import Register from "./auth/register";
-import OTP from "./auth/otp"; // Thêm import này
+import OTP from "./auth/otp"; 
 import { AuthProvider } from "./contexts/AuthContext";
 import './App.css';
+import HomeAdmin from "./admin/home-admin";
+import ChapterAdmin from "./admin/chapter";
+import LessonAdmin from "./admin/lesson"; 
+import QuestionAdmin from "./admin/question"; 
+import ExamAdmin from "./admin/exam"; 
 
 function App() {
   return (
@@ -23,6 +28,11 @@ function App() {
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/otp" element={<OTP />} /> {/* Thêm route này */}
+          <Route path="/home-admin" element={<HomeAdmin />} />
+          <Route path="/admin/chapters" element={<ChapterAdmin />} /> {/* Thêm route này */}
+          <Route path="/admin/lessons" element={<LessonAdmin />} /> {/* Thêm route này */}
+          <Route path="/admin/questions" element={<QuestionAdmin />} /> {/* Thêm route này */}
+          <Route path="/admin/exams" element={<ExamAdmin />} /> {/* Thêm route này */}
         </Routes>
       </BrowserRouter>
     </AuthProvider>
