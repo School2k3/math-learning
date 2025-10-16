@@ -12,17 +12,14 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
   const handleLogout = () => {
     logout();
     setShowDropdown(false);
-    navigate("/");
+    navigate("/auth/login");
   };
 
   return (
     <header className={`header${bgWhite ? " header--white" : ""}`}>
       <div className="header__container">
-
-      
-
-        <img style={{width:'100px',height:'100px',marginLeft: '100px'}}
-
+        <img
+          style={{ width: "100px", height: "100px", marginLeft: "100px" }}
           src="/public/logo-Photoroom.png"
           alt="MEI Logo"
           className="header__logo"
@@ -42,19 +39,39 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
           >
             Trang chủ
           </NavLink>
-          <NavLink to="/study" className={({ isActive }) => isActive ? "active" : ""}>Vào học</NavLink>
-          <NavLink to="/no" className={({ isActive }) => isActive ? "active" : ""}>Đánh giá</NavLink>
-          <NavLink to="/no" className={({ isActive }) => isActive ? "active" : ""}>Tin tức</NavLink>
-          <NavLink to="/no" className={({ isActive }) => isActive ? "active" : ""}>Đổi quà</NavLink>
+          <NavLink
+            to="/study"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            Vào học
+          </NavLink>
+          <NavLink
+            to="/no"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            Đánh giá
+          </NavLink>
+          <NavLink
+            to="/no"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            Tin tức
+          </NavLink>
+          <NavLink
+            to="/no"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            Đổi quà
+          </NavLink>
         </nav>
         <div className="header__actions">
           {isAuthenticated && user ? (
-            <div className="header__user" onClick={() => setShowDropdown(!showDropdown)}>
+            <div
+              className="header__user"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
               <img
-
-                src={user.avatar || "/default-avatar.png"}
                 src={user.avatar || "/public/defaut_avatar.jpg"}
-
                 alt="User Avatar"
                 className="header__avatar"
               />
@@ -63,10 +80,12 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
                 <span className="header__grade">Lớp {user.grade}</span>
               </div>
               <span className="header__dropdown-arrow">▼</span>
-              
+
               {showDropdown && (
                 <div className="header__dropdown">
-                  <button onClick={() => navigate("/profile")}>Thông tin cá nhân</button>
+                  <button onClick={() => navigate("/profile")}>
+                    Thông tin cá nhân
+                  </button>
                   <button onClick={() => navigate("/settings")}>Cài đặt</button>
                   <button onClick={handleLogout}>Đăng xuất</button>
                 </div>

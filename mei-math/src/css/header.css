@@ -20,6 +20,10 @@ body {
   margin-top: -35px;
 
 
+
+  z-index: 1000; /* Thêm z-index cho header */
+
+
   z-index: 1000; /* Thêm z-index cho header */
 
 }
@@ -66,7 +70,11 @@ body {
   color: #333;
   text-decoration: none;
 
+
   font-size: 18px;
+
+  font-size: 20px;
+
 
   font-size: 20px;
 
@@ -130,7 +138,11 @@ body {
   border: 1px solid #00cbbb;
 
 
+
   z-index: 10000; /* Thêm z-index cho container */
+
+
+
 
 }
 
@@ -173,9 +185,13 @@ body {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
+
   z-index: 1000;
 
   z-index: 9999; /* Tăng z-index cao hơn */
+
+
+
 
   min-width: 150px;
   margin-top: 4px;

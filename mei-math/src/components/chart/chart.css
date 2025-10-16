@@ -1,0 +1,142 @@
+/* Chart Container Styles */
+.chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  transition: all 0.2s ease;
+}
+
+.chart-container:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.chart-title {
+  margin: 0 0 16px 0;
+  color: #212529;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Charts Grid Layout */
+.charts-section {
+  margin-bottom: 32px;
+}
+
+.charts-section h3 {
+  margin: 0 0 24px 0;
+  color: #212529;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.charts-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.charts-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+/* Chart specific styles */
+.chart-container .recharts-tooltip-cursor {
+  fill: rgba(35, 189, 238, 0.1);
+}
+
+.chart-container .recharts-cartesian-axis-tick-value {
+  font-size: 12px;
+  fill: #6c757d;
+}
+
+.chart-container .recharts-legend-item-text {
+  font-size: 12px;
+  color: #495057 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .charts-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .charts-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .charts-grid,
+  .charts-grid-2,
+  .charts-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .chart-container {
+    padding: 16px;
+  }
+
+  .chart-title {
+    font-size: 16px;
+  }
+}
+
+/* Loading State */
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Error State */
+.chart-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #dc3545;
+  font-size: 14px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Custom Tooltip Styles */
+.custom-tooltip {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.custom-tooltip .label {
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 8px;
+}
+
+.custom-tooltip .value {
+  color: #495057;
+  font-size: 14px;
+}

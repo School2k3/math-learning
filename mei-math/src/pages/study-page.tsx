@@ -27,8 +27,20 @@ const [loadingExams, setLoadingExams] = useState(false);
     const grade = Number(selectedClass.replace("Lớp ", ""));
     const volume = selectedSemester === "Học kỳ 1" ? 1 : 2;
     setLoading(true);
+    
+    // Reset selectedChapterId khi thay đổi lớp
+    setSelectedChapterId(null);
+    
     fetchChapters(grade, volume)
-      .then((data) => setTopics(data.chapters ?? [])) // Sửa chỗ này
+      .then((data) => {
+        const chapters = data.chapters ?? [];
+        setTopics(chapters);
+        
+        // Tự động chọn chapter đầu tiên khi có dữ liệu
+        if (chapters.length > 0) {
+          setSelectedChapterId(chapters[0].id);
+        }
+      })
       .catch(() => setTopics([]))
       .finally(() => setLoading(false));
   }, [selectedClass, selectedSemester]);
@@ -56,13 +68,6 @@ const [loadingExams, setLoadingExams] = useState(false);
       setExams([]);
     }
   }, [selectedChapterId]);
-
-  useEffect(() => {
-    if (topics.length > 0 && !selectedChapterId) {
-      setSelectedChapterId(topics[0].id);
-    }
-    // eslint-disable-next-line
-  }, [topics]);
 
   return (
     <div>
@@ -101,7 +106,7 @@ const [loadingExams, setLoadingExams] = useState(false);
                       />
                     </svg>
                   </span>
-                  <div>
+                  <div style={{fontSize: "20px", lineHeight: "1.5", fontWeight: 500, color: "#252641",textAlign: "center"}}>
                     <div>{topic.title}</div> {/* Sửa lại từ topic.name thành topic.title */}
                     
                   </div>
@@ -197,7 +202,7 @@ const [loadingExams, setLoadingExams] = useState(false);
                             <span
                               className="study-card-action-icon"
                               style={{ color: "#252641" }}
-                              onClick={() => navigate(`/pratice?lessonId=${lesson.id}`)}
+                              onClick={() => navigate(`/pratice?lessonId=${lesson.id}&title=${encodeURIComponent(lesson.title)}`)}
                             >
                               {/* SVG thực hành */}
                               <svg

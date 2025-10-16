@@ -76,9 +76,13 @@ model Question {
   grade          Int
   type           String            // practice, exam
 
+
   answerType     String?           @map("answer_type") // combobox, text, choice
 
   answerType     String?            @map("answer_type") // combobox, text, choice
+
+
+  answerType     String?           @map("answer_type") // combobox, text, choice
 
   lessonId       Int?              @map("lesson_id")
   createdAt      DateTime          @default(now()) @map("created_at")

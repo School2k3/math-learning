@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import "../css/pratice.css";
-import { fetchQuestionsByLesson } from "../api/praticeAPI";
+import { fetchQuestionsByLesson, fetchQuestionAudio } from "../api/praticeAPI";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 // Component ScoreBar
@@ -46,6 +46,7 @@ const Pratice: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
+  const lessonTitle = searchParams.get("title") || "";
   const navigate = useNavigate();
   const lessonId = Number(searchParams.get("lessonId"));
 
@@ -65,6 +66,53 @@ const Pratice: React.FC = () => {
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [usedQuestions, setUsedQuestions] = useState<Set<number>>(new Set());
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+
+  // Hàm phát audio
+  const handlePlayAudio = async () => {
+    try {
+      setIsPlayingAudio(true);
+      const currentQuestion = questions[current];
+      if (!currentQuestion?.id) return;
+
+      const audioData = await fetchQuestionAudio(currentQuestion.id);
+      if (audioData.audioUrl) {
+        // Dừng audio cũ nếu đang phát
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.currentTime = 0;
+        }
+
+        const audio = new Audio(audioData.audioUrl);
+        setAudioElement(audio);
+        
+        audio.onended = () => {
+          setIsPlayingAudio(false);
+        };
+        
+        audio.onerror = () => {
+          setIsPlayingAudio(false);
+          console.error("Không thể phát audio");
+        };
+
+        await audio.play();
+      }
+    } catch (error) {
+      setIsPlayingAudio(false);
+      console.error("Lỗi khi phát audio:", error);
+    }
+  };
+
+  // Cleanup audio khi component unmount
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+    };
+  }, [audioElement]);
 
   // Hàm để chọn câu hỏi random
   const getRandomQuestion = () => {
@@ -220,24 +268,66 @@ const Pratice: React.FC = () => {
           </div>
         ) : !showIncorrect ? (
           <div className="pratice-question-block">
+            {/* Thêm dòng này phía trên Câu */}
+            <div style={{ fontSize: "22px", fontWeight: 600, color: "#21867a", marginBottom: 16,textAlign: "left" }}>
+              Phần thực hành: {lessonTitle}
+            </div>
             <div className="pratice-question">
               <div className="question-header-row">
-                <span
-                  style={{
-                    fontWeight: 700,
-                    color: "#1fdaf3ff",
-                    background: "#e0f7fa",
-                    borderRadius: "8px",
-                    padding: "4px 14px",
-                    fontSize: "30px",
-                    display: "inline-block",
-                    minWidth: 110,
-                    textAlign: "center",
-                    boxShadow: "0 1px 4px #0001",
-                  }}
-                >
-                  Câu {current + 1}:
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <span
+                    style={{
+                      fontWeight: 500,
+                      color: "#1fdaf3ff",
+                      background: "#e0f7fa",
+                      borderRadius: "8px",
+                      padding: "4px 14px",
+                      fontSize: "22px",
+                      display: "inline-block",
+                      minWidth: 110,
+                      textAlign: "left",
+                      boxShadow: "0 1px 4px #0001",
+                    }}
+                  >
+                    Câu {current + 1}:
+                  </span>
+                  
+                  {/* Icon Loa */}
+                  <button
+                    onClick={handlePlayAudio}
+                    disabled={isPlayingAudio}
+                    style={{
+                      background: isPlayingAudio ? "#ff9800" : "#4CAF50",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: "40px",
+                      height: "40px",
+                      cursor: isPlayingAudio ? "not-allowed" : "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "18px",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                      transition: "all 0.3s ease",
+                      opacity: isPlayingAudio ? 0.7 : 1
+                    }}
+                    onMouseOver={(e) => {
+                      if (!isPlayingAudio) {
+                        e.currentTarget.style.background = "#45a049";
+                        e.currentTarget.style.transform = "scale(1.1)";
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (!isPlayingAudio) {
+                        e.currentTarget.style.background = "#4CAF50";
+                        e.currentTarget.style.transform = "scale(1)";
+                      }
+                    }}
+                    title={isPlayingAudio ? "Đang phát..." : "Nghe câu hỏi"}
+                  >
+                    {isPlayingAudio ? "⏸️" : "🔊"}
+                  </button>
+                </div>
                 
                 {/* Thanh điểm nằm bên phải */}
                 <div className="score-bar-inline">
@@ -248,7 +338,7 @@ const Pratice: React.FC = () => {
                   />
                 </div>
               </div>
-              <span style={{ fontSize: "28px", color: "#252641" }}>
+              <span style={{ fontSize: "22px", color: "#252641" }}>
                 {questions[current]?.questionText}
               </span>
               {questions[current]?.imageUrl && (
@@ -263,7 +353,7 @@ const Pratice: React.FC = () => {
                   <img
                     src={questions[current].imageUrl}
                     alt="Hình minh họa"
-                    style={{ maxWidth: 550, display: "block" }}
+                    style={{ maxWidth: 650, display: "block" }}
                   />
                 </div>
               )}

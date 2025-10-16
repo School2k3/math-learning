@@ -142,6 +142,64 @@ const questionController: Controller = {
       res.status(500).json({ message: 'Error getting questions by exam', error: (error as Error).message });
     }
   },
+  
+  // Get practice questions by lesson
+  getPracticeQuestionsByLesson: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { lessonId } = req.params;
+      
+      const questions = await prisma.question.findMany({
+        where: { 
+          lessonId: parseInt(lessonId),
+          type: 'practice' // Only get practice questions
+        },
+        include: {
+          answers: true, // Include associated answers
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      
+      res.status(200).json({ questions });
+    } catch (error) {
+      console.error('Error getting practice questions by lesson:', error);
+      res.status(500).json({ message: 'Error getting practice questions by lesson', error: (error as Error).message });
+    }
+  },
+
+  // Get audio by question ID
+  getQuestionAudio: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      
+      const question = await prisma.question.findUnique({
+        where: { id: parseInt(id) },
+        select: { 
+          id: true,
+          audioUrl: true,
+        },
+      });
+      
+      if (!question) {
+        res.status(404).json({ message: 'Question not found' });
+        return;
+      }
+      
+      if (!question.audioUrl) {
+        res.status(404).json({ message: 'Audio not found for this question' });
+        return;
+      }
+      
+      res.status(200).json({ 
+        id: question.id,
+        audioUrl: question.audioUrl 
+      });
+    } catch (error) {
+      console.error('Error getting question audio:', error);
+      res.status(500).json({ message: 'Error getting question audio', error: (error as Error).message });
+    }
+  }
 };
 
 export default questionController;
