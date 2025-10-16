@@ -1,0 +1,290 @@
+/* Import base admin styles */
+@import "./home-admin.css";
+
+/* Lesson specific styles */
+.lesson-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.lesson-title h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #212529;
+}
+
+.lesson-title p {
+  margin: 4px 0 0 0;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.btn-add {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* Table Container */
+.lesson-table-container {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+/* Table Styles */
+.lesson-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 1000px;
+}
+
+.lesson-table thead {
+  background: #f8f9fa;
+}
+
+.lesson-table th {
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #e9ecef;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.lesson-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.lesson-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.lesson-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Add row highlighting */
+.add-row {
+  background: #e3f2fd !important;
+}
+
+.add-row:hover {
+  background: #e3f2fd !important;
+}
+
+/* Cell content styles */
+.lesson-title-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.chapter-cell {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #495057;
+}
+
+.media-cell {
+  text-align: center;
+}
+
+.media-available {
+  color: #28a745;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.media-null {
+  color: #dc3545;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Form Controls */
+.input-field,
+.select-field {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+  min-width: 120px;
+}
+
+.input-field:focus,
+.select-field:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.select-field {
+  cursor: pointer;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-edit,
+.btn-delete,
+.btn-save,
+.btn-cancel {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-edit {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #138496;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #c82333;
+}
+
+.btn-save {
+  background: #28a745;
+  color: white;
+}
+
+.btn-save:hover {
+  background: #218838;
+}
+
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background: #5a6268;
+}
+
+/* Column widths */
+.lesson-table th:nth-child(1),
+.lesson-table td:nth-child(1) {
+  width: 50px;
+}
+.lesson-table th:nth-child(2),
+.lesson-table td:nth-child(2) {
+  width: 25%;
+}
+.lesson-table th:nth-child(3),
+.lesson-table td:nth-child(3) {
+  width: 30%;
+}
+.lesson-table th:nth-child(4),
+.lesson-table td:nth-child(4) {
+  width: 15%;
+}
+.lesson-table th:nth-child(5),
+.lesson-table td:nth-child(5) {
+  width: 15%;
+}
+.lesson-table th:nth-child(6),
+.lesson-table td:nth-child(6) {
+  width: 15%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lesson-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .lesson-table {
+    font-size: 12px;
+  }
+
+  .lesson-table th,
+  .lesson-table td {
+    padding: 8px 6px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .btn-edit,
+  .btn-delete,
+  .btn-save,
+  .btn-cancel {
+    min-width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
+
+  .lesson-title-cell,
+  .chapter-cell {
+    max-width: 150px;
+  }
+}
+
+/* Scrollable table on small screens */
+@media (max-width: 576px) {
+  .lesson-table-container {
+    overflow-x: auto;
+  }
+
+  .lesson-table {
+    min-width: 800px;
+  }
+}

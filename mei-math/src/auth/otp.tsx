@@ -114,7 +114,7 @@ const OTP: React.FC = () => {
     <div className="otp-page">
       <div className="otp-left">
         <img src="/img-auth.png" alt="Học tập với MEI" className="otp-img" />
-        <div className="otp-img-caption">Học Tập dễ dàng với MEI</div>
+        <div style={{marginBottom: "12px"}} className="otp-img-caption">Học Tập dễ dàng với MEI</div>
       </div>
       <div className="otp-right">
         <div className="otp-welcome">

@@ -32,6 +32,22 @@ const Login: React.FC = () => {
     setError("");
 
     try {
+      // Kiểm tra tài khoản admin trước khi gọi API
+      if (username === "admin" && password === "admin") {
+        // Tạo user admin giả lập
+        const adminUser = {
+          id: 0,
+          username: "admin",
+          email: "admin@mei.com",
+          role: "admin",
+          fullName: "Administrator",
+        };
+
+        login(adminUser, "admin-token", "admin-refresh-token");
+        navigate("/home-admin");
+        return;
+      }
+
       const loginData: LoginRequest = {
         username: username,
         password: password,
@@ -41,7 +57,13 @@ const Login: React.FC = () => {
 
       if (result.success && result.data) {
         login(result.data.user, result.data.token, result.data.refreshToken);
-        navigate("/");
+
+        // Kiểm tra role từ API response để điều hướng
+        if (result.data.user.role === "admin") {
+          navigate("/home-admin");
+        } else {
+          navigate("/");
+        }
       } else {
         setError(result.message || "Đăng nhập thất bại");
       }
@@ -55,7 +77,11 @@ const Login: React.FC = () => {
   return (
     <div className="login-page">
       <div className="login-left">
-        <img src="/img-auth.png" alt="Học tập dễ dàng với MEI" className="login-img" />
+        <img
+          src="/img-auth.png"
+          alt="Học tập dễ dàng với MEI"
+          className="login-img"
+        />
         <div className="login-img-caption">Học tập dễ dàng với MEI</div>
       </div>
       <div className="login-right">
@@ -65,15 +91,27 @@ const Login: React.FC = () => {
         <div className="login-desc">
           Nền tảng tự học và ôn tập toán trực tuyến cho học sinh tiểu học
         </div>
-        
+
         {successMessage && (
-          <div style={{ color: "green", marginBottom: 10, textAlign: "center" }}>
+          <div
+            style={{
+              color: "green",
+              marginBottom: 10,
+              textAlign: "center",
+            }}
+          >
             {successMessage}
           </div>
         )}
 
         {error && (
-          <div style={{ color: "red", marginBottom: 10, textAlign: "center" }}>
+          <div
+            style={{
+              color: "red",
+              marginBottom: 10,
+              textAlign: "center",
+            }}
+          >
             {error}
           </div>
         )}
@@ -114,8 +152,8 @@ const Login: React.FC = () => {
               Quên mật khẩu
             </a>
           </div>
-          <button 
-            className="login-submit-btn" 
+          <button
+            className="login-submit-btn"
             type="submit"
             disabled={loading}
           >
