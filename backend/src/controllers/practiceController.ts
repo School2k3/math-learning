@@ -61,6 +61,21 @@ const practiceController: Controller = {
         res.status(404).json({ message: 'Answer not found' });
         return;
       }
+
+      // Get current practice session to check if it's completed
+      const currentSession = await prisma.practiceSession.findUnique({
+        where: { id: parseInt(practiceId) }
+      });
+
+      if (!currentSession) {
+        res.status(404).json({ message: 'Practice session not found' });
+        return;
+      }
+
+      if (currentSession.finishedAt) {
+        res.status(400).json({ message: 'This practice session is already completed' });
+        return;
+      }
       
       // Check if an answer for this question already exists in this practice session
       const existingAnswer = await prisma.practiceAnswer.findFirst({
@@ -71,8 +86,22 @@ const practiceController: Controller = {
       });
       
       let practiceAnswer;
+      let scoreChange = 0;
+      
+      // Calculate score change: +10 for correct, -2 for incorrect
+      scoreChange = answer.isCorrect ? 10 : -2;
       
       if (existingAnswer) {
+        // If answer changes from correct to incorrect or vice versa, adjust score accordingly
+        if (existingAnswer.isCorrect !== answer.isCorrect) {
+          // If previous was correct and new is incorrect: -12 points (-10 -2)
+          // If previous was incorrect and new is correct: +12 points (+10 +2)
+          scoreChange = answer.isCorrect ? 12 : -12;
+        } else {
+          // No change in correctness, no score change
+          scoreChange = 0;
+        }
+        
         // Update the existing answer
         practiceAnswer = await prisma.practiceAnswer.update({
           where: { id: existingAnswer.id },
@@ -92,23 +121,45 @@ const practiceController: Controller = {
           },
         });
         
-        // Update the practice session total questions count
+        // Update the practice session total questions count and score
         await prisma.practiceSession.update({
           where: { id: parseInt(practiceId) },
           data: {
             totalQuestions: {
               increment: 1,
             },
-            score: {
-              increment: answer.isCorrect ? 1 : 0,
-            },
           },
         });
       }
       
+      // Update the score
+      const updatedSession = await prisma.practiceSession.update({
+        where: { id: parseInt(practiceId) },
+        data: {
+          score: {
+            increment: scoreChange,
+          },
+        },
+      });
+      
+      // Check if the score has reached 100 or more
+      let practiceCompleted = false;
+      if (updatedSession.score >= 100 && !updatedSession.finishedAt) {
+        await prisma.practiceSession.update({
+          where: { id: parseInt(practiceId) },
+          data: {
+            finishedAt: new Date(),
+          },
+        });
+        practiceCompleted = true;
+      }
+      
       res.status(201).json({ 
         practiceAnswer,
-        isCorrect: answer.isCorrect
+        isCorrect: answer.isCorrect,
+        score: updatedSession.score,
+        scoreChange,
+        practiceCompleted
       });
     } catch (error) {
       console.error('Error saving practice answer:', error);
@@ -176,6 +227,48 @@ const practiceController: Controller = {
     } catch (error) {
       console.error('Error getting practice history:', error);
       res.status(500).json({ message: 'Error getting practice history', error: (error as Error).message });
+    }
+  },
+
+  // Get current score for a practice session
+  getCurrentScore: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { practiceId } = req.params;
+      
+      const practiceSession = await prisma.practiceSession.findUnique({
+        where: { id: parseInt(practiceId) },
+        include: {
+          practiceAnswers: {
+            include: {
+              question: true,
+              chosenAnswer: true
+            }
+          }
+        }
+      });
+      
+      if (!practiceSession) {
+        res.status(404).json({ message: 'Practice session not found' });
+        return;
+      }
+      
+      // Get total answered questions and correct answers
+      const totalAnswered = practiceSession.practiceAnswers.length;
+      const correctAnswers = practiceSession.practiceAnswers.filter(answer => answer.isCorrect).length;
+      const incorrectAnswers = totalAnswered - correctAnswers;
+      
+      res.status(200).json({ 
+        score: practiceSession.score,
+        totalAnswered,
+        correctAnswers,
+        incorrectAnswers,
+        pointsToComplete: Math.max(0, 100 - practiceSession.score),
+        isCompleted: practiceSession.finishedAt !== null,
+        practiceSession
+      });
+    } catch (error) {
+      console.error('Error getting practice score:', error);
+      res.status(500).json({ message: 'Error getting practice score', error: (error as Error).message });
     }
   }
 };
