@@ -111,7 +111,6 @@ model Answer {
 model PracticeSession {
   id              Int               @id @default(autoincrement()) @map("practice_id")
   userId          Int               @map("user_id")
-  topic           String
   score           Float
   totalQuestions  Int               @map("total_questions")
   startedAt       DateTime          @map("started_at")

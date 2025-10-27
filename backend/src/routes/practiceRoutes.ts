@@ -25,9 +25,6 @@ const router = express.Router();
  *               lessonId:
  *                 type: integer
  *                 description: ID of the lesson (optional)
- *               topic:
- *                 type: string
- *                 description: Topic of the practice session
  *     responses:
  *       201:
  *         description: Practice session created or updated successfully

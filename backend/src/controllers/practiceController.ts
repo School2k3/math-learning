@@ -17,7 +17,6 @@ const practiceController: Controller = {
       let practiceSession = await prisma.practiceSession.findFirst({
         where: {
           userId: parseInt(userId),
-          topic,
           finishedAt: null,
         },
       });
@@ -27,7 +26,6 @@ const practiceController: Controller = {
         practiceSession = await prisma.practiceSession.create({
           data: {
             userId: parseInt(userId),
-            topic,
             score: 0,
             totalQuestions: 0,
             startedAt: new Date(),
