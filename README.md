@@ -2,7 +2,9 @@
 
 This project consists of a backend API built with TypeScript, Node.js, Express, and PostgreSQL with Prisma ORM.
 
-## Setup with Docker
+## Setup Options
+
+### Option 1: Local Docker Setup (Development)
 
 ### Prerequisites
 - Docker Desktop installed and running
@@ -33,6 +35,43 @@ This project consists of a backend API built with TypeScript, Node.js, Express, 
    npm run build
    npm start
    ```
+
+### Option 2: Supabase (Shared Database - Recommended for Teams)
+
+**Why Supabase?**
+- Share database with teammates
+- Cloud-based, accessible from anywhere
+- Free tier available
+- Easy to deploy to production
+
+**Quick Setup:**
+
+1. **Create Supabase account** at https://supabase.com
+2. **Create a new project** 
+3. **Get DATABASE_URL** from Settings → Database
+4. **Configure your environment:**
+   ```bash
+   cd backend
+   # Create .env file with DATABASE_URL
+   echo 'DATABASE_URL="your-supabase-connection-string"' > .env
+   echo 'JWT_SECRET="your-secret-key"' >> .env
+   ```
+5. **Run setup script:**
+   ```bash
+   # Windows
+   .\scripts\setup-supabase.ps1
+   
+   # Mac/Linux
+   ./scripts/setup-supabase.sh
+   ```
+
+**Detailed Guide:** See `backend/MIGRATE_TO_SUPABASE.md` and `SHARED_DATABASE_GUIDE.md`
+
+**Sharing Database with Teammates:**
+- Invite teammates to your Supabase project (Settings → Team members)
+- Share `DATABASE_URL` (or use individual access tokens)
+- Both can now work on the same database!
+
 
 ### Accessing the Database
 
