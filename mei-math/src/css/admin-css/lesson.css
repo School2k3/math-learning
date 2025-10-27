@@ -78,6 +78,7 @@
   padding: 12px;
   border-bottom: 1px solid #e9ecef;
   vertical-align: middle;
+  text-align: left;
 }
 
 .lesson-table tbody tr:hover {
@@ -239,6 +240,12 @@
 .lesson-table th:nth-child(6),
 .lesson-table td:nth-child(6) {
   width: 15%;
+}
+
+/* Table cell alignment */
+.lesson-table th:nth-last-child(-n + 3),
+.lesson-table td:nth-last-child(-n + 3) {
+  text-align: center !important;
 }
 
 /* Responsive */

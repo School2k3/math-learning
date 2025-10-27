@@ -14,6 +14,8 @@ const Exams: React.FC = () => {
   const examQuestions = exam?.examQuestions || [];
   const durationMinutes = exam?.durationMinutes || 30;
   const examTitle = exam?.title || "Bài kiểm tra";
+  const chapterId = location.state?.chapterId; // Sửa lại, không lấy từ searchParams
+  const chapterTitle = location.state?.chapterTitle || ""; // Truyền từ study-page khi navigate
 
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(examQuestions.length).fill(null));
@@ -21,6 +23,7 @@ const Exams: React.FC = () => {
   const [secondsLeft, setSecondsLeft] = useState(durationMinutes * 60);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
+  const [showReview, setShowReview] = useState(false);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -96,15 +99,41 @@ const Exams: React.FC = () => {
   return (
     <div>
       <div style={{ marginTop: "-30px" }}>
-          <Header bgWhite />
-        </div>
+        <Header bgWhite />
+      </div>
       <div className="exams-container">
-        
         <div className="exams-main-row">
           <div className="exams-main-left">
-            <div className="exams-title" style={{ textAlign: "center", fontWeight: 700, fontSize: "24px", color: "#23bdee", marginBottom: "24px" }}>
-          {examTitle}
-        </div>
+            {/* Sửa phần tiêu đề như sau */}
+            <div className="exams-title" style={{ textAlign: "left", fontWeight: 700, fontSize: "22px", color: "#0c1211ff", marginBottom: "24px" }}>
+              {chapterTitle ? (
+                <span
+                  className="exams-chapter-link"
+                  style={{
+                    color: "#21867a",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    transition: "background 0.2s, color 0.2s",
+                    padding: "2px 6px",
+                    borderRadius: "6px",
+                  }}
+                  onClick={() => navigate(`/study?chapterId=${chapterId}`)}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = "#e0f7fa";
+                    e.currentTarget.style.color = "#23bdee";
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = "#21867a";
+                  }}
+                  title="Quay về chương này"
+                >
+                  Chương: {chapterTitle}
+                </span>
+              ) : null}
+              {chapterTitle ? " > " : ""}
+              Kiểm tra: {examTitle}
+            </div>
             <div className="exams-question-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 {/* SVG và tiêu đề */}
@@ -215,7 +244,7 @@ const Exams: React.FC = () => {
                 marginBottom: "18px",
                 cursor: "pointer"
               }}
-              onClick={handleSubmitExam}
+              onClick={() => setShowReview(true)}
               disabled={showResult}
             >
               NỘP BÀI
@@ -299,6 +328,116 @@ const Exams: React.FC = () => {
               >
                 Đóng
               </button>
+            </div>
+          </div>
+        )}
+        {showReview && (
+          <div className="exams-review-modal" style={{
+            position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+            background: "rgba(0,0,0,0.2)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+          }}>
+            <div style={{
+              background: "#fff", borderRadius: "16px", padding: "32px", minWidth: "400px", maxHeight: "80vh", overflowY: "auto"
+            }}>
+              <h2 style={{ color: "#23bdee", textAlign: "center" }}>Xác nhận nộp bài</h2>
+              <div style={{ marginBottom: "16px", fontWeight: 500 }}>
+                Thời gian còn lại: <span style={{ color: "#ff5252" }}>{formatTime(secondsLeft)}</span>
+              </div>
+              <div style={{ marginBottom: "16px" }}>
+                <strong>Danh sách câu hỏi:</strong>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
+                  {examQuestions.map((q: any, idx: number) => {
+                    const answered = answers[idx] !== null;
+                    const flagged = reviewFlags[idx];
+                    return (
+                      <span
+                        key={q.id}
+                        style={{
+                          background: answered ? "#4caf50" : "#eaf6fb",
+                          color: flagged ? "#ffbc63" : "#252641",
+                          borderRadius: "6px",
+                          width: "32px",
+                          height: "32px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 600,
+                          border: flagged ? "2px solid #ffbc63" : "1px solid #ccc",
+                          cursor: "pointer",
+                          position: "relative"
+                        }}
+                        title={
+                          answered
+                            ? flagged
+                              ? "Đã trả lời & Đánh dấu"
+                              : "Đã trả lời"
+                            : flagged
+                              ? "Chưa trả lời & Đánh dấu"
+                              : "Chưa trả lời"
+                        }
+                        onClick={() => {
+                          setCurrent(idx);
+                          setShowReview(false);
+                        }}
+                      >
+                        {idx + 1}
+                        {flagged && (
+                          <span style={{
+                            position: "absolute",
+                            top: "-6px",
+                            right: "-6px",
+                            fontSize: "14px",
+                            color: "#ffbc63"
+                          }}>★</span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Thống kê trạng thái */}
+              <div style={{ marginBottom: "16px", fontSize: "15px" }}>
+                <span style={{ color: "#4caf50", fontWeight: 600 }}>
+                  Đã trả lời: {answers.filter(a => a !== null).length}
+                </span>
+                {" | "}
+                <span style={{ color: "#eaf6fb", fontWeight: 600 }}>
+                  Chưa trả lời: {answers.filter(a => a === null).length}
+                </span>
+                {" | "}
+                <span style={{ color: "#ffbc63", fontWeight: 600 }}>
+                  Đã đánh dấu: {reviewFlags.filter(f => f).length}
+                </span>
+              </div>
+              {/* Cảnh báo nếu còn câu chưa trả lời */}
+              {answers.filter(a => a === null).length > 0 && (
+                <div style={{ color: "#d32f2f", marginBottom: "12px", fontWeight: 500 }}>
+                  Bạn còn {answers.filter(a => a === null).length} câu chưa trả lời!
+                </div>
+              )}
+              <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginTop: "18px" }}>
+                <button
+                  style={{
+                    background: "#49bbbd", color: "#fff", fontWeight: 600, fontSize: "18px",
+                    border: "none", borderRadius: "12px", padding: "12px 32px", cursor: "pointer"
+                  }}
+                  onClick={() => setShowReview(false)}
+                >
+                  Quay lại làm bài
+                </button>
+                <button
+                  style={{
+                    background: "#ff5252", color: "#fff", fontWeight: 600, fontSize: "18px",
+                    border: "none", borderRadius: "12px", padding: "12px 32px", cursor: "pointer"
+                  }}
+                  onClick={() => {
+                    setShowReview(false);
+                    handleSubmitExam();
+                  }}
+                >
+                  Nộp bài và kết thúc
+                </button>
+              </div>
             </div>
           </div>
         )}

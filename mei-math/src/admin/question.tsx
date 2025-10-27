@@ -211,7 +211,7 @@ const QuestionAdmin: React.FC = () => {
                               📊 Dashboard
                             </Link>
                           </li>
-                          <li>📚 Quản lý lớp học</li>
+                        
                           <li>
                             <Link to="/admin/chapters" style={{ textDecoration: "none", color: "inherit" }}>
                               📖 Quản lý chương
@@ -236,8 +236,10 @@ const QuestionAdmin: React.FC = () => {
           <div className="nav-section">
             <h4>QUẢN LÝ NGƯỜI DÙNG</h4>
             <ul>
-              <li>👥 Học sinh</li>
-              <li>👨‍🏫 Giáo viên</li>
+              <Link to="/admin/users" style={{ textDecoration: "none", color: "inherit" }}>
+                                👥 Học sinh
+                              </Link>
+             
               <li>📈 Báo cáo học tập</li>
             </ul>
           </div>

@@ -1,15 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import "../css/theoretical-video.css";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { fetchAllChapters } from "../api/chapterAPI";
     
 
 const TheoreticalVideo: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [chapterTitle, setChapterTitle] = useState(""); // Thêm state cho chapter title
   const videoUrl = searchParams.get("videoUrl") || "/videos/ToanLop3_Dayso.mp4";
   const title = searchParams.get("title") || "";
   const lessonId = searchParams.get("lessonId"); // Lấy lessonId từ URL
+  const chapterId = searchParams.get("chapterId"); // Thêm chapterId từ URL
+
+  // Fetch chapter title khi component mount
+  useEffect(() => {
+    if (chapterId) {
+      fetchAllChapters()
+        .then((chaptersData) => {
+          const chapters = chaptersData.chapters ?? [];
+          const chapter = chapters.find((ch: any) => ch.id === Number(chapterId));
+          if (chapter) {
+            setChapterTitle(chapter.title);
+          }
+        })
+        .catch(() => setChapterTitle(""));
+    }
+  }, [chapterId]);
 
   return (
     <div>
@@ -17,6 +35,37 @@ const TheoreticalVideo: React.FC = () => {
         <Header bgWhite />
       </div>
       <div className="video-page-container">
+        {/* Thêm text-info phía trên video */}
+        <div className="video-page-info">
+          {chapterTitle ? (
+            <span
+              className="video-chapter-link"
+              style={{
+                color: "#21867a",
+                textDecoration: "underline",
+                cursor: "pointer",
+                transition: "background 0.2s, color 0.2s",
+                padding: "2px 6px",
+                borderRadius: "6px",
+              }}
+              onClick={() => navigate(`/study?chapterId=${chapterId}`)}
+              onMouseOver={e => {
+                e.currentTarget.style.background = "#e0f7fa";
+                e.currentTarget.style.color = "#23bdee";
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "#21867a";
+              }}
+              title="Quay về chương này"
+            >
+              Chương: {chapterTitle}
+            </span>
+          ) : null}
+          {chapterTitle ? " > " : ""}
+          Video: {title}
+        </div>
+        
         <div className="video-player-wrapper">
           <video
   className="video-player"

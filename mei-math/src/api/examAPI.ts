@@ -1,5 +1,29 @@
 export async function fetchExamsByChapter(chapterId: number) {
-  const url = `/api/exams/chapter/${chapterId}`;
+  const url = `/api/exams?chapterId=${chapterId}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch exams");
+  }
+  const data = await response.json();
+  console.log("fetchExamsByChapter response:", data); // Debug log
+  return data;
+}
+
+// Lấy tất cả exams (không filter)
+export async function fetchAllExams() {
+  const url = `/api/exams`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch exams");
+  }
+  const data = await response.json();
+  console.log("fetchAllExams response:", data);
+  return data;
+}
+
+// Lấy exams theo grade
+export async function fetchExamsByGrade(grade: number) {
+  const url = `/api/exams?grade=${grade}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error("Failed to fetch exams");

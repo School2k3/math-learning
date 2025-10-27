@@ -15,7 +15,17 @@ const data: StudentGradeData[] = [
   { grade: "Lớp 5", students: 160, color: "#8dd1e1" },
 ];
 
-const StudentGradeChart: React.FC = () => {
+interface StudentGradeChartProps {
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+const StudentGradeChart: React.FC<StudentGradeChartProps> = ({ dateRange }) => {
+  // Sử dụng dateRange để filter dữ liệu
+  console.log("StudentGradeChart dateRange:", dateRange);
+  
   return (
     <div className="chart-container">
       <h3 className="chart-title">Số lượng học sinh theo lớp</h3>

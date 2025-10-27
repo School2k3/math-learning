@@ -1,106 +1,105 @@
 import React, { useState, useEffect } from "react";
 import "../css/admin-css/lesson.css";
 import { Link } from "react-router-dom";
+import { fetchAllChapters } from "../api/chapterAPI";
+import { fetchAllLessons, fetchLessonsByChapter } from "../api/lessonAPI";
 
 interface Lesson {
-  lesson_id: number;
-  chapter_id: number;
+  id: number;
+  chapterId: number;
   title: string;
-  video_url?: string;
-  image_url?: string;
+  videoUrl?: string;
+  imageUrl?: string;
 }
 
 interface Chapter {
-  chapter_id: number;
+  id: number;
   title: string;
   grade: number;
   volume: number;
 }
 
-const initialLessons: Lesson[] = [
-  { lesson_id: 1, chapter_id: 1, title: "Các số 0, 1, 2, 3, 4, 5", video_url: "", image_url: "https://res.cloudinary.com/dqbluifmd/image/u..." },
-  { lesson_id: 2, chapter_id: 1, title: "Các số 6, 7, 8, 9, 10", video_url: "", image_url: "https://res.cloudinary.com/dqbluifmd/image/u..." },
-  { lesson_id: 3, chapter_id: 1, title: "Nhiều hơn, ít hơn, bằng nhau", video_url: "", image_url: "https://res.cloudinary.com/dqbluifmd/image/u..." },
-  { lesson_id: 4, chapter_id: 1, title: "So sánh số", video_url: "", image_url: "https://res.cloudinary.com/dqbluifmd/image/u..." },
-  { lesson_id: 5, chapter_id: 1, title: "Máy và máy", video_url: "", image_url: "https://res.cloudinary.com/dqbluifmd/image/u..." },
-  { lesson_id: 6, chapter_id: 2, title: "Hình vuông, hình tròn, hình tam giác, hình chữ nhật", video_url: "", image_url: "" },
-  { lesson_id: 7, chapter_id: 2, title: "Thực hành lắp ghép, xếp hình", video_url: "", image_url: "" },
-  { lesson_id: 8, chapter_id: 3, title: "Phép cộng trong phạm vi 10", video_url: "", image_url: "" },
-  { lesson_id: 9, chapter_id: 3, title: "Phép trừ trong phạm vi 10", video_url: "", image_url: "" },
-  { lesson_id: 10, chapter_id: 3, title: "Bảng cộng, bảng trừ trong phạm vi 10", video_url: "", image_url: "" },
-  { lesson_id: 27, chapter_id: 9, title: "Bảng cộng (qua 10)", video_url: "https://res.cloudinary.com/dv3gofhee/video/up...", image_url: "https://res.cloudinary.com/dqbluifmd/image/u..." },
-  { lesson_id: 30, chapter_id: 9, title: "Bảng trừ (qua 10)", video_url: "https://res.cloudinary.com/dv3gofhee/video/up...", image_url: "https://res.cloudinary.com/dqbluifmd/image/u..." },
-];
-
-const initialChapters: Chapter[] = [
-  { chapter_id: 1, title: "Các số từ 0 đến 10", grade: 1, volume: 1 },
-  { chapter_id: 2, title: "Làm quen với một số hình phẳng", grade: 1, volume: 1 },
-  { chapter_id: 3, title: "Phép cộng, phép trừ trong phạm vi 10", grade: 1, volume: 1 },
-  { chapter_id: 4, title: "Làm quen với một số hình khối", grade: 1, volume: 1 },
-  { chapter_id: 5, title: "Các số đến 100", grade: 1, volume: 2 },
-  { chapter_id: 9, title: "Phép cộng, phép trừ trong phạm vi 20", grade: 2, volume: 1 },
-];
-
 const LessonAdmin: React.FC = () => {
-  const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
-  const [chapters] = useState<Chapter[]>(initialChapters);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  // Filter states
+  const [filterChapter, setFilterChapter] = useState<string>("all");
+  const [filterGrade, setFilterGrade] = useState<string>("all");
+  
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<Lesson>>({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLesson, setNewLesson] = useState<Partial<Lesson>>({});
 
+  // Load data từ API
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      // Luôn luôn load chapters
+      const chaptersResponse = await fetchAllChapters();
+      setChapters(chaptersResponse.data?.chapters || chaptersResponse.chapters || []);
+      // Load lessons dựa trên filter
+      let lessonsResponse;
+      if (filterChapter === "all") {
+        lessonsResponse = await fetchAllLessons();
+      } else {
+        lessonsResponse = await fetchLessonsByChapter(Number(filterChapter));
+      }
+      let lessonsList = lessonsResponse.data?.lessons || lessonsResponse.lessons || [];
+      // Nếu filterGrade khác "all", chỉ lấy các bài học thuộc chương có grade đúng
+      if (filterGrade !== "all") {
+        const gradeNum = Number(filterGrade);
+        const chapterIds = chaptersResponse.chapters
+          .filter((ch: Chapter) => ch.grade === gradeNum)
+          .map((ch: Chapter) => ch.id);
+        lessonsList = lessonsList.filter((lesson: Lesson) => chapterIds.includes(lesson.chapterId));
+      }
+      setLessons(lessonsList);
+    } catch (error) {
+      setError("Không thể tải dữ liệu: " + (error as Error).message);
+      setLessons([]);
+      setChapters([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [filterChapter, filterGrade]);
+
+  // Không cần filter trên client nữa vì đã filter qua API
+  const filteredLessons = lessons;
+
   // Lấy tên chương theo ID
   const getChapterTitle = (chapterId: number) => {
-    const chapter = chapters.find(c => c.chapter_id === chapterId);
+    const chapter = chapters.find(c => c.id === chapterId);
     return chapter ? `${chapter.title} (Lớp ${chapter.grade} - HK${chapter.volume})` : `Chương ${chapterId}`;
   };
 
-  // Thêm bài học mới
+  // Thêm bài học mới (tạm thời vô hiệu hóa - chỉ có API GET)
   const handleAdd = () => {
-    if (!newLesson.title || !newLesson.chapter_id) {
-      alert("Vui lòng điền đầy đủ thông tin bắt buộc!");
-      return;
-    }
-    
-    const newId = Math.max(...lessons.map(l => l.lesson_id)) + 1;
-    setLessons([...lessons, {
-      lesson_id: newId,
-      chapter_id: Number(newLesson.chapter_id),
-      title: newLesson.title,
-      video_url: newLesson.video_url || "",
-      image_url: newLesson.image_url || ""
-    }]);
-    
-    setNewLesson({});
-    setShowAddForm(false);
+    alert("Chức năng thêm tạm thời vô hiệu hóa - API chỉ hỗ trợ GET");
   };
 
-  // Xóa bài học
-  const handleDelete = (id: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa bài học này?")) {
-      setLessons(lessons.filter(l => l.lesson_id !== id));
-    }
+  // Xóa bài học (tạm thời vô hiệu hóa - chỉ có API GET)
+  const handleDelete = (_id: number) => {
+    alert("Chức năng xóa tạm thời vô hiệu hóa - API chỉ hỗ trợ GET");
   };
 
   // Bắt đầu chỉnh sửa
   const handleEdit = (lesson: Lesson) => {
-    setEditingId(lesson.lesson_id);
+    setEditingId(lesson.id);
     setEditData({ ...lesson });
   };
 
-  // Lưu chỉnh sửa
+  // Lưu chỉnh sửa (tạm thời vô hiệu hóa - chỉ có API GET)
   const handleSave = () => {
-    if (!editData.title || !editData.chapter_id) {
-      alert("Vui lòng điền đầy đủ thông tin bắt buộc!");
-      return;
-    }
-
-    setLessons(lessons.map(l => 
-      l.lesson_id === editingId 
-        ? { ...l, ...editData } 
-        : l
-    ));
-    
+    alert("Chức năng chỉnh sửa tạm thời vô hiệu hóa - API chỉ hỗ trợ GET");
     setEditingId(null);
     setEditData({});
   };
@@ -132,7 +131,6 @@ const LessonAdmin: React.FC = () => {
                               📊 Dashboard
                             </Link>
                           </li>
-                          <li>📚 Quản lý lớp học</li>
                           <li>
                             <Link to="/admin/chapters" style={{ textDecoration: "none", color: "inherit" }}>
                               📖 Quản lý chương
@@ -157,8 +155,9 @@ const LessonAdmin: React.FC = () => {
           <div className="nav-section">
             <h4>QUẢN LÝ NGƯỜI DÙNG</h4>
             <ul>
-              <li>👥 Học sinh</li>
-              <li>👨‍🏫 Giáo viên</li>
+              <Link to="/admin/users" style={{ textDecoration: "none", color: "inherit" }}>
+                                👥 Học sinh
+                              </Link>
               <li>📈 Báo cáo học tập</li>
             </ul>
           </div>
@@ -179,7 +178,7 @@ const LessonAdmin: React.FC = () => {
         <div className="lesson-header">
           <div className="lesson-title">
             <h1>Bài học</h1>
-            <p>{lessons.length} bài học</p>
+            <p>{filteredLessons.length} bài học</p>
           </div>
           <button 
             className="btn-add"
@@ -187,6 +186,53 @@ const LessonAdmin: React.FC = () => {
           >
             + Thêm mới
           </button>
+        </div>
+
+        {/* Filter Section */}
+        <div className="filter-section" style={{ 
+          display: "flex", 
+          gap: "16px", 
+          marginBottom: "20px", 
+          padding: "16px", 
+          backgroundColor: "#f8f9fa", 
+          borderRadius: "8px" 
+        }}>
+          {/* Lọc theo lớp trước */}
+          <div>
+            <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>Lọc theo lớp:</label>
+            <select
+              value={filterGrade}
+              onChange={(e) => setFilterGrade(e.target.value)}
+              style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd", minWidth: "120px" }}
+            >
+              <option value="all">Tất cả lớp</option>
+              <option value="1">Lớp 1</option>
+              <option value="2">Lớp 2</option>
+              <option value="3">Lớp 3</option>
+              <option value="4">Lớp 4</option>
+              <option value="5">Lớp 5</option>
+            </select>
+          </div>
+          {/* Lọc theo chương sau, chỉ hiện chương thuộc lớp đã chọn */}
+          <div>
+            <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>Lọc theo chương:</label>
+            <select
+              value={filterChapter}
+              onChange={(e) => setFilterChapter(e.target.value)}
+              style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd", minWidth: "200px" }}
+            >
+              <option value="all">Tất cả chương</option>
+              {chapters
+                .filter(chapter => filterGrade === "all" || chapter.grade === Number(filterGrade))
+                .map(chapter => (
+                  <option key={chapter.id} value={chapter.id}>
+                    {getChapterTitle(chapter.id)}
+                  </option>
+                ))}
+            </select>
+          </div>
+          {loading && <div style={{ alignSelf: "flex-end", color: "#666" }}>Đang tải...</div>}
+          {error && <div style={{ alignSelf: "flex-end", color: "#d32f2f" }}>Lỗi: {error}</div>}
         </div>
 
         <div className="lesson-table-container">
@@ -217,33 +263,35 @@ const LessonAdmin: React.FC = () => {
                   </td>
                   <td>
                     <select
-                      value={newLesson.chapter_id || ""}
-                      onChange={(e) => setNewLesson({...newLesson, chapter_id: Number(e.target.value)})}
+                      value={newLesson.chapterId || ""}
+                      onChange={(e) => setNewLesson({...newLesson, chapterId: Number(e.target.value)})}
                       className="select-field"
                     >
                       <option value="">Chọn chương</option>
-                      {chapters.map(chapter => (
-                        <option key={chapter.chapter_id} value={chapter.chapter_id}>
-                          {getChapterTitle(chapter.chapter_id)}
-                        </option>
-                      ))}
+                      {chapters
+                        .filter(chapter => filterGrade === "all" || chapter.grade === Number(filterGrade))
+                        .map(chapter => (
+                          <option key={chapter.id} value={chapter.id}>
+                            {getChapterTitle(chapter.id)}
+                          </option>
+                        ))}
                     </select>
                   </td>
                   <td>
                     <input
-                      type="url"
-                      value={newLesson.video_url || ""}
-                      onChange={(e) => setNewLesson({...newLesson, video_url: e.target.value})}
-                      placeholder="URL video (tùy chọn)"
+                      type="text"
+                      value={newLesson.videoUrl || ""}
+                      onChange={(e) => setNewLesson({...newLesson, videoUrl: e.target.value})}
+                      placeholder="URL video"
                       className="input-field"
                     />
                   </td>
                   <td>
                     <input
-                      type="url"
-                      value={newLesson.image_url || ""}
-                      onChange={(e) => setNewLesson({...newLesson, image_url: e.target.value})}
-                      placeholder="URL hình ảnh (tùy chọn)"
+                      type="text"
+                      value={newLesson.imageUrl || ""}
+                      onChange={(e) => setNewLesson({...newLesson, imageUrl: e.target.value})}
+                      placeholder="URL hình ảnh"
                       className="input-field"
                     />
                   </td>
@@ -261,11 +309,11 @@ const LessonAdmin: React.FC = () => {
               )}
 
               {/* Danh sách bài học */}
-              {lessons.map((lesson, index) => (
-                <tr key={lesson.lesson_id}>
+              {filteredLessons.map((lesson, index) => (
+                <tr key={lesson.id}>
                   <td>{index + 1}</td>
                   <td>
-                    {editingId === lesson.lesson_id ? (
+                    {editingId === lesson.id ? (
                       <input
                         type="text"
                         value={editData.title || ""}
@@ -279,36 +327,36 @@ const LessonAdmin: React.FC = () => {
                     )}
                   </td>
                   <td>
-                    {editingId === lesson.lesson_id ? (
+                    {editingId === lesson.id ? (
                       <select
-                        value={editData.chapter_id || ""}
-                        onChange={(e) => setEditData({...editData, chapter_id: Number(e.target.value)})}
+                        value={editData.chapterId || ""}
+                        onChange={(e) => setEditData({...editData, chapterId: Number(e.target.value)})}
                         className="select-field"
                       >
                         {chapters.map(chapter => (
-                          <option key={chapter.chapter_id} value={chapter.chapter_id}>
-                            {getChapterTitle(chapter.chapter_id)}
+                          <option key={chapter.id} value={chapter.id}>
+                            {getChapterTitle(chapter.id)}
                           </option>
                         ))}
                       </select>
                     ) : (
                       <div className="chapter-cell">
-                        {getChapterTitle(lesson.chapter_id)}
+                        {getChapterTitle(lesson.chapterId)}
                       </div>
                     )}
                   </td>
                   <td>
-                    {editingId === lesson.lesson_id ? (
+                    {editingId === lesson.id ? (
                       <input
                         type="url"
-                        value={editData.video_url || ""}
-                        onChange={(e) => setEditData({...editData, video_url: e.target.value})}
+                        value={editData.videoUrl || ""}
+                        onChange={(e) => setEditData({...editData, videoUrl: e.target.value})}
                         className="input-field"
                         placeholder="URL video"
                       />
                     ) : (
                       <div className="media-cell">
-                        {lesson.video_url ? (
+                        {lesson.videoUrl ? (
                           <span className="media-available">✅ Có video</span>
                         ) : (
                           <span className="media-null">❌ Chưa có</span>
@@ -317,17 +365,17 @@ const LessonAdmin: React.FC = () => {
                     )}
                   </td>
                   <td>
-                    {editingId === lesson.lesson_id ? (
+                    {editingId === lesson.id ? (
                       <input
                         type="url"
-                        value={editData.image_url || ""}
-                        onChange={(e) => setEditData({...editData, image_url: e.target.value})}
+                        value={editData.imageUrl || ""}
+                        onChange={(e) => setEditData({...editData, imageUrl: e.target.value})}
                         className="input-field"
                         placeholder="URL hình ảnh"
                       />
                     ) : (
                       <div className="media-cell">
-                        {lesson.image_url ? (
+                        {lesson.imageUrl ? (
                           <span className="media-available">✅ Có hình</span>
                         ) : (
                           <span className="media-null">❌ Chưa có</span>
@@ -336,7 +384,7 @@ const LessonAdmin: React.FC = () => {
                     )}
                   </td>
                   <td>
-                    {editingId === lesson.lesson_id ? (
+                    {editingId === lesson.id ? (
                       <div className="action-buttons">
                         <button className="btn-save" onClick={handleSave}>
                           💾
@@ -350,7 +398,7 @@ const LessonAdmin: React.FC = () => {
                         <button className="btn-edit" onClick={() => handleEdit(lesson)}>
                           ✏️
                         </button>
-                        <button className="btn-delete" onClick={() => handleDelete(lesson.lesson_id)}>
+                        <button className="btn-delete" onClick={() => handleDelete(lesson.id)}>
                           🗑️
                         </button>
                       </div>

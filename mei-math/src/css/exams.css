@@ -89,3 +89,15 @@
   gap: 2px;
   margin-bottom: 12px;
 }
+.exams-chapter-link {
+  color: #21867a;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.exams-chapter-link:hover {
+  background: #e0f7fa;
+  color: #23bdee;
+}

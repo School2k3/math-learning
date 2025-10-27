@@ -4,12 +4,21 @@
   margin: 0 auto;
 }
 
+/* Style cho text-info phía trên video */
+.video-page-info {
+  font-size: 22px;
+  font-weight: 500;
+  color: #0c1211ff;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
 .video-player-wrapper {
   width: 100%;
   border-radius: 16px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .video-player {
@@ -78,4 +87,18 @@
   border-radius: 12px;
   padding: 12px 32px;
   cursor: pointer;
+}
+
+/* Thêm vào theoretical-video.css */
+.video-chapter-link {
+  color: #21867a;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.video-chapter-link:hover {
+  background: #e0f7fa;
+  color: #23bdee;
 }

@@ -1,12 +1,12 @@
 .study-main {
   display: flex;
   gap: 32px;
-  padding: 32px;
   background: #f7f8fa;
   min-height: 100vh;
 }
 .study-sidebar {
-  width: 450px; /* Tăng kích thước */
+  width: 550px;
+  margin-left: -40px;
 }
 .study-title {
   color: #23bdee;
@@ -113,6 +113,7 @@
 }
 .study-content {
   flex: 1;
+  margin-left: 40px;
 }
 .study-content-header {
   display: flex;
@@ -127,7 +128,7 @@
   border-radius: 8px;
   padding: 18px 32px;
   min-width: 340px;
-  width: 700px;
+  width: 740px;
   margin-top: 20px;
 }
 .study-content-title {
@@ -160,7 +161,7 @@
   font-size: 16px;
 }
 .study-content-cards {
-  display: block; /* Đổi từ flex sang block để không bị dàn hàng ngang */
+  display: block; 
   margin-top: 10px;
 }
 .study-card {
@@ -168,7 +169,7 @@
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   padding: 18px 20px 0px 18px;
-  width: 345px;
+  width: 365px;
 }
 .study-card-img {
   position: relative;

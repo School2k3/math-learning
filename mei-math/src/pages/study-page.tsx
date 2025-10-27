@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header";
+import ProgressCircle from "../components/ProgressCircle";
 import "../css/study-page.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom"; // Thêm useSearchParams
 import { fetchChapters } from "../api/chapterAPI";
 import { fetchLessonsByChapter } from "../api/lessonAPI";
 import { fetchExamsByChapter } from "../api/examAPI";
 import { startExam } from "../api/examAPI"; // Import startExam từ examAPI
 import { fetchExamById } from "../api/examAPI"; // Import fetchExamById từ examAPI
+import { getLessonProgress } from "../api/praticeAPI"; // Import API progress
 
 const classOptions = ["Lớp 1","Lớp 2","Lớp 3", "Lớp 4", "Lớp 5"];
 const semesterOptions = ["Học kỳ 1", "Học kỳ 2"];
@@ -17,43 +19,76 @@ const StudyPage: React.FC = () => {
   const [topics, setTopics] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // Thêm dòng này
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
 const [lessons, setLessons] = useState<any[]>([]);
 const [loadingLessons, setLoadingLessons] = useState(false);
 const [exams, setExams] = useState<any[]>([]);
 const [loadingExams, setLoadingExams] = useState(false);
+const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: number, completed: boolean}}>({});
 
   useEffect(() => {
     const grade = Number(selectedClass.replace("Lớp ", ""));
     const volume = selectedSemester === "Học kỳ 1" ? 1 : 2;
     setLoading(true);
-    
-    // Reset selectedChapterId khi thay đổi lớp
-    setSelectedChapterId(null);
-    
+
+    // Lấy chapterId từ URL nếu có
+    const urlChapterId = Number(searchParams.get("chapterId"));
+
     fetchChapters(grade, volume)
       .then((data) => {
         const chapters = data.chapters ?? [];
         setTopics(chapters);
-        
-        // Tự động chọn chapter đầu tiên khi có dữ liệu
+
+        // Nếu có chapterId trên URL và tồn tại trong danh sách thì chọn, nếu không thì chọn đầu tiên
         if (chapters.length > 0) {
-          setSelectedChapterId(chapters[0].id);
+          if (urlChapterId && chapters.some(ch => ch.id === urlChapterId)) {
+            setSelectedChapterId(urlChapterId);
+          } else {
+            setSelectedChapterId(chapters[0].id);
+          }
         }
       })
       .catch(() => setTopics([]))
       .finally(() => setLoading(false));
-  }, [selectedClass, selectedSemester]);
+  }, [selectedClass, selectedSemester, searchParams]);
 
   useEffect(() => {
     if (selectedChapterId) {
       setLoadingLessons(true);
       fetchLessonsByChapter(selectedChapterId)
-        .then((data) => setLessons(data.lessons ?? []))
-        .catch(() => setLessons([]))
+        .then(async (data) => {
+          console.log("API Response:", data); // Debug để xem structure
+          // Sửa lại để lấy đúng path
+          const lessonsData = data.data?.lessons ?? [];
+          setLessons(lessonsData);
+          
+          // Fetch progress cho mỗi lesson
+          const progressPromises = lessonsData.map(async (lesson: any) => {
+            try {
+              const progressData = await getLessonProgress(lesson.id);
+              return { lessonId: lesson.id, ...progressData };
+            } catch {
+              return { lessonId: lesson.id, progress: 0, completed: false };
+            }
+          });
+          
+          const progressResults = await Promise.all(progressPromises);
+          const progressMap = progressResults.reduce((acc, result) => {
+            acc[result.lessonId] = { progress: result.progress, completed: result.completed };
+            return acc;
+          }, {} as {[key: number]: {progress: number, completed: boolean}});
+          
+          setLessonProgress(progressMap);
+        })
+        .catch((error) => {
+          console.error("Error fetching lessons:", error);
+          setLessons([]);
+        })
         .finally(() => setLoadingLessons(false));
     } else {
       setLessons([]);
+      setLessonProgress({});
     }
   }, [selectedChapterId]);
 
@@ -61,8 +96,15 @@ const [loadingExams, setLoadingExams] = useState(false);
     if (selectedChapterId) {
       setLoadingExams(true);
       fetchExamsByChapter(selectedChapterId)
-        .then((data) => setExams(data.exams ?? []))
-        .catch(() => setExams([]))
+        .then((data) => {
+          console.log("Exams API Response:", data); // Debug để xem structure
+          // Response trực tiếp có exams array
+          setExams(data.exams ?? []);
+        })
+        .catch((error) => {
+          console.error("Error fetching exams:", error);
+          setExams([]);
+        })
         .finally(() => setLoadingExams(false));
     } else {
       setExams([]);
@@ -106,8 +148,8 @@ const [loadingExams, setLoadingExams] = useState(false);
                       />
                     </svg>
                   </span>
-                  <div style={{fontSize: "20px", lineHeight: "1.5", fontWeight: 500, color: "#252641",textAlign: "center"}}>
-                    <div>{topic.title}</div> {/* Sửa lại từ topic.name thành topic.title */}
+                  <div style={{fontSize: "20px", lineHeight: "1.5", fontWeight: 500, color: "#252641",textAlign: "left"}}>
+                    <div>{topic.title}</div> 
                     
                   </div>
                 </div>
@@ -172,7 +214,7 @@ const [loadingExams, setLoadingExams] = useState(false);
                         </div>
                         <div
                           className="study-card-title"
-                          style={{ color: "#23bdee", fontWeight: "bold" }}
+                          style={{ color: "#23bdee", fontWeight: "bold",minHeight: "66px" }}
                         >
                           {lesson.title}
                         </div>
@@ -184,10 +226,10 @@ const [loadingExams, setLoadingExams] = useState(false);
                               onClick={() => {
                                 console.log("lesson.title:", lesson.title);
                                 navigate(
-                                  `/theoretical-video?videoUrl=${encodeURIComponent(lesson.videoUrl || "")}&title=${encodeURIComponent(lesson.title || "")}&lessonId=${lesson.id}`
+                                  `/theoretical-video?videoUrl=${encodeURIComponent(lesson.videoUrl || "")}&title=${encodeURIComponent(lesson.title || "")}&lessonId=${lesson.id}&chapterId=${selectedChapterId}`
                                 );
                               }}
-                            >
+                            >                   
                               {/* SVG video */}
                               <svg width="24" height="24" fill="none">
                                 <rect width="24" height="24" rx="6" fill="#23BDEE" />
@@ -202,7 +244,9 @@ const [loadingExams, setLoadingExams] = useState(false);
                             <span
                               className="study-card-action-icon"
                               style={{ color: "#252641" }}
-                              onClick={() => navigate(`/pratice?lessonId=${lesson.id}&title=${encodeURIComponent(lesson.title)}`)}
+                              onClick={() => navigate(
+                                `/pratice?lessonId=${lesson.id}&title=${encodeURIComponent(lesson.title)}&chapterId=${selectedChapterId}`
+                              )}
                             >
                               {/* SVG thực hành */}
                               <svg
@@ -235,28 +279,13 @@ const [loadingExams, setLoadingExams] = useState(false);
                               className="study-card-action-icon"
                               style={{ color: "#A1A1A1" }}
                             >
-                              {/* SVG tiến độ */}
-                              <svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M21 6L15.7071 11.2929C15.3166 11.6834 14.6834 11.6834 14.2929 11.2929L12.7071 9.70711C12.3166 9.31658 11.6834 9.31658 11.2929 9.70711L7 14"
-                                  stroke="#33363F"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                                <path
-                                  d="M3 3V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21H21"
-                                  stroke="#33363F"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                />
-                              </svg>
+                              {/* Thay thế SVG bằng ProgressCircle */}
+                              <ProgressCircle 
+                                progress={lessonProgress[lesson.id]?.progress ?? 0} 
+                                completed={lessonProgress[lesson.id]?.completed ?? false}
+                                size={24}
+                                strokeWidth={3}
+                              />
                             </span>
                             <span className="study-card-action-label">TIẾN ĐỘ</span>
                           </div>
@@ -362,16 +391,16 @@ const [loadingExams, setLoadingExams] = useState(false);
                         cursor: "pointer",
                       }}
                       onClick={async () => {
-                        // Gọi startExam trước
                         try {
-                          const res = await startExam(exam.id, 4); // userId tạm thời là 1
-                          // Sau đó lấy chi tiết đề thi
+                          const res = await startExam(exam.id, 4); // userId tạm thời là 4
                           const examDetail = await fetchExamById(exam.id);
-                          // Chuyển sang trang exams, truyền dữ liệu qua state
+                          // Truyền thêm chapterId và chapterTitle qua state
                           navigate("/exams", {
                             state: {
                               exam: examDetail.exam,
                               examResult: res.examResult,
+                              chapterId: selectedChapterId,
+                              chapterTitle: topics.find((t) => t.id === selectedChapterId)?.title || "",
                             },
                           });
                         } catch (e) {

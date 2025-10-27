@@ -70,11 +70,16 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+.chapter-table th:last-child {
+  text-align: center;
+}
 
 .chapter-table td {
   padding: 12px;
   border-bottom: 1px solid #e9ecef;
   vertical-align: middle;
+  text-align: left;
+  
 }
 
 .chapter-table tbody tr:hover {

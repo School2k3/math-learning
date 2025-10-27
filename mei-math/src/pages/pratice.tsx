@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import "../css/pratice.css";
-import { fetchQuestionsByLesson, fetchQuestionAudio } from "../api/praticeAPI";
+import { 
+  fetchQuestionsByLesson, 
+  fetchQuestionAudio,
+  createPracticeSession,
+  submitAnswer,
+  completePracticeSession 
+} from "../api/praticeAPI";
+import { fetchAllChapters } from "../api/chapterAPI";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 // Component ScoreBar
@@ -45,18 +52,67 @@ const ScoreBar: React.FC<{
 const Pratice: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chapterTitle, setChapterTitle] = useState(""); // Thêm state này
+  const [practiceId, setPracticeId] = useState<number | null>(null); // Thêm state cho practice session
   const [searchParams] = useSearchParams();
   const lessonTitle = searchParams.get("title") || "";
   const navigate = useNavigate();
   const lessonId = Number(searchParams.get("lessonId"));
+  const chapterId = Number(searchParams.get("chapterId")); // Lấy từ URL
 
   useEffect(() => {
     if (lessonId) {
-      fetchQuestionsByLesson(lessonId)
-        .then((data) => setQuestions(data.questions ?? []))
+      // Fetch questions trước, tạo practice session song song
+      const fetchQuestionsPromise = fetchQuestionsByLesson(lessonId)
+        .then((data) => {
+          console.log("Questions API Response:", data);
+          const questionsData = data.data?.questions ?? [];
+          setQuestions(questionsData);
+          
+          // Lấy chapterId từ lesson đầu tiên để fetch chapter info
+          if (questionsData.length > 0 && questionsData[0].lesson?.chapterId) {
+            fetchAllChapters()
+              .then((chaptersData) => {
+                const chapters = chaptersData.chapters ?? [];
+                const chapter = chapters.find((ch: any) => ch.id === questionsData[0].lesson.chapterId);
+                if (chapter) {
+                  setChapterTitle(chapter.title);
+                }
+              })
+              .catch(() => setChapterTitle(""));
+          }
+          return questionsData;
+        });
+
+      // Tạo practice session song song
+      const createSessionPromise = createPracticeSession(lessonId)
+        .then((sessionData) => {
+          console.log("Practice session created:", sessionData);
+          setPracticeId(sessionData.id);
+          return sessionData;
+        })
+        .catch((error) => {
+          console.error("Failed to create practice session:", error);
+          // Không blocking nếu tạo session thất bại
+          return null;
+        });
+
+      // Chờ cả 2 promises
+      Promise.all([fetchQuestionsPromise, createSessionPromise])
         .finally(() => setLoading(false));
     }
   }, [lessonId]);
+
+  // Lấy tiêu đề chương từ chapterId trong URL
+  useEffect(() => {
+    if (chapterId) {
+      fetchAllChapters().then((data) => {
+        const chapters = data.chapters ?? [];
+        const chapter = chapters.find((ch: any) => ch.id === chapterId);
+        if (chapter) setChapterTitle(chapter.title);
+      });
+    }
+  }, [chapterId]);
 
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -68,8 +124,6 @@ const Pratice: React.FC = () => {
   const [usedQuestions, setUsedQuestions] = useState<Set<number>>(new Set());
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
-
-  // Hàm phát audio
   const handlePlayAudio = async () => {
     try {
       setIsPlayingAudio(true);
@@ -133,9 +187,22 @@ const Pratice: React.FC = () => {
   };
 
   // Sửa lại hàm handleSubmit cho đúng dữ liệu
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selected === null) return;
+    
     const isCorrect = questions[current].answers[selected]?.isCorrect;
+    const currentQuestion = questions[current];
+    
+    // Gọi API submitAnswer nếu có practiceId
+    if (practiceId) {
+      try {
+        await submitAnswer(practiceId, currentQuestion.id, isCorrect);
+      } catch (error) {
+        console.error("Error submitting answer:", error);
+        // Tiếp tục game nếu API lỗi
+      }
+    }
+    
     if (isCorrect) {
       const newCorrectCount = correctCount + 1;
       const newScore = score + 10;
@@ -146,6 +213,14 @@ const Pratice: React.FC = () => {
       
       // Kết thúc game khi đạt 100 điểm
       if (newScore >= 100) {
+        // Gọi API complete session nếu có practiceId
+        if (practiceId) {
+          try {
+            await completePracticeSession(practiceId);
+          } catch (error) {
+            console.error("Error completing practice session:", error);
+          }
+        }
         setIsFinished(true);
       } else if (current < questions.length - 1) {
         setCurrent(current + 1);
@@ -269,16 +344,40 @@ const Pratice: React.FC = () => {
         ) : !showIncorrect ? (
           <div className="pratice-question-block">
             {/* Thêm dòng này phía trên Câu */}
-            <div style={{ fontSize: "22px", fontWeight: 600, color: "#21867a", marginBottom: 16,textAlign: "left" }}>
+            
+            <div className="pratice-question"><div style={{ fontSize: "22px", fontWeight: 500, color: "#0c1211ff", marginBottom: 16, textAlign: "left" }}>
+              {chapterTitle ? (
+                <span
+                  className="pratice-chapter-link"
+                  onClick={() => {
+                    if (chapterId) {
+                      navigate(`/study?chapterId=${chapterId}`);
+                    } else {
+                      navigate("/study");
+                    }
+                  }}
+                  style={{
+                    color: "#21867a",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    transition: "background 0.2s, color 0.2s",
+                    padding: "2px 6px",
+                    borderRadius: "6px",
+                  }}
+                  title="Quay về chương này"
+                >
+                  Chương: {chapterTitle}
+                </span>
+              ) : null}
+              {chapterTitle ? " > " : ""}
               Phần thực hành: {lessonTitle}
             </div>
-            <div className="pratice-question">
               <div className="question-header-row">
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <span
                     style={{
                       fontWeight: 500,
-                      color: "#1fdaf3ff",
+                      color: "#025122ff",
                       background: "#e0f7fa",
                       borderRadius: "8px",
                       padding: "4px 14px",
