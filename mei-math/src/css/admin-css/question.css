@@ -109,6 +109,10 @@
   padding: 10px 8px;
   border-bottom: 1px solid #e9ecef;
   vertical-align: top;
+   text-align: left;
+}
+.question-table th:last-child {
+  text-align: center;
 }
 
 .question-table tbody tr:hover {

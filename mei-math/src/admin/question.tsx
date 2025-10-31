@@ -236,9 +236,11 @@ const QuestionAdmin: React.FC = () => {
           <div className="nav-section">
             <h4>QUẢN LÝ NGƯỜI DÙNG</h4>
             <ul>
-              <Link to="/admin/users" style={{ textDecoration: "none", color: "inherit" }}>
+              <li>
+                              <Link to="/admin/users" style={{ textDecoration: "none", color: "inherit" }}>
                                 👥 Học sinh
                               </Link>
+                            </li>
              
               <li>📈 Báo cáo học tập</li>
             </ul>
@@ -306,14 +308,16 @@ const QuestionAdmin: React.FC = () => {
           <table className="question-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Nội dung câu hỏi ↑</th>
-                <th>Loại ↑</th>
-                <th>Bài học ↑</th>
-                <th>Hình ảnh ↑</th>
-                <th>Audio ↑</th>
-                <th>Kiểu trả lời ↑</th>
-                <th>Giải thích ↑</th>
+                <th># ↑</th>
+                <th>Nội dung câu hỏi</th>
+                <th>Loại</th>
+                <th>Bài học</th>
+                <th>Lớp</th> {/* Thêm cột lớp */}
+                <th>Hình ảnh</th>
+                <th>Audio</th>
+                <th>Kiểu trả lời</th> {/* Thêm cột kiểu trả lời */}
+                <th>Ngày tạo</th> {/* Thêm cột ngày tạo */}
+                <th>Giải thích</th>
                 <th>Chức năng</th>
               </tr>
             </thead>
@@ -409,157 +413,160 @@ const QuestionAdmin: React.FC = () => {
               )}
 
               {/* Danh sách câu hỏi */}
-              {filteredQuestions.map((question, index) => (
-                <tr key={question.question_id}>
-                  <td>{index + 1}</td>
-                  <td>
-                    {editingId === question.question_id ? (
-                      <textarea
-                        value={editData.question_text || ""}
-                        onChange={(e) => setEditData({...editData, question_text: e.target.value})}
-                        className="textarea-field"
-                        rows={2}
-                      />
-                    ) : (
-                      <div className="question-text-cell">
-                        {question.question_text}
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === question.question_id ? (
-                      <select
-                        value={editData.type || ""}
-                        onChange={(e) => setEditData({...editData, type: e.target.value as 'practice' | 'exam'})}
-                        className="select-field"
-                      >
-                        <option value="practice">Thực hành</option>
-                        <option value="exam">Kiểm tra</option>
-                      </select>
-                    ) : (
-                      <span className={`type-badge ${question.type}`}>
-                        {question.type === 'practice' ? 'Thực hành' : 'Kiểm tra'}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === question.question_id ? (
-                      <select
-                        value={editData.lesson_id || ""}
-                        onChange={(e) => setEditData({...editData, lesson_id: Number(e.target.value)})}
-                        className="select-field"
-                      >
-                        {lessons.map(lesson => (
-                          <option key={lesson.lesson_id} value={lesson.lesson_id}>
-                            {lesson.title}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="lesson-cell">
-                        {getLessonTitle(question.lesson_id)}
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === question.question_id ? (
-                      <input
-                        type="url"
-                        value={editData.image_url || ""}
-                        onChange={(e) => setEditData({...editData, image_url: e.target.value})}
-                        className="input-field"
-                      />
-                    ) : (
-                      <div className="media-cell">
-                        {question.image_url ? (
-                          <span className="media-available">✅</span>
-                        ) : (
-                          <span className="media-null">❌</span>
-                        )}
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === question.question_id ? (
-                      <input
-                        type="url"
-                        value={editData.audio_url || ""}
-                        onChange={(e) => setEditData({...editData, audio_url: e.target.value})}
-                        className="input-field"
-                      />
-                    ) : (
-                      <div className="media-cell">
-                        {question.audio_url ? (
-                          <span className="media-available">✅</span>
-                        ) : (
-                          <span className="media-null">❌</span>
-                        )}
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === question.question_id ? (
-                      <select
-                        value={editData.answer_type || ""}
-                        onChange={(e) => setEditData({...editData, answer_type: e.target.value as 'choice' | 'input' | 'drag'})}
-                        className="select-field"
-                      >
-                        <option value="choice">Trắc nghiệm</option>
-                        <option value="input">Nhập liệu</option>
-                        <option value="drag">Kéo thả</option>
-                      </select>
-                    ) : (
-                      <span className="answer-type-badge">
-                        {question.answer_type === 'choice' ? 'Trắc nghiệm' : 
-                         question.answer_type === 'input' ? 'Nhập liệu' : 'Kéo thả'}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === question.question_id ? (
-                      <input
-                        type="text"
-                        value={editData.explanation_text || ""}
-                        onChange={(e) => setEditData({...editData, explanation_text: e.target.value})}
-                        className="input-field"
-                      />
-                    ) : (
-                      <div className="explanation-cell">
-                        {question.explanation_text ? (
-                          <span title={question.explanation_text}>
-                            {question.explanation_text.length > 20 
-                              ? question.explanation_text.substring(0, 20) + "..." 
-                              : question.explanation_text}
-                          </span>
-                        ) : (
-                          <span className="text-muted">Chưa có</span>
-                        )}
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === question.question_id ? (
-                      <div className="action-buttons">
-                        <button className="btn-save" onClick={handleSave}>
-                          💾
-                        </button>
-                        <button className="btn-cancel" onClick={handleCancel}>
-                          ❌
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="action-buttons">
-                        <button className="btn-edit" onClick={() => handleEdit(question)}>
-                          ✏️
-                        </button>
-                        <button className="btn-delete" onClick={() => handleDelete(question.question_id)}>
-                          🗑️
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {filteredQuestions.map((question, index) => {
+                const lesson = lessons.find(l => l.lesson_id === question.lesson_id);
+                return (
+                  <tr key={question.question_id}>
+                    <td>{index + 1}</td>
+                    <td>
+                      {editingId === question.question_id ? (
+                        <textarea
+                          value={editData.question_text || ""}
+                          onChange={(e) => setEditData({...editData, question_text: e.target.value})}
+                          className="textarea-field"
+                          rows={2}
+                        />
+                      ) : (
+                        <div className="question-text-cell">
+                          {question.question_text}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      {editingId === question.question_id ? (
+                        <select
+                          value={editData.type || ""}
+                          onChange={(e) => setEditData({...editData, type: e.target.value as 'practice' | 'exam'})}
+                          className="select-field"
+                        >
+                          <option value="practice">Thực hành</option>
+                          <option value="exam">Kiểm tra</option>
+                        </select>
+                      ) : (
+                        <span className={`type-badge ${question.type}`}>
+                          {question.type === 'practice' ? 'Thực hành' : 'Kiểm tra'}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {editingId === question.question_id ? (
+                        <select
+                          value={editData.lesson_id || ""}
+                          onChange={(e) => setEditData({...editData, lesson_id: Number(e.target.value)})}
+                          className="select-field"
+                        >
+                          {lessons.map(lesson => (
+                            <option key={lesson.lesson_id} value={lesson.lesson_id}>
+                              {lesson.title}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="lesson-cell">
+                          {getLessonTitle(question.lesson_id)}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      {editingId === question.question_id ? (
+                        <input
+                          type="url"
+                          value={editData.image_url || ""}
+                          onChange={(e) => setEditData({...editData, image_url: e.target.value})}
+                          className="input-field"
+                        />
+                      ) : (
+                        <div className="media-cell">
+                          {question.image_url ? (
+                            <span className="media-available">✅</span>
+                          ) : (
+                            <span className="media-null">❌</span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      {editingId === question.question_id ? (
+                        <input
+                          type="url"
+                          value={editData.audio_url || ""}
+                          onChange={(e) => setEditData({...editData, audio_url: e.target.value})}
+                          className="input-field"
+                        />
+                      ) : (
+                        <div className="media-cell">
+                          {question.audio_url ? (
+                            <span className="media-available">✅</span>
+                          ) : (
+                            <span className="media-null">❌</span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      {editingId === question.question_id ? (
+                        <select
+                          value={editData.answer_type || ""}
+                          onChange={(e) => setEditData({...editData, answer_type: e.target.value as 'choice' | 'input' | 'drag'})}
+                          className="select-field"
+                        >
+                          <option value="choice">Trắc nghiệm</option>
+                          <option value="input">Nhập liệu</option>
+                          <option value="drag">Kéo thả</option>
+                        </select>
+                      ) : (
+                        <span className="answer-type-badge">
+                          {question.answer_type === 'choice' ? 'Trắc nghiệm' : 
+                           question.answer_type === 'input' ? 'Nhập liệu' : 'Kéo thả'}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {editingId === question.question_id ? (
+                        <input
+                          type="text"
+                          value={editData.explanation_text || ""}
+                          onChange={(e) => setEditData({...editData, explanation_text: e.target.value})}
+                          className="input-field"
+                        />
+                      ) : (
+                        <div className="explanation-cell">
+                          {question.explanation_text ? (
+                            <span title={question.explanation_text}>
+                              {question.explanation_text.length > 20 
+                                ? question.explanation_text.substring(0, 20) + "..." 
+                                : question.explanation_text}
+                            </span>
+                          ) : (
+                            <span className="text-muted">Chưa có</span>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      {editingId === question.question_id ? (
+                        <div className="action-buttons">
+                          <button className="btn-save" onClick={handleSave}>
+                            💾
+                          </button>
+                          <button className="btn-cancel" onClick={handleCancel}>
+                            ❌
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="action-buttons">
+                          <button className="btn-edit" onClick={() => handleEdit(question)}>
+                            ✏️
+                          </button>
+                          <button className="btn-delete" onClick={() => handleDelete(question.question_id)}>
+                            🗑️
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

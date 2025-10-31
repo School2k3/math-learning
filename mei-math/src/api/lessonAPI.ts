@@ -39,3 +39,60 @@ export async function fetchAllLessons() {
     throw error;
   }
 }
+
+export async function createLesson(lessonData: {
+  chapterId: number;
+  title: string;
+  videoUrl?: string;
+  imageUrl?: string;
+}) {
+  const response = await fetch("/api/lessons", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(lessonData),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create lesson");
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+export async function updateLesson(
+  id: number,
+  lessonData: {
+    chapterId: number;
+    title: string;
+    videoUrl?: string;
+    imageUrl?: string;
+  }
+) {
+  const response = await fetch(`/api/lessons/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(lessonData),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update lesson");
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+export async function deleteLesson(id: number) {
+  const response = await fetch(`/api/lessons/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete lesson");
+  }
+
+  const data = await response.json();
+  return data;
+}

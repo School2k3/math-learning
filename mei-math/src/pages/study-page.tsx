@@ -8,7 +8,7 @@ import { fetchLessonsByChapter } from "../api/lessonAPI";
 import { fetchExamsByChapter } from "../api/examAPI";
 import { startExam } from "../api/examAPI"; // Import startExam từ examAPI
 import { fetchExamById } from "../api/examAPI"; // Import fetchExamById từ examAPI
-import { getLessonProgress } from "../api/praticeAPI"; // Import API progress
+import { getLessonProgress, createOrUpdatePracticeSession } from "../api/praticeAPI"; // Import API progress
 
 const classOptions = ["Lớp 1","Lớp 2","Lớp 3", "Lớp 4", "Lớp 5"];
 const semesterOptions = ["Học kỳ 1", "Học kỳ 2"];
@@ -241,53 +241,88 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                             </span>
                           </div>
                           <div>
-                            <span
-                              className="study-card-action-icon"
-                              style={{ color: "#252641" }}
-                              onClick={() => navigate(
-                                `/pratice?lessonId=${lesson.id}&title=${encodeURIComponent(lesson.title)}&chapterId=${selectedChapterId}`
-                              )}
+                            <button
+                              className="study-card-action-btn"
+                              style={{
+                                background: "none",
+                                border: "none",
+                                padding: 0,
+                                margin: 0,
+                                cursor: "pointer",
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                outline: "none"
+                              }}
+                              onClick={async () => {
+                                try {
+                                  console.log("Starting practice for lesson.id:", lesson.id);
+                                  const result = await createOrUpdatePracticeSession(1, lesson.id);
+                                  console.log("createOrUpdatePracticeSession result:", result);
+                                  const practiceSessionId = result.practiceSession?.id;
+                                  navigate(
+                                    `/pratice?lessonId=${lesson.id}&title=${encodeURIComponent(lesson.title)}&chapterId=${selectedChapterId}&practiceSessionId=${practiceSessionId}`
+                                  );
+                                } catch (error) {
+                                  console.error("createOrUpdatePracticeSession error:", error);
+                                  alert("Không thể tạo phiên thực hành!");
+                                }
+                              }}
                             >
-                              {/* SVG thực hành */}
-                              <svg
-                                width="25"
-                                height="25"
-                                viewBox="0 0 25 25"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M2.45654 3.20166H8.45654C9.51741 3.20166 10.5348 3.62309 11.285 4.37323C12.0351 5.12338 12.4565 6.14079 12.4565 7.20166V21.2017C12.4565 20.406 12.1405 19.6429 11.5779 19.0803C11.0153 18.5177 10.2522 18.2017 9.45654 18.2017H2.45654V3.20166Z"
-                                  stroke="black"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                                <path
-                                  d="M22.4565 3.20166H16.4565C15.3957 3.20166 14.3783 3.62309 13.6281 4.37323C12.878 5.12338 12.4565 6.14079 12.4565 7.20166V21.2017C12.4565 20.406 12.7726 19.6429 13.3352 19.0803C13.8978 18.5177 14.6609 18.2017 15.4565 18.2017H22.4565V3.20166Z"
-                                  stroke="black"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </span>
-                            <span className="study-card-action-label">THỰC HÀNH</span>
+                              <span className="study-card-action-icon" style={{ color: "#252641" }}>
+                                {/* SVG thực hành */}
+                                <svg
+                                  width="25"
+                                  height="25"
+                                  viewBox="0 0 25 25"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M2.45654 3.20166H8.45654C9.51741 3.20166 10.5348 3.62309 11.285 4.37323C12.0351 5.12338 12.4565 6.14079 12.4565 7.20166V21.2017C12.4565 20.406 12.1405 19.6429 11.5779 19.0803C11.0153 18.5177 10.2522 18.2017 9.45654 18.2017H2.45654V3.20166Z"
+                                    stroke="black"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M22.4565 3.20166H16.4565C15.3957 3.20166 14.3783 3.62309 13.6281 4.37323C12.878 5.12338 12.4565 6.14079 12.4565 7.20166V21.2017C12.4565 20.406 12.7726 19.6429 13.3352 19.0803C13.8978 18.5177 14.6609 18.2017 15.4565 18.2017H22.4565V3.20166Z"
+                                    stroke="black"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </span>
+                              <span className="study-card-action-label">THỰC HÀNH</span>
+                            </button>
                           </div>
                           <div>
-                            <span
-                              className="study-card-action-icon"
-                              style={{ color: "#A1A1A1" }}
+                            <button
+                              className="study-card-action-btn"
+                              style={{
+                                background: "none",
+                                border: "none",
+                                padding: 0,
+                                margin: 0,
+                                cursor: "pointer",
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                outline: "none"
+                              }}
+                              // Nếu muốn bấm vào tiến độ thì thêm onClick ở đây
                             >
-                              {/* Thay thế SVG bằng ProgressCircle */}
-                              <ProgressCircle 
-                                progress={lessonProgress[lesson.id]?.progress ?? 0} 
-                                completed={lessonProgress[lesson.id]?.completed ?? false}
-                                size={24}
-                                strokeWidth={3}
-                              />
-                            </span>
-                            <span className="study-card-action-label">TIẾN ĐỘ</span>
+                              <span className="study-card-action-icon" style={{ color: "#A1A1A1" }}>
+                                <ProgressCircle 
+                                  progress={lessonProgress[lesson.id]?.progress ?? 0} 
+                                  completed={lessonProgress[lesson.id]?.completed ?? false}
+                                  size={24}
+                                  strokeWidth={3}
+                                />
+                              </span>
+                              <span className="study-card-action-label">TIẾN ĐỘ</span>
+                            </button>
                           </div>
                         </div>
                       </div>

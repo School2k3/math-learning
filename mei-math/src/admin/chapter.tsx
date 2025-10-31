@@ -224,9 +224,11 @@ const ChapterAdmin: React.FC = () => {
           <div className="nav-section">
             <h4>QUẢN LÝ NGƯỜI DÙNG</h4>
             <ul>
-              <Link to="/admin/users" style={{ textDecoration: "none", color: "inherit" }}>
+              <li>
+                              <Link to="/admin/users" style={{ textDecoration: "none", color: "inherit" }}>
                                 👥 Học sinh
                               </Link>
+                            </li>
              
               <li>📈 Báo cáo học tập</li>
             </ul>

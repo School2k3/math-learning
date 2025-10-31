@@ -42,7 +42,9 @@ body {
   margin-left: 80px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .header__logo {
@@ -51,7 +53,7 @@ body {
 }
 
 .header__search {
-  flex: 1;
+
   max-width: 320px;
   padding: 8px 16px;
   border-radius: 20px;
@@ -130,10 +132,6 @@ body {
   cursor: pointer;
   position: relative;
   border: 1px solid #00cbbb;
-  
-
-
-
   z-index: 10000; /* Thêm z-index cho container */
 
 

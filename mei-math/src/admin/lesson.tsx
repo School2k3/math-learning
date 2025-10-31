@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../css/admin-css/lesson.css";
 import { Link } from "react-router-dom";
 import { fetchAllChapters } from "../api/chapterAPI";
-import { fetchAllLessons, fetchLessonsByChapter } from "../api/lessonAPI";
+import { createLesson, fetchAllLessons, fetchLessonsByChapter, updateLesson, deleteLesson } from "../api/lessonAPI";
 
 interface Lesson {
   id: number;
@@ -82,13 +82,52 @@ const LessonAdmin: React.FC = () => {
   };
 
   // Thêm bài học mới (tạm thời vô hiệu hóa - chỉ có API GET)
-  const handleAdd = () => {
-    alert("Chức năng thêm tạm thời vô hiệu hóa - API chỉ hỗ trợ GET");
+  const handleAdd = async () => {
+    if (!newLesson.title || !newLesson.chapterId) {
+      alert("Vui lòng nhập đầy đủ tên bài học và chọn chương!");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await createLesson({
+        chapterId: Number(newLesson.chapterId),
+        title: newLesson.title,
+        videoUrl: newLesson.videoUrl,
+        imageUrl: newLesson.imageUrl,
+      });
+      if (res.success) {
+        alert("Thêm bài học thành công!");
+        setShowAddForm(false);
+        setNewLesson({});
+        // Reload lại danh sách bài học
+        loadData();
+      } else {
+        alert("Thêm bài học thất bại: " + res.message);
+      }
+    } catch (error) {
+      alert("Lỗi khi thêm bài học: " + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Xóa bài học (tạm thời vô hiệu hóa - chỉ có API GET)
-  const handleDelete = (_id: number) => {
-    alert("Chức năng xóa tạm thời vô hiệu hóa - API chỉ hỗ trợ GET");
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa bài học này?")) return;
+    setLoading(true);
+    try {
+      const res = await deleteLesson(id);
+      if (res.success) {
+        alert("Xóa bài học thành công!");
+        loadData();
+      } else {
+        alert("Xóa bài học thất bại: " + res.message);
+      }
+    } catch (error) {
+      alert("Lỗi khi xóa bài học: " + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Bắt đầu chỉnh sửa
@@ -98,10 +137,32 @@ const LessonAdmin: React.FC = () => {
   };
 
   // Lưu chỉnh sửa (tạm thời vô hiệu hóa - chỉ có API GET)
-  const handleSave = () => {
-    alert("Chức năng chỉnh sửa tạm thời vô hiệu hóa - API chỉ hỗ trợ GET");
-    setEditingId(null);
-    setEditData({});
+  const handleSave = async () => {
+    if (!editingId || !editData.title || !editData.chapterId) {
+      alert("Vui lòng nhập đầy đủ tên bài học và chọn chương!");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await updateLesson(editingId, {
+        chapterId: Number(editData.chapterId),
+        title: editData.title,
+        videoUrl: editData.videoUrl,
+        imageUrl: editData.imageUrl,
+      });
+      if (res.success) {
+        alert("Cập nhật bài học thành công!");
+        setEditingId(null);
+        setEditData({});
+        loadData();
+      } else {
+        alert("Cập nhật bài học thất bại: " + res.message);
+      }
+    } catch (error) {
+      alert("Lỗi khi cập nhật bài học: " + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Hủy chỉnh sửa
@@ -155,9 +216,11 @@ const LessonAdmin: React.FC = () => {
           <div className="nav-section">
             <h4>QUẢN LÝ NGƯỜI DÙNG</h4>
             <ul>
-              <Link to="/admin/users" style={{ textDecoration: "none", color: "inherit" }}>
+              <li>
+                              <Link to="/admin/users" style={{ textDecoration: "none", color: "inherit" }}>
                                 👥 Học sinh
                               </Link>
+                            </li>
               <li>📈 Báo cáo học tập</li>
             </ul>
           </div>
@@ -239,11 +302,11 @@ const LessonAdmin: React.FC = () => {
           <table className="lesson-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Tên bài học ↑</th>
-                <th>Chương ↑</th>
-                <th>Video ↑</th>
-                <th>Hình ảnh ↑</th>
+                <th># ↑</th>
+                <th>Tên bài học</th>
+                <th>Chương</th>
+                <th>Video </th>
+                <th>Hình ảnh </th>
                 <th>Chức năng</th>
               </tr>
             </thead>
