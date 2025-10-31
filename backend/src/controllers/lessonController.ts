@@ -106,8 +106,14 @@ const lessonController: Controller = {
         return;
       }
 
+      // Only allow whitelisted fields to be written to avoid passing an explicit id
       const lesson = await prisma.lesson.create({
-        data: lessonData,
+        data: {
+          chapterId: lessonData.chapterId,
+          title: lessonData.title,
+          videoUrl: lessonData.videoUrl ?? null,
+          imageUrl: lessonData.imageUrl ?? null,
+        },
         include: {
           chapter: true
         }
@@ -148,9 +154,15 @@ const lessonController: Controller = {
         }
       }
 
+      // Only update allowed fields
       const updatedLesson = await prisma.lesson.update({
         where: { id: parseInt(id) },
-        data: lessonData,
+        data: {
+          ...(lessonData.chapterId !== undefined ? { chapterId: lessonData.chapterId } : {}),
+          ...(lessonData.title !== undefined ? { title: lessonData.title } : {}),
+          ...(lessonData.videoUrl !== undefined ? { videoUrl: lessonData.videoUrl } : {}),
+          ...(lessonData.imageUrl !== undefined ? { imageUrl: lessonData.imageUrl } : {}),
+        },
         include: {
           chapter: true
         }

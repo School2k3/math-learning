@@ -13,12 +13,18 @@ const practiceController: Controller = {
         return;
       }
 
-      // Try to find existing session for this user and topic that's not finished
+      // Try to find existing session for this user and lesson/topic that's not finished
+      const whereClause: any = {
+        userId: parseInt(userId),
+        finishedAt: null,
+      };
+
+      if (lessonId) whereClause.lessonId = parseInt(lessonId);
+      if (topic) whereClause.topic = topic;
+
       let practiceSession = await prisma.practiceSession.findFirst({
-        where: {
-          userId: parseInt(userId),
-          finishedAt: null,
-        },
+        where: whereClause,
+        include: { lesson: true }
       });
 
       // If no existing session, create a new one
@@ -26,13 +32,15 @@ const practiceController: Controller = {
         practiceSession = await prisma.practiceSession.create({
           data: {
             userId: parseInt(userId),
+            lessonId: lessonId ? parseInt(lessonId) : null,
             score: 0,
             totalQuestions: 0,
             startedAt: new Date(),
           },
+          include: { lesson: true }
         });
       }
-      
+
       res.status(201).json({ practiceSession });
     } catch (error) {
       console.error('Error creating/updating practice session:', error);
@@ -236,6 +244,7 @@ const practiceController: Controller = {
       const practiceSession = await prisma.practiceSession.findUnique({
         where: { id: parseInt(practiceId) },
         include: {
+          lesson: true,
           practiceAnswers: {
             include: {
               question: true,
@@ -262,6 +271,11 @@ const practiceController: Controller = {
         incorrectAnswers,
         pointsToComplete: Math.max(0, 100 - practiceSession.score),
         isCompleted: practiceSession.finishedAt !== null,
+        lesson: practiceSession.lesson ? {
+          id: practiceSession.lesson.id,
+          title: practiceSession.lesson.title,
+          imageUrl: practiceSession.lesson.imageUrl
+        } : null,
         practiceSession
       });
     } catch (error) {
