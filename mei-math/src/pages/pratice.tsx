@@ -4,9 +4,8 @@ import "../css/pratice.css";
 import { 
   fetchQuestionsByLesson, 
   fetchQuestionAudio,
-  createPracticeSession,
-  submitAnswer,
-  completePracticeSession 
+  completePracticeSession,
+  savePracticeAnswer // Nhập hàm lưu đáp án
 } from "../api/praticeAPI";
 import { fetchAllChapters } from "../api/chapterAPI";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -53,12 +52,13 @@ const Pratice: React.FC = () => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [chapterTitle, setChapterTitle] = useState(""); // Thêm state này
-  const [practiceId, setPracticeId] = useState<number | null>(null); // Thêm state cho practice session
+ 
   const [searchParams] = useSearchParams();
   const lessonTitle = searchParams.get("title") || "";
   const navigate = useNavigate();
   const lessonId = Number(searchParams.get("lessonId"));
   const chapterId = Number(searchParams.get("chapterId")); // Lấy từ URL
+  const practiceId = Number(searchParams.get("practiceSessionId"));
 
   useEffect(() => {
     if (lessonId) {
@@ -84,21 +84,10 @@ const Pratice: React.FC = () => {
           return questionsData;
         });
 
-      // Tạo practice session song song
-      const createSessionPromise = createPracticeSession(lessonId)
-        .then((sessionData) => {
-          console.log("Practice session created:", sessionData);
-          setPracticeId(sessionData.id);
-          return sessionData;
-        })
-        .catch((error) => {
-          console.error("Failed to create practice session:", error);
-          // Không blocking nếu tạo session thất bại
-          return null;
-        });
+      
 
       // Chờ cả 2 promises
-      Promise.all([fetchQuestionsPromise, createSessionPromise])
+      Promise.all([fetchQuestionsPromise])
         .finally(() => setLoading(false));
     }
   }, [lessonId]);
@@ -189,20 +178,26 @@ const Pratice: React.FC = () => {
   // Sửa lại hàm handleSubmit cho đúng dữ liệu
   const handleSubmit = async () => {
     if (selected === null) return;
-    
-    const isCorrect = questions[current].answers[selected]?.isCorrect;
+
     const currentQuestion = questions[current];
-    
-    // Gọi API submitAnswer nếu có practiceId
+    const selectedAnswer = currentQuestion.answers[selected];
+    const answerId = selectedAnswer.id;
+
+    // Gọi API lưu đáp án nếu có practiceId
     if (practiceId) {
       try {
-        await submitAnswer(practiceId, currentQuestion.id, isCorrect);
+        const res = await savePracticeAnswer(practiceId, currentQuestion.id, answerId);
+        console.log("savePracticeAnswer result:", res);
       } catch (error) {
-        console.error("Error submitting answer:", error);
-        // Tiếp tục game nếu API lỗi
+        console.error("Error saving practice answer:", error);
       }
+    } else {
+      console.warn("practiceId is null, cannot save answer");
     }
+
+    const isCorrect = questions[current].answers[selected]?.isCorrect;
     
+    // Cập nhật điểm số và số câu đúng/sai
     if (isCorrect) {
       const newCorrectCount = correctCount + 1;
       const newScore = score + 10;
@@ -251,6 +246,18 @@ const Pratice: React.FC = () => {
       }
     }
   };
+
+  // Gọi completePracticeSession khi component unmount
+  useEffect(() => {
+    return () => {
+      // Gọi khi rời khỏi trang
+      if (practiceId) {
+        completePracticeSession(practiceId)
+          .then(() => console.log("Practice session completed on unmount"))
+          .catch((err) => console.error("Error completing session on unmount:", err));
+      }
+    };
+  }, [practiceId]);
 
   return (
     <div>

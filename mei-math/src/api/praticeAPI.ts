@@ -30,14 +30,13 @@ export async function fetchQuestionAudio(questionId: number) {
 // Create or update a practice session
 export async function createOrUpdatePracticeSession(
   userId: number,
-  topic: string,
   lessonId?: number
 ) {
   const url = "/api/practice/session";
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, topic, lessonId }),
+    body: JSON.stringify({ userId, lessonId }),
   });
 
   if (!response.ok) {
@@ -67,71 +66,7 @@ export async function savePracticeAnswer(
   return response.json();
 }
 
-// Get current score for a practice session
-export async function getPracticeScore(practiceId: number) {
-  const url = `/api/practice/session/${practiceId}/score`;
-  const response = await fetch(url);
 
-  if (!response.ok) {
-    throw new Error("Không thể lấy điểm luyện tập");
-  }
-
-  return response.json();
-}
-
-export async function getUserPracticeHistory(userId: number) {
-  const url = `/api/practice/history/${userId}`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error("Không thể lấy lịch sử luyện tập");
-  }
-
-  return response.json();
-}
-
-export async function createPracticeSession(lessonId: number) {
-  const response = await fetch("/api/practice/session", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      lessonId: lessonId,
-      topic: "practiceSession",
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to create practice session");
-  }
-
-  return response.json();
-}
-
-export async function submitAnswer(
-  practiceId: number,
-  questionId: number,
-  isCorrect: boolean
-) {
-  const response = await fetch("/api/practice/answer", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      practiceId: practiceId,
-      questionId: questionId,
-      isCorrect: isCorrect,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to submit answer");
-  }
-
-  return response.json();
-}
 
 export async function completePracticeSession(practiceId: number) {
   const response = await fetch(`/api/practice/session/${practiceId}/complete`, {
@@ -158,3 +93,4 @@ export async function getLessonProgress(lessonId: number) {
 
   return response.json();
 }
+
