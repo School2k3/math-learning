@@ -12,6 +12,7 @@ import answerRoutes from './routes/answerRoutes.js';
 import examRoutes from './routes/examRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import practiceRoutes from './routes/practiceRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -35,6 +36,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/answers', answerRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/practice', practiceRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, { 
