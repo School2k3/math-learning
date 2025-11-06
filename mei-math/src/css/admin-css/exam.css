@@ -110,6 +110,7 @@
   padding: 12px 10px;
   border-bottom: 1px solid #e9ecef;
   vertical-align: middle;
+  text-align: left;
 }
 
 .exam-table tbody tr:hover {

@@ -145,6 +145,11 @@ const HomeAdmin: React.FC = () => {
                   📋 Quản lý bài kiểm tra
                 </Link>
               </li>
+              <li>
+                <Link to="/admin/answers" style={{ textDecoration: "none", color: "inherit" }}>
+                  📝 Quản lý đáp án
+                </Link>
+              </li>
             </ul>
           </div>
           

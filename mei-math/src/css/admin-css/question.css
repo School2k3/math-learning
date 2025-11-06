@@ -179,7 +179,7 @@
 .type-badge {
   padding: 4px 8px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -310,11 +310,11 @@
 }
 .question-table th:nth-child(4),
 .question-table td:nth-child(4) {
-  width: 15%;
+  width: 6%;
 }
 .question-table th:nth-child(5),
 .question-table td:nth-child(5) {
-  width: 6%;
+  width: 15%;
 }
 .question-table th:nth-child(6),
 .question-table td:nth-child(6) {
@@ -326,11 +326,11 @@
 }
 .question-table th:nth-child(8),
 .question-table td:nth-child(8) {
-  width: 15%;
+  width: 10%;
 }
 .question-table th:nth-child(9),
 .question-table td:nth-child(9) {
-  width: 12%;
+  width: 17%;
 }
 
 /* Responsive */

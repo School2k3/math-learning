@@ -5,7 +5,8 @@ import {
   fetchQuestionsByLesson, 
   fetchQuestionAudio,
   completePracticeSession,
-  savePracticeAnswer // Nhập hàm lưu đáp án
+  savePracticeAnswer, // Nhập hàm lưu đáp án
+  checkPracticeSessionStatus // Thêm import này
 } from "../api/praticeAPI";
 import { fetchAllChapters } from "../api/chapterAPI";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -103,6 +104,26 @@ const Pratice: React.FC = () => {
     }
   }, [chapterId]);
 
+  // Kiểm tra trạng thái session khi component mount
+  useEffect(() => {
+    if (practiceId) {
+      checkPracticeSessionStatus(practiceId)
+        .then((status) => {
+          console.log("Session status:", status);
+          if (status.completed) {
+            setSessionCompleted(true);
+            console.warn("Practice session already completed");
+            // Có thể redirect về study page hoặc hiển thị thông báo
+            alert("Phiên luyện tập này đã hoàn thành. Vui lòng tạo phiên mới.");
+            navigate(-1); // Quay lại trang trước
+          }
+        })
+        .catch((error) => {
+          console.error("Error checking session status:", error);
+        });
+    }
+  }, [practiceId, navigate]);
+
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [showIncorrect, setShowIncorrect] = useState(false);
@@ -113,6 +134,7 @@ const Pratice: React.FC = () => {
   const [usedQuestions, setUsedQuestions] = useState<Set<number>>(new Set());
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [sessionCompleted, setSessionCompleted] = useState(false); // Thêm state này
   const handlePlayAudio = async () => {
     try {
       setIsPlayingAudio(true);
@@ -177,22 +199,30 @@ const Pratice: React.FC = () => {
 
   // Sửa lại hàm handleSubmit cho đúng dữ liệu
   const handleSubmit = async () => {
-    if (selected === null) return;
+    if (selected === null || sessionCompleted) return; // Kiểm tra sessionCompleted
 
     const currentQuestion = questions[current];
     const selectedAnswer = currentQuestion.answers[selected];
     const answerId = selectedAnswer.id;
 
-    // Gọi API lưu đáp án nếu có practiceId
-    if (practiceId) {
+    if (practiceId && !sessionCompleted) { // Kiểm tra session chưa complete
       try {
         const res = await savePracticeAnswer(practiceId, currentQuestion.id, answerId);
         console.log("savePracticeAnswer result:", res);
       } catch (error) {
         console.error("Error saving practice answer:", error);
+        // Nếu lỗi 400, có thể session đã complete
+        if (error.message.includes("400") || error.message.includes("Không thể lưu câu trả lời")) {
+          console.warn("Session may already be completed");
+          setSessionCompleted(true);
+          alert("Phiên luyện tập đã kết thúc. Vui lòng tạo phiên mới.");
+          navigate(-1);
+          return;
+        }
       }
     } else {
-      console.warn("practiceId is null, cannot save answer");
+      console.warn("practiceId is null or session completed, cannot save answer");
+      return;
     }
 
     const isCorrect = questions[current].answers[selected]?.isCorrect;
@@ -209,9 +239,10 @@ const Pratice: React.FC = () => {
       // Kết thúc game khi đạt 100 điểm
       if (newScore >= 100) {
         // Gọi API complete session nếu có practiceId
-        if (practiceId) {
+        if (practiceId && !sessionCompleted) {
           try {
             await completePracticeSession(practiceId);
+            setSessionCompleted(true); // Đánh dấu đã complete
           } catch (error) {
             console.error("Error completing practice session:", error);
           }
@@ -247,26 +278,19 @@ const Pratice: React.FC = () => {
     }
   };
 
-  // Gọi completePracticeSession khi component unmount
+  // Sửa lại useEffect cleanup để không tự động complete session
   useEffect(() => {
     return () => {
-      // Gọi khi rời khỏi trang
-      if (practiceId) {
-        completePracticeSession(practiceId)
-          .then(() => console.log("Practice session completed on unmount"))
-          .catch((err) => console.error("Error completing session on unmount:", err));
-      }
+      // Không tự động complete session khi unmount
+      // Session chỉ được complete khi user đạt 100 điểm
+      console.log("Component unmounting, session completion handled manually");
     };
-  }, [practiceId]);
+  }, []);
 
   return (
     <div>
       {isFinished ? (
         <div style={{ marginTop: "-360px" }}>
-          <Header bgWhite />
-        </div>
-      ) : showIncorrect ? (
-        <div style={{ marginTop: "-270px" }}>
           <Header bgWhite />
         </div>
       ) : (
@@ -348,7 +372,7 @@ const Pratice: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : !showIncorrect ? (
+        ) : (
           <div className="pratice-question-block">
             {/* Thêm dòng này phía trên Câu */}
             
@@ -444,6 +468,116 @@ const Pratice: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {/* Hiển thị thông báo và giải thích khi trả lời sai - inline */}
+              {showIncorrect && (
+                <div style={{ 
+                  marginTop: "20px", 
+                  marginBottom: "20px",
+                  backgroundColor: "#fff3cd",
+                  border: "1px solid #ffeaa7",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <img
+                      src="/public/incorrect.png"
+                      alt="incorrect"
+                      style={{ width: "40px" }}
+                    />
+                    <span
+                      style={{
+                        color: "#856404",
+                        fontWeight: 600,
+                        fontSize: "18px",
+                      }}
+                    >
+                      Sai rồi bé ơi, đọc kĩ lại đề nhé{" "}
+                      <span style={{ color: "red" }}>❤️</span>
+                    </span>
+                  </div>
+                  
+                  <div
+                    style={{
+                      background: "#ffbc63",
+                      borderRadius: "6px 6px 0 0",
+                      padding: "8px 16px",
+                      fontWeight: 600,
+                      color: "#fff"
+                    }}
+                  >
+                    <span role="img" aria-label="pin">
+                      📍
+                    </span>{" "}
+                    Giải thích
+                  </div>
+                  
+                  <div
+                    style={{
+                      background: "#fff",
+                      borderRadius: "0 0 6px 6px",
+                      padding: "16px",
+                      border: "1px solid #ffbc63",
+                      borderTop: "none"
+                    }}
+                  >
+                    {/* Hiển thị giải thích nếu có */}
+                    {questions[current]?.explanationText && (
+                      <div style={{ marginBottom: "12px", fontSize: "16px", lineHeight: "1.5" }}>
+                        {questions[current].explanationText}
+                      </div>
+                    )}
+                    {questions[current]?.explanationImg && (
+                      <div style={{ marginBottom: "12px" }}>
+                        <img
+                          src={questions[current].explanationImg}
+                          alt="Giải thích"
+                          style={{ maxWidth: "100%", height: "auto", display: "block" }}
+                        />
+                      </div>
+                    )}
+                    
+                    <div style={{ marginBottom: "16px" }}>
+                      <b>Đáp án đúng:</b>{" "}
+                      {
+                        questions[current]?.answers.find((ans: any) => ans.isCorrect)
+                          ?.answerText
+                      }
+                    </div>
+                    
+                    <button
+                      style={{
+                        background: "#28a745",
+                        color: "#fff",
+                        fontWeight: 600,
+                        fontSize: "16px",
+                        border: "none",
+                        borderRadius: "6px",
+                        padding: "10px 24px",
+                        cursor: "pointer",
+                        transition: "background 0.3s ease"
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.background = "#218838";
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.background = "#28a745";
+                      }}
+                      onClick={handleNext}
+                    >
+                      Đã hiểu
+                    </button>
+                  </div>
+                </div>
+              )}
               <span style={{ fontSize: "22px", color: "#252641" }}>
                 {questions[current]?.questionText}
               </span>
@@ -480,93 +614,6 @@ const Pratice: React.FC = () => {
             <div className="pratice-action-row">
               <button className="pratice-submit-btn" onClick={handleSubmit}>
                 Trả lời
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="pratice-incorrect-modal">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "18px",
-                marginBottom: "12px",
-              }}
-            >
-              <img
-                src="/public/incorrect.png"
-                alt="incorrect"
-                className="pratice-incorrect-img"
-                style={{ width: "100px" }}
-              />
-              <span
-                style={{
-                  color: "#21867a",
-                  fontWeight: 700,
-                  fontSize: "22px",
-                }}
-              >
-                Sai rồi bé ơi, đọc kĩ lại đề nhé{" "}
-                <span style={{ color: "red" }}>❤️</span>
-              </span>
-            </div>
-            <div
-              className="pratice-incorrect-explain"
-              style={{
-                background: "#ffbc63",
-                borderRadius: "6px 6px 0 0",
-                padding: "8px 16px",
-                fontWeight: 600,
-              }}
-            >
-              <span role="img" aria-label="pin">
-                📍
-              </span>{" "}
-              Giải thích
-              {/* Hiển thị giải thích nếu có, nằm trong nền màu cam */}
-              {questions[current]?.explanationText && (
-                <div style={{ marginTop: 8 }}>{questions[current].explanationText}</div>
-              )}
-              {questions[current]?.explanationImg && (
-                <div style={{ marginTop: 8 }}>
-                  <img
-                    src={questions[current].explanationImg}
-                    alt="Giải thích"
-                    style={{ maxWidth: 300, display: "block" }}
-                  />
-                </div>
-              )}
-            </div>
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: "0 0 6px 6px",
-                padding: "16px",
-              }}
-            >
-              <div>
-                <b>Đáp án đúng:</b>{" "}
-                {
-                  questions[current]?.answers.find((ans: any) => ans.isCorrect)
-                    ?.answerText
-                }
-              </div>
-              <button
-                className="pratice-next-btn"
-                style={{
-                  background: "#ff5252",
-                  color: "#fff",
-                  fontWeight: 600,
-                  fontSize: "18px",
-                  border: "none",
-                  borderRadius: "12px",
-                  padding: "12px 48px",
-                  marginTop: "18px",
-                  cursor: "pointer",
-                }}
-                onClick={handleNext}
-              >
-                Đã hiểu
               </button>
             </div>
           </div>

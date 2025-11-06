@@ -46,6 +46,25 @@ export async function createOrUpdatePracticeSession(
   return response.json();
 }
 
+// Create a new practice session (always creates new)
+export async function createNewPracticeSession(
+  userId: number,
+  lessonId?: number
+) {
+  const url = "/api/practice/session/new";
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, lessonId }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Không thể tạo phiên luyện tập mới");
+  }
+
+  return response.json();
+}
+
 // Save an answer for a practice question
 export async function savePracticeAnswer(
   practiceId: number,
@@ -60,14 +79,27 @@ export async function savePracticeAnswer(
   });
 
   if (!response.ok) {
-    throw new Error("Không thể lưu câu trả lời");
+    // Try to extract response body to provide more context for caller
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+      // If body is JSON, keep it readable
+      try {
+        const parsed = JSON.parse(bodyText);
+        bodyText = JSON.stringify(parsed);
+      } catch (e) {
+        // keep raw text
+      }
+    } catch (e) {
+      bodyText = "(no response body)";
+    }
+    throw new Error(`HTTP ${response.status}: ${bodyText}`);
   }
 
   return response.json();
 }
 
-
-
+// Complete a practice session
 export async function completePracticeSession(practiceId: number) {
   const response = await fetch(`/api/practice/session/${practiceId}/complete`, {
     method: "PUT",
@@ -94,3 +126,33 @@ export async function getLessonProgress(lessonId: number) {
   return response.json();
 }
 
+// Lấy điểm và thông tin phiên luyện tập
+export async function fetchPracticeSessionScore(practiceId: number) {
+  const url = `/api/practice/session/${practiceId}/score`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch practice session score");
+  }
+  return response.json();
+}
+
+// Lấy lịch sử luyện tập của user
+export async function fetchPracticeHistoryByUser(userId: number) {
+  const url = `/api/practice/history/${userId}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch practice history");
+  }
+  return response.json();
+}
+
+// Kiểm tra trạng thái của practice session
+export async function checkPracticeSessionStatus(practiceId: number) {
+  const response = await fetch(`/api/practice/session/${practiceId}/status`);
+
+  if (!response.ok) {
+    throw new Error("Failed to check practice session status");
+  }
+
+  return response.json();
+}

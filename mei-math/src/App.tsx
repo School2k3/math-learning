@@ -4,6 +4,7 @@ import StudyPage from "./pages/study-page";
 import TheoreticalVideo from "./pages/theoretical-video";
 import Pratice from "./pages/pratice";
 import Exams from "./pages/exams";
+import DashUser from "./pages/dash-user";
 import Login from "./auth/login";
 import Register from "./auth/register";
 import OTP from "./auth/otp"; 
@@ -15,6 +16,7 @@ import LessonAdmin from "./admin/lesson";
 import QuestionAdmin from "./admin/question"; 
 import ExamAdmin from "./admin/exam"; 
 import UserAdmin from "./admin/user";
+import AnswerAdmin from "./admin/answer";
 
 function App() {
   return (
@@ -26,6 +28,7 @@ function App() {
           <Route path="/theoretical-video" element={<TheoreticalVideo />} />
           <Route path="/pratice" element={<Pratice />} />
           <Route path="/exams" element={<Exams />} />
+          <Route path="/dashboard" element={<DashUser />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/otp" element={<OTP />} /> {/* Thêm route này */}
@@ -35,6 +38,7 @@ function App() {
           <Route path="/admin/questions" element={<QuestionAdmin />} /> {/* Thêm route này */}
           <Route path="/admin/exams" element={<ExamAdmin />} /> {/* Thêm route này */}
           <Route path="/admin/users" element={<UserAdmin />} /> {/* Thêm route này */}
+          <Route path="/admin/answers" element={<AnswerAdmin />} /> {/* Thêm route này */}
         </Routes>
       </BrowserRouter>
     </AuthProvider>

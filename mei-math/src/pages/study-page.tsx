@@ -6,9 +6,9 @@ import { useNavigate, useSearchParams } from "react-router-dom"; // Thêm useSea
 import { fetchChapters } from "../api/chapterAPI";
 import { fetchLessonsByChapter } from "../api/lessonAPI";
 import { fetchExamsByChapter } from "../api/examAPI";
-import { startExam } from "../api/examAPI"; // Import startExam từ examAPI
-import { fetchExamById } from "../api/examAPI"; // Import fetchExamById từ examAPI
-import { getLessonProgress, createOrUpdatePracticeSession } from "../api/praticeAPI"; // Import API progress
+import { startExam } from "../api/examAPI"; 
+import { fetchExamById } from "../api/examAPI"; 
+import { getLessonProgress, createOrUpdatePracticeSession, fetchPracticeHistoryByUser } from "../api/praticeAPI"; // Import API progress
 
 const classOptions = ["Lớp 1","Lớp 2","Lớp 3", "Lớp 4", "Lớp 5"];
 const semesterOptions = ["Học kỳ 1", "Học kỳ 2"];
@@ -64,15 +64,23 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
           setLessons(lessonsData);
           
           // Fetch progress cho mỗi lesson
+          const userId = 1; // hoặc lấy từ context, localStorage
           const progressPromises = lessonsData.map(async (lesson: any) => {
             try {
-              const progressData = await getLessonProgress(lesson.id);
-              return { lessonId: lesson.id, ...progressData };
+              const historyData = await fetchPracticeHistoryByUser(userId);
+              // Lọc ra các session của lesson này
+              const sessions = historyData.practiceHistory.filter(
+                (s: any) => s.lessonId === lesson.id
+              );
+              // Lấy session mới nhất (hoặc điểm cao nhất)
+              const latestSession = sessions.sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt))[0];
+              const score = latestSession ? latestSession.score : 0;
+              const completed = latestSession ? latestSession.score >= 100 : false;
+              return { lessonId: lesson.id, progress: score, completed };
             } catch {
               return { lessonId: lesson.id, progress: 0, completed: false };
             }
           });
-          
           const progressResults = await Promise.all(progressPromises);
           const progressMap = progressResults.reduce((acc, result) => {
             acc[result.lessonId] = { progress: result.progress, completed: result.completed };
@@ -241,7 +249,7 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                             </span>
                           </div>
                           <div>
-                            <button
+                              <button
                               className="study-card-action-btn"
                               style={{
                                 background: "none",
@@ -257,9 +265,17 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                               onClick={async () => {
                                 try {
                                   console.log("Starting practice for lesson.id:", lesson.id);
+                                  // Use createOrUpdatePracticeSession (server will create or return an active session)
                                   const result = await createOrUpdatePracticeSession(1, lesson.id);
                                   console.log("createOrUpdatePracticeSession result:", result);
-                                  const practiceSessionId = result.practiceSession?.id;
+                                  const practiceSessionId = result.practiceSession?.id ?? result.data?.practiceSession?.id;
+
+                                  if (!practiceSessionId) {
+                                    console.error("No practiceSession id returned from API", result);
+                                    throw new Error("Failed to create practice session ID");
+                                  }
+
+                                  // Navigate to practice; the practice page will verify session status on mount
                                   navigate(
                                     `/pratice?lessonId=${lesson.id}&title=${encodeURIComponent(lesson.title)}&chapterId=${selectedChapterId}&practiceSessionId=${practiceSessionId}`
                                   );
@@ -311,7 +327,9 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                                 alignItems: "center",
                                 outline: "none"
                               }}
-                              // Nếu muốn bấm vào tiến độ thì thêm onClick ở đây
+                              onClick={() => {
+                                navigate(`/dashboard?lessonId=${lesson.id}&chapterId=${selectedChapterId}`);
+                              }}
                             >
                               <span className="study-card-action-icon" style={{ color: "#A1A1A1" }}>
                                 <ProgressCircle 
@@ -427,7 +445,7 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                       }}
                       onClick={async () => {
                         try {
-                          const res = await startExam(exam.id, 4); // userId tạm thời là 4
+                          const res = await startExam(exam.id, 1); // userId tạm thời là 1
                           const examDetail = await fetchExamById(exam.id);
                           // Truyền thêm chapterId và chapterTitle qua state
                           navigate("/exams", {

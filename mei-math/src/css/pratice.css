@@ -88,10 +88,10 @@
 }
 
 .pratice-question {
-  font-size: 17px;
-  font-weight: 600;
+   color: #252641;
+  font-size: 16px;
+  font-weight: 400;
   margin-bottom: 10px; /* giảm margin */
-  color: #252641;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -135,6 +135,7 @@
 .pratice-option-text {
   color: #252641;
   font-size: 16px;
+  font-weight: 400;
 }
 
 .pratice-action-row {

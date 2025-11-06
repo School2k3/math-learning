@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "../css/admin-css/chapter.css";
 import { Link, useNavigate } from "react-router-dom";
-import { fetchAllChapters, fetchChaptersByGrade, createChapter, updateChapter, deleteChapter } from "../api/chapterAPI";
+import {
+  fetchAllChapters,
+  fetchChaptersByGrade,
+  createChapter,
+  updateChapter,
+  deleteChapter,
+} from "../api/chapterAPI";
 import { useAuth } from "../contexts/AuthContext";
 interface Chapter {
   id: number;
@@ -16,17 +22,19 @@ const ChapterAdmin: React.FC = () => {
   const [error, setError] = useState("");
   const { logout } = useAuth();
   const navigate = useNavigate();
-  
+
   // Filter states
   const [filterGrade, setFilterGrade] = useState<string>("all");
   const [filterVolume, setFilterVolume] = useState<string>("all");
-  
+
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<Chapter>>({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [newChapter, setNewChapter] = useState<Partial<Chapter>>({});
 
-  const [sortField, setSortField] = useState<"title" | "grade" | "volume" | "">("");
+  const [sortField, setSortField] = useState<"title" | "grade" | "volume" | "">(
+    ""
+  );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   // Load data từ API
@@ -50,9 +58,11 @@ const ChapterAdmin: React.FC = () => {
   }, []);
 
   // Filter chapters
-  const filteredChapters = chapters.filter(chapter => {
-    if (filterGrade !== "all" && chapter.grade !== Number(filterGrade)) return false;
-    if (filterVolume !== "all" && chapter.volume !== Number(filterVolume)) return false;
+  const filteredChapters = chapters.filter((chapter) => {
+    if (filterGrade !== "all" && chapter.grade !== Number(filterGrade))
+      return false;
+    if (filterVolume !== "all" && chapter.volume !== Number(filterVolume))
+      return false;
     return true;
   });
 
@@ -86,7 +96,7 @@ const ChapterAdmin: React.FC = () => {
         volume: newChapter.volume!,
         title: newChapter.title!,
       });
-      
+
       // Reload data sau khi thêm thành công
       await loadData();
       setNewChapter({});
@@ -102,14 +112,18 @@ const ChapterAdmin: React.FC = () => {
 
   // Xóa chương (tạm thời vô hiệu hóa - chỉ có API GET)
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa chương này? Hành động này không thể hoàn tác!")) {
+    if (
+      !window.confirm(
+        "Bạn có chắc chắn muốn xóa chương này? Hành động này không thể hoàn tác!"
+      )
+    ) {
       return;
     }
 
     try {
       setLoading(true);
       await deleteChapter(id);
-      
+
       // Reload data sau khi xóa thành công
       await loadData();
       alert("Xóa chương thành công!");
@@ -141,7 +155,7 @@ const ChapterAdmin: React.FC = () => {
         volume: editData.volume!,
         title: editData.title!,
       });
-      
+
       // Reload data sau khi cập nhật thành công
       await loadData();
       setEditingId(null);
@@ -160,7 +174,6 @@ const ChapterAdmin: React.FC = () => {
       navigate("/auth/login");
     }
   };
-
 
   // Hủy chỉnh sửa
   const handleCancel = () => {
@@ -189,77 +202,103 @@ const ChapterAdmin: React.FC = () => {
           <h2>MEI Math</h2>
           <p>Admin Dashboard</p>
         </div>
-        
+
         <nav className="admin-nav">
           <div className="nav-section">
             <h4>QUẢN LÝ NỘI DUNG</h4>
-                        <ul>
-                                      <li>
-                                        <Link to="/home-admin" style={{ textDecoration: "none", color: "inherit" }}>
-                                          📊 Dashboard
-                                        </Link>
-                                      </li>
+            <ul>
+              <li>
+                <Link
+                  to="/home-admin"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  📊 Dashboard
+                </Link>
+              </li>
 
-                                      <li className="active">
-                                        <Link to="/admin/chapters" style={{ textDecoration: "none", color: "inherit" }}>
-                                          📖 Quản lý chương
-                                        </Link>
-                                      </li>
-                                      <li>
-                                        <Link to="/admin/lessons" style={{ textDecoration: "none", color: "inherit" }}>
-                                          📝 Quản lý bài học
-                                        </Link>
-                                      </li>
-                                      <li>
-                                        <Link to="/admin/questions" style={{ textDecoration: "none", color: "inherit" }}>
-                                          ❓ Quản lý câu hỏi
-                                        </Link>
-                                      </li>
-                                      <li ><Link to="/admin/exams" style={{ textDecoration: "none", color: "inherit" }}>
-                                                        📋 Quản lý bài kiểm tra
-                                                      </Link></li>
-                                    </ul>
+              <li className="active">
+                <Link
+                  to="/admin/chapters"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  📖 Quản lý chương
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/admin/lessons"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  📝 Quản lý bài học
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/admin/questions"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  ❓ Quản lý câu hỏi
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/admin/exams"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  📋 Quản lý bài kiểm tra
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/admin/answers"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  📝 Quản lý đáp án
+                </Link>
+              </li>
+            </ul>
           </div>
-          
+
           <div className="nav-section">
             <h4>QUẢN LÝ NGƯỜI DÙNG</h4>
             <ul>
               <li>
-                              <Link to="/admin/users" style={{ textDecoration: "none", color: "inherit" }}>
-                                👥 Học sinh
-                              </Link>
-                            </li>
-             
+                <Link
+                  to="/admin/users"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  👥 Học sinh
+                </Link>
+              </li>
+
               <li>📈 Báo cáo học tập</li>
             </ul>
           </div>
-          
+
           <div className="nav-section">
             <h4>HỆ THỐNG</h4>
             <ul>
               <li>⚙️ Cài đặt</li>
               <li>🔐 Bảo mật</li>
               <li>📊 Thống kê</li>
-              <li >
-                <button 
+              <li>
+                <button
                   onClick={handleLogout}
                   className="logout-btn"
-                  style={{ 
+                  style={{
                     background: "none",
-                    backgroundColor: "red", 
-                    border: "none",  
+                    backgroundColor: "red",
+                    border: "none",
                     cursor: "pointer",
                     textAlign: "left",
-                    color:"red",
+                    color: "red",
                     width: "100%",
-                    padding: "0"
-                    
+                    padding: "0",
                   }}
                 >
                   🚪 Đăng xuất
                 </button>
               </li>
-
             </ul>
           </div>
         </nav>
@@ -272,13 +311,13 @@ const ChapterAdmin: React.FC = () => {
             <h1>Chương học</h1>
             <p>{filteredChapters.length} chương</p>
           </div>
-          <button 
+          <button
             className="btn-add"
             onClick={() => setShowAddForm(true)}
             disabled={loading}
-            style={{ 
+            style={{
               opacity: loading ? 0.6 : 1,
-              cursor: loading ? "not-allowed" : "pointer"
+              cursor: loading ? "not-allowed" : "pointer",
             }}
           >
             {loading ? "⏳ Đang xử lý..." : "+ Thêm mới"}
@@ -286,20 +325,35 @@ const ChapterAdmin: React.FC = () => {
         </div>
 
         {/* Filter Section */}
-        <div className="filter-section" style={{ 
-          display: "flex", 
-          gap: "16px", 
-          marginBottom: "20px", 
-          padding: "16px", 
-          backgroundColor: "#f8f9fa", 
-          borderRadius: "8px" 
-        }}>
+        <div
+          className="filter-section"
+          style={{
+            display: "flex",
+            gap: "16px",
+            marginBottom: "20px",
+            padding: "16px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+          }}
+        >
           <div>
-            <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>Lọc theo lớp:</label>
-            <select 
-              value={filterGrade} 
+            <label
+              style={{
+                display: "block",
+                marginBottom: "4px",
+                fontWeight: "500",
+              }}
+            >
+              Lọc theo lớp:
+            </label>
+            <select
+              value={filterGrade}
               onChange={(e) => setFilterGrade(e.target.value)}
-              style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
+              style={{
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ddd",
+              }}
             >
               <option value="all">Tất cả lớp</option>
               <option value="1">Lớp 1</option>
@@ -310,19 +364,39 @@ const ChapterAdmin: React.FC = () => {
             </select>
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>Lọc theo học kỳ:</label>
-            <select 
-              value={filterVolume} 
+            <label
+              style={{
+                display: "block",
+                marginBottom: "4px",
+                fontWeight: "500",
+              }}
+            >
+              Lọc theo học kỳ:
+            </label>
+            <select
+              value={filterVolume}
               onChange={(e) => setFilterVolume(e.target.value)}
-              style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}
+              style={{
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ddd",
+              }}
             >
               <option value="all">Tất cả học kỳ</option>
               <option value="1">Học kỳ 1</option>
               <option value="2">Học kỳ 2</option>
             </select>
           </div>
-          {loading && <div style={{ alignSelf: "flex-end", color: "#666" }}>Đang tải...</div>}
-          {error && <div style={{ alignSelf: "flex-end", color: "#d32f2f" }}>Lỗi: {error}</div>}
+          {loading && (
+            <div style={{ alignSelf: "flex-end", color: "#666" }}>
+              Đang tải...
+            </div>
+          )}
+          {error && (
+            <div style={{ alignSelf: "flex-end", color: "#d32f2f" }}>
+              Lỗi: {error}
+            </div>
+          )}
         </div>
 
         <div className="chapter-table-container">
@@ -330,14 +404,38 @@ const ChapterAdmin: React.FC = () => {
             <thead>
               <tr>
                 <th>#</th>
-                <th style={{ cursor: "pointer" }} onClick={() => handleSort("title")}>
-                  Tên chương {sortField === "title" ? (sortOrder === "asc" ? "↑" : "↓") : "↑"}
+                <th
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleSort("title")}
+                >
+                  Tên chương{" "}
+                  {sortField === "title"
+                    ? sortOrder === "asc"
+                      ? "↑"
+                      : "↓"
+                    : "↑"}
                 </th>
-                <th style={{ cursor: "pointer" }} onClick={() => handleSort("grade")}>
-                  Lớp {sortField === "grade" ? (sortOrder === "asc" ? "↑" : "↓") : "↑"}
+                <th
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleSort("grade")}
+                >
+                  Lớp{" "}
+                  {sortField === "grade"
+                    ? sortOrder === "asc"
+                      ? "↑"
+                      : "↓"
+                    : "↑"}
                 </th>
-                <th style={{ cursor: "pointer" }} onClick={() => handleSort("volume")}>
-                  Học kỳ {sortField === "volume" ? (sortOrder === "asc" ? "↑" : "↓") : "↑"}
+                <th
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleSort("volume")}
+                >
+                  Học kỳ{" "}
+                  {sortField === "volume"
+                    ? sortOrder === "asc"
+                      ? "↑"
+                      : "↓"
+                    : "↑"}
                 </th>
                 <th>Chức năng</th>
               </tr>
@@ -351,7 +449,9 @@ const ChapterAdmin: React.FC = () => {
                     <input
                       type="text"
                       value={newChapter.title || ""}
-                      onChange={(e) => setNewChapter({...newChapter, title: e.target.value})}
+                      onChange={(e) =>
+                        setNewChapter({ ...newChapter, title: e.target.value })
+                      }
                       placeholder="Nhập tên chương"
                       className="input-field"
                     />
@@ -359,7 +459,12 @@ const ChapterAdmin: React.FC = () => {
                   <td>
                     <select
                       value={newChapter.grade || ""}
-                      onChange={(e) => setNewChapter({...newChapter, grade: Number(e.target.value)})}
+                      onChange={(e) =>
+                        setNewChapter({
+                          ...newChapter,
+                          grade: Number(e.target.value),
+                        })
+                      }
                       className="select-field"
                     >
                       <option value="">Chọn lớp</option>
@@ -373,7 +478,12 @@ const ChapterAdmin: React.FC = () => {
                   <td>
                     <select
                       value={newChapter.volume || ""}
-                      onChange={(e) => setNewChapter({...newChapter, volume: Number(e.target.value)})}
+                      onChange={(e) =>
+                        setNewChapter({
+                          ...newChapter,
+                          volume: Number(e.target.value),
+                        })
+                      }
                       className="select-field"
                     >
                       <option value="">Chọn kỳ</option>
@@ -383,15 +493,15 @@ const ChapterAdmin: React.FC = () => {
                   </td>
                   <td>
                     <div className="action-buttons">
-                      <button 
-                        className="btn-save" 
+                      <button
+                        className="btn-save"
                         onClick={handleAdd}
                         disabled={loading}
                       >
                         {loading ? "⏳" : "💾"} Lưu
                       </button>
-                      <button 
-                        className="btn-cancel" 
+                      <button
+                        className="btn-cancel"
                         onClick={handleCancel}
                         disabled={loading}
                       >
@@ -411,7 +521,9 @@ const ChapterAdmin: React.FC = () => {
                       <input
                         type="text"
                         value={editData.title || ""}
-                        onChange={(e) => setEditData({...editData, title: e.target.value})}
+                        onChange={(e) =>
+                          setEditData({ ...editData, title: e.target.value })
+                        }
                         className="input-field"
                       />
                     ) : (
@@ -422,7 +534,12 @@ const ChapterAdmin: React.FC = () => {
                     {editingId === chapter.id ? (
                       <select
                         value={editData.grade || ""}
-                        onChange={(e) => setEditData({...editData, grade: Number(e.target.value)})}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            grade: Number(e.target.value),
+                          })
+                        }
                         className="select-field"
                       >
                         <option value={1}>1</option>
@@ -439,7 +556,12 @@ const ChapterAdmin: React.FC = () => {
                     {editingId === chapter.id ? (
                       <select
                         value={editData.volume || ""}
-                        onChange={(e) => setEditData({...editData, volume: Number(e.target.value)})}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            volume: Number(e.target.value),
+                          })
+                        }
                         className="select-field"
                       >
                         <option value={1}>1</option>
@@ -452,16 +574,16 @@ const ChapterAdmin: React.FC = () => {
                   <td>
                     {editingId === chapter.id ? (
                       <div className="action-buttons">
-                        <button 
-                          className="btn-save" 
+                        <button
+                          className="btn-save"
                           onClick={handleSave}
                           disabled={loading}
                           style={{ opacity: loading ? 0.6 : 1 }}
                         >
                           {loading ? "⏳" : "💾"}
                         </button>
-                        <button 
-                          className="btn-cancel" 
+                        <button
+                          className="btn-cancel"
                           onClick={() => setEditingId(null)}
                           disabled={loading}
                         >
@@ -470,11 +592,14 @@ const ChapterAdmin: React.FC = () => {
                       </div>
                     ) : (
                       <div className="action-buttons">
-                        <button className="btn-edit" onClick={() => handleEdit(chapter)}>
+                        <button
+                          className="btn-edit"
+                          onClick={() => handleEdit(chapter)}
+                        >
                           ✏️
                         </button>
-                        <button 
-                          className="btn-delete" 
+                        <button
+                          className="btn-delete"
                           onClick={() => handleDelete(chapter.id)}
                           disabled={loading}
                           style={{ opacity: loading ? 0.6 : 1 }}

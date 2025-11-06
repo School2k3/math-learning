@@ -155,7 +155,7 @@ const Exams: React.FC = () => {
             </div>
             <div className="exams-question-block">
               {/* Hiển thị câu hỏi hiện tại */}
-              <div className="exams-question">
+              <div style={{fontWeight: 400,fontSize: "20px"}} className="exams-question">
                 {examQuestions[current]?.question?.questionText}
                 {examQuestions[current]?.question?.imageUrl && (
                   <div style={{ marginTop: 16, display: "flex", justifyContent: "center" }}>
