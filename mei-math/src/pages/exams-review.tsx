@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchExamResultDetail } from "../api/examAPI";
+import { fetchExamResultById } from "../api/examAPI";
 import "../css/exams-review.css";
 
 const ExamsReview: React.FC = () => {
@@ -14,12 +14,16 @@ const ExamsReview: React.FC = () => {
     const loadExamDetail = async () => {
       if (!resultId) return;
 
+      console.log("📖 Loading exam result detail for resultId:", resultId);
+
       try {
-        const result = await fetchExamResultDetail(Number(resultId));
-        console.log("Exam detail:", result);
-        setExamDetail(result.examResult);
+        const result = await fetchExamResultById(Number(resultId));
+        console.log("✅ Exam result detail loaded:", result);
+        
+        // API trả về trực tiếp object examResult với các trường cần thiết
+        setExamDetail(result.examResult || result);
       } catch (error) {
-        console.error("Error loading exam detail:", error);
+        console.error("❌ Error loading exam detail:", error);
       } finally {
         setLoading(false);
       }
@@ -90,7 +94,9 @@ const ExamsReview: React.FC = () => {
           <div className="summary-row">
             <div className="summary-item">
               <span className="summary-label">Bài kiểm tra:</span>
-              <span className="summary-value">{examDetail.examId}</span>
+              <span className="summary-value">
+                {examDetail.exam?.title || `Exam #${examDetail.examId}`}
+              </span>
             </div>
             <div className="summary-item">
               <span className="summary-label">Ngày làm:</span>
@@ -135,9 +141,15 @@ const ExamsReview: React.FC = () => {
           {examDetail.examAnswers && examDetail.examAnswers.length > 0 ? (
             examDetail.examAnswers.map((answer: any, index: number) => {
               const question = answer.question;
-              const userAnswer = question?.answers?.find((a: any) => a.id === answer.chosenAnswerId);
-              const correctAnswer = question?.answers?.find((a: any) => a.isCorrect);
-              
+              const chosenAnswer = answer.chosenAnswer;
+              let correctAnswerText = "";
+              if (question?.answers && Array.isArray(question.answers)) {
+                const correct = question.answers.find((a: any) => a.isCorrect);
+                correctAnswerText = correct?.answerText || "";
+              } else if (question?.correctAnswerText) {
+                correctAnswerText = question.correctAnswerText;
+              }
+
               return (
                 <div 
                   key={answer.id} 
@@ -148,6 +160,9 @@ const ExamsReview: React.FC = () => {
                     <span className={`question-status ${answer.isCorrect ? 'correct' : 'incorrect'}`}>
                       {answer.isCorrect ? '✓ Đúng' : '✗ Sai'}
                     </span>
+                    {answer.isFlagged && (
+                      <span className="flagged-badge">🚩 Đã đánh dấu</span>
+                    )}
                   </div>
 
                   <div className="question-content">
@@ -165,18 +180,29 @@ const ExamsReview: React.FC = () => {
                     <div className="answer-item user-answer">
                       <strong>Câu trả lời của bạn:</strong>
                       <span className={answer.isCorrect ? 'correct-text' : 'incorrect-text'}>
-                        {userAnswer?.answerText || "Chưa trả lời"}
+                        {chosenAnswer?.answerText || "Chưa trả lời"}
                       </span>
                     </div>
 
+                    {/* Hiển thị dòng "Câu trả lời đúng" nếu câu sai */}
                     {!answer.isCorrect && (
                       <div className="answer-item correct-answer">
-                        <strong>Đáp án đúng:</strong>
+                        <strong>Câu trả lời đúng:</strong>
                         <span className="correct-text">
-                          {correctAnswer?.answerText}
+                          {correctAnswerText || "Không xác định"}
                         </span>
                       </div>
                     )}
+
+                    {/* Nếu muốn vẫn giữ dòng Đáp án đúng cũ, có thể bỏ dòng dưới */}
+                    {/* {!answer.isCorrect && correctAnswer && (
+                      <div className="answer-item correct-answer">
+                        <strong>Đáp án đúng:</strong>
+                        <span className="correct-text">
+                          {correctAnswer.answerText}
+                        </span>
+                      </div>
+                    )} */}
 
                     {question?.explanationText && (
                       <div className="explanation-box">

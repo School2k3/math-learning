@@ -1,36 +1,46 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header";
-import { useNavigate } from "react-router-dom";
-import { fetchExamHistory } from "../api/examAPI";
+import { useNavigate, useLocation } from "react-router-dom";
+import { fetchExamResultsByExamId } from "../api/examAPI";
 import { useAuth } from "../contexts/AuthContext";
 import "../css/exams-history.css";
 
 const ExamsHistory: React.FC = () => {
   const [examHistory, setExamHistory] = useState<any[]>([]);
+  const [examInfo, setExamInfo] = useState<any>(null);
+  const [statistics, setStatistics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const loadHistory = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
+      // Lấy examId từ location.state hoặc có thể hardcode tạm
+      const examId = location.state?.examId || 201; // Tạm thời dùng 201, sau này có thể truyền qua navigation
+
+      console.log("📊 Loading exam history for examId:", examId);
 
       try {
-        const result = await fetchExamHistory(user.id);
-        console.log("Exam history:", result);
+        const result = await fetchExamResultsByExamId(examId, {
+          includeFinished: true,
+          includeActive: true
+        });
+        
+        console.log("✅ Exam results loaded:", result);
+        
         setExamHistory(result.examResults || []);
+        setExamInfo(result.exam || null);
+        setStatistics(result.statistics || null);
       } catch (error) {
-        console.error("Error loading exam history:", error);
+        console.error("❌ Error loading exam history:", error);
       } finally {
         setLoading(false);
       }
     };
 
     loadHistory();
-  }, [user]);
+  }, [location.state]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -57,7 +67,9 @@ const ExamsHistory: React.FC = () => {
       
       <div className="exams-history-content">
         <div className="history-header">
-          <h1 className="history-title">Lịch sử bài kiểm tra</h1>
+          <h1 className="history-title">
+            {examInfo ? examInfo.title : "Lịch sử bài kiểm tra"}
+          </h1>
           <button 
             className="back-btn"
             onClick={() => navigate("/study")}
@@ -65,6 +77,24 @@ const ExamsHistory: React.FC = () => {
             ← Quay lại
           </button>
         </div>
+
+        {/* Thống kê */}
+        {statistics && (
+          <div className="statistics-summary">
+            <div className="stat-item">
+              <span className="stat-label">Tổng lần làm:</span>
+              <span className="stat-value">{statistics.totalAttempts}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Điểm trung bình:</span>
+              <span className="stat-value">{statistics.averageScore?.toFixed(1)}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Tỷ lệ đạt:</span>
+              <span className="stat-value">{(statistics.passRate * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="loading-state">Đang tải lịch sử...</div>
@@ -94,7 +124,9 @@ const ExamsHistory: React.FC = () => {
               <tbody>
                 {examHistory.map((exam) => (
                   <tr key={exam.id}>
-                    <td className="exam-title">{exam.examId}</td>
+                    <td className="exam-title">
+                      {examInfo?.title || `Bài kiểm tra #${exam.examId}`}
+                    </td>
                     <td>{formatDate(exam.startedAt)}</td>
                     <td>
                       {exam.finishedAt 

@@ -141,10 +141,11 @@
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 2px solid #e9ecef;
+  gap: 12px;
 }
 
 .question-number {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: #252641;
 }
@@ -152,8 +153,17 @@
 .question-status {
   padding: 6px 16px;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 600;
+}
+
+.flagged-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  background: #fff3cd;
+  color: #856404;
+  font-weight: 500;
 }
 
 .question-status.correct {
@@ -171,14 +181,14 @@
 }
 
 .question-text {
-  font-size: 16px;
+  font-size: 20px;
   color: #333;
   line-height: 1.6;
   margin-bottom: 15px;
 }
 
 .question-image {
-  max-width: 100%;
+  max-width: 400px;
   height: auto;
   border-radius: 8px;
   margin-top: 15px;
@@ -200,12 +210,12 @@
   display: block;
   margin-bottom: 8px;
   color: #666;
-  font-size: 14px;
+  font-size: 20px;
 }
 
 .answer-item span {
   display: block;
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 500;
 }
 
@@ -228,7 +238,7 @@
   display: block;
   margin-bottom: 10px;
   color: #856404;
-  font-size: 14px;
+  font-size: 20px;
 }
 
 .explanation-box p {

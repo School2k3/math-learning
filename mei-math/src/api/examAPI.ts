@@ -185,3 +185,36 @@ export async function fetchExamResultDetail(resultId: number) {
   }
   return response.json();
 }
+
+// Lấy tất cả kết quả (attempts) của một bài kiểm tra (GET /api/exams/{examId}/results)
+export async function fetchExamResultsByExamId(
+  examId: number,
+  options?: { includeFinished?: boolean; includeActive?: boolean }
+) {
+  let url = `/api/exams/${examId}/results`;
+  const params: string[] = [];
+  if (options?.includeFinished !== undefined) {
+    params.push(`includeFinished=${options.includeFinished}`);
+  }
+  if (options?.includeActive !== undefined) {
+    params.push(`includeActive=${options.includeActive}`);
+  }
+  if (params.length > 0) {
+    url += "?" + params.join("&");
+  }
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch exam results by examId");
+  }
+  return response.json();
+}
+
+// Lấy chi tiết một kết quả bài kiểm tra theo resultId (GET /api/exams/results/{id})
+export async function fetchExamResultById(resultId: number) {
+  const url = `/api/exams/results/${resultId}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch exam result by id");
+  }
+  return response.json();
+}
