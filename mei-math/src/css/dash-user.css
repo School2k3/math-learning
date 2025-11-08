@@ -220,6 +220,104 @@
   background: #9e9e9e;
 }
 
+/* Chapters and Lessons Section */
+.loading-chapters {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+  color: #666;
+}
+
+.chapters-container {
+  margin-top: 30px;
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.semester-title {
+  background: linear-gradient(135deg, #9CCC65, #7CB342);
+  color: white;
+  padding: 15px 30px;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  letter-spacing: 1px;
+}
+
+.chapter-section {
+  margin-bottom: 35px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.chapter-section:last-child {
+  border-bottom: none;
+}
+
+.chapter-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2196f3;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e3f2fd;
+}
+
+.lessons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 60px));
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.lesson-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.lesson-circle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Lesson Status Colors */
+.lesson-circle.completed {
+  background: #4caf50;
+  border-color: #4caf50;
+}
+
+.lesson-circle.not-done {
+  background: #f44336;
+  border-color: #f44336;
+}
+
+.lesson-circle.in-progress {
+  background: #2196f3;
+  border-color: #2196f3;
+}
+
+.lesson-circle.not-started {
+  background: white;
+  border-color: #9e9e9e;
+}
+
+.no-lessons,
+.no-chapters {
+  text-align: center;
+  padding: 30px;
+  color: #999;
+  font-style: italic;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .dash-user-content {
@@ -247,5 +345,28 @@
   .date-range-picker {
     flex-wrap: wrap;
     justify-content: center;
+  }
+
+  .chapters-container {
+    padding: 20px;
+  }
+
+  .semester-title {
+    font-size: 18px;
+    padding: 12px 20px;
+  }
+
+  .chapter-title {
+    font-size: 16px;
+  }
+
+  .lessons-grid {
+    grid-template-columns: repeat(auto-fill, minmax(50px, 50px));
+    gap: 15px;
+  }
+
+  .lesson-circle {
+    width: 50px;
+    height: 50px;
   }
 }
