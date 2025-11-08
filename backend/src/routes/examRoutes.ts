@@ -102,6 +102,56 @@ router.get('/results/user/:userId', examController.getExamResultsByUser);
 
 /**
  * @swagger
+ * /api/exams/{examId}/results:
+ *   get:
+ *     summary: Get all exam results by exam ID
+ *     description: Retrieve all exam results/attempts for a specific exam.
+ *     parameters:
+ *       - in: path
+ *         name: examId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Exam ID
+ *       - in: query
+ *         name: includefinished
+ *         schema:
+ *           type: boolean
+ *         description: Include finished exams (default true)
+ *       - in: query
+ *         name: includeactive
+ *         schema:
+ *           type: boolean
+ *         description: Include active exams (default true)
+ *     responses:
+ *       200:
+ *         description: List of exam results for the specified exam
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 examResults:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ExamResult'
+ *                 exam:
+ *                   $ref: '#/components/schemas/Exam'
+ *                 totalAttempts:
+ *                   type: integer
+ *                 averageScore:
+ *                   type: number
+ *                 passRate:
+ *                   type: number
+ *       404:
+ *         description: Exam not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:examId/results', examController.getExamResultsByExamId);
+
+/**
+ * @swagger
  * /api/exams/results/{id}:
  *   get:
  *     summary: Get an exam result by ID

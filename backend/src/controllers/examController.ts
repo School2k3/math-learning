@@ -162,6 +162,112 @@ const examController: Controller = {
     }
   },
   
+  // Get all exam results by exam ID
+  getExamResultsByExamId: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { examId } = req.params;
+      const { includefinished = 'true', includeactive = 'true' } = req.query;
+      
+      // Check if exam exists
+      const exam = await prisma.exam.findUnique({
+        where: { id: parseInt(examId) },
+        include: {
+          examQuestions: {
+            include: {
+              question: true,
+            },
+          },
+        },
+      });
+      
+      if (!exam) {
+        res.status(404).json({ message: 'Exam not found' });
+        return;
+      }
+      
+      // Build where clause based on query parameters
+      const whereClause: any = {
+        examId: parseInt(examId),
+      };
+      
+      // Filter by status if specified
+      if (includefinished === 'false' && includeactive === 'true') {
+        whereClause.finishedAt = null;
+        whereClause.isActive = true;
+      } else if (includefinished === 'true' && includeactive === 'false') {
+        whereClause.finishedAt = { not: null };
+        whereClause.isActive = false;
+      }
+      // If both are true or both are false, include all results
+      
+      const examResults = await prisma.examResult.findMany({
+        where: whereClause,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              fullName: true,
+              role: true,
+              grade: true,
+            },
+          },
+          examAnswers: {
+            include: {
+              question: {
+                select: {
+                  id: true,
+                  questionText: true,
+                },
+              },
+              chosenAnswer: {
+                select: {
+                  id: true,
+                  answerText: true,
+                  isCorrect: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [
+          { finishedAt: 'desc' },
+          { startedAt: 'desc' },
+        ],
+      });
+      
+      // Calculate statistics
+      const finishedResults = examResults.filter(result => result.finishedAt);
+      const totalAttempts = examResults.length;
+      const averageScore = finishedResults.length > 0 
+        ? finishedResults.reduce((sum, result) => sum + result.score, 0) / finishedResults.length
+        : 0;
+      const passedResults = finishedResults.filter(result => result.score >= 60);
+      const passRate = finishedResults.length > 0 ? (passedResults.length / finishedResults.length) * 100 : 0;
+      
+      res.status(200).json({ 
+        examResults,
+        exam: {
+          id: exam.id,
+          title: exam.title,
+          grade: exam.grade,
+          durationMinutes: exam.durationMinutes,
+          totalQuestions: exam.examQuestions.length,
+        },
+        statistics: {
+          totalAttempts,
+          finishedAttempts: finishedResults.length,
+          activeAttempts: examResults.filter(result => result.isActive && !result.finishedAt).length,
+          averageScore: Math.round(averageScore * 100) / 100,
+          passRate: Math.round(passRate * 100) / 100,
+        },
+      });
+    } catch (error) {
+      console.error('Error getting exam results by exam ID:', error);
+      res.status(500).json({ message: 'Error getting exam results by exam ID', error: (error as Error).message });
+    }
+  },
+  
   // Get a specific exam result by ID
   getExamResultById: async (req: Request, res: Response): Promise<void> => {
     try {
