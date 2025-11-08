@@ -5,9 +5,9 @@ interface User {
   username: string;
   fullName: string;
   email: string;
+  role: string;
   grade: number;
-  address: string;
-  avatar?: string;
+  avatarUrl?: string;
 }
 
 interface AuthContextType {

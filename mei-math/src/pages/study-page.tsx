@@ -9,6 +9,7 @@ import { fetchExamsByChapter } from "../api/examAPI";
 import { startExam } from "../api/examAPI"; 
 import { fetchExamById } from "../api/examAPI"; 
 import { getLessonProgress, createOrUpdatePracticeSession, fetchPracticeHistoryByUser } from "../api/praticeAPI"; // Import API progress
+import { useAuth } from "../contexts/AuthContext"; // Import useAuth
 
 const classOptions = ["Lớp 1","Lớp 2","Lớp 3", "Lớp 4", "Lớp 5"];
 const semesterOptions = ["Học kỳ 1", "Học kỳ 2"];
@@ -20,6 +21,7 @@ const StudyPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams(); // Thêm dòng này
+  const { user } = useAuth(); // Lấy user từ AuthContext
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
 const [lessons, setLessons] = useState<any[]>([]);
 const [loadingLessons, setLoadingLessons] = useState(false);
@@ -64,7 +66,7 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
           setLessons(lessonsData);
           
           // Fetch progress cho mỗi lesson
-          const userId = 1; // hoặc lấy từ context, localStorage
+          const userId = user?.id || 1; // Lấy từ AuthContext, fallback về 1 nếu chưa login
           const progressPromises = lessonsData.map(async (lesson: any) => {
             try {
               const historyData = await fetchPracticeHistoryByUser(userId);
@@ -266,7 +268,8 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                                 try {
                                   console.log("Starting practice for lesson.id:", lesson.id);
                                   // Use createOrUpdatePracticeSession (server will create or return an active session)
-                                  const result = await createOrUpdatePracticeSession(1, lesson.id);
+                                  const userId = user?.id || 1;
+                                  const result = await createOrUpdatePracticeSession(userId, lesson.id);
                                   console.log("createOrUpdatePracticeSession result:", result);
                                   const practiceSessionId = result.practiceSession?.id ?? result.data?.practiceSession?.id;
 
@@ -445,7 +448,8 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                       }}
                       onClick={async () => {
                         try {
-                          const res = await startExam(exam.id, 1); // userId tạm thời là 1
+                          const userId = user?.id || 1;
+                          const res = await startExam(exam.id, userId);
                           const examDetail = await fetchExamById(exam.id);
                           // Truyền thêm chapterId và chapterTitle qua state
                           navigate("/exams", {
@@ -465,11 +469,14 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                     </button>
                     <div
                       style={{
-                        color: "#ff5252",
+                        color: "#49bbbd",
                         textAlign: "center",
                         fontWeight: "500",
                         fontSize: "15px",
+                        cursor: "pointer",
+                        textDecoration: "underline",
                       }}
+                      onClick={() => navigate("/exams/history")}
                     >
                       Lịch sử các lần làm bài
                     </div>

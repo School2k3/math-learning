@@ -41,6 +41,7 @@ const Login: React.FC = () => {
           email: "admin@mei.com",
           role: "admin",
           fullName: "Administrator",
+          grade: 0,
         };
 
         login(adminUser, "admin-token", "admin-refresh-token");
@@ -56,7 +57,7 @@ const Login: React.FC = () => {
       const result = await loginAPI(loginData);
 
       if (result.success && result.data) {
-        login(result.data.user, result.data.token, result.data.refreshToken);
+        login(result.data.user, result.data.accessToken, result.data.refreshToken);
 
         // Kiểm tra role từ API response để điều hướng
         if (result.data.user.role === "admin") {

@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import Header from "../components/header";
 import "../css/dash-user.css";
+import { useAuth } from "../contexts/AuthContext";
 
 const DashUser: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Đánh giá chung");
   const [startDate, setStartDate] = useState("2025-10-25");
   const [endDate, setEndDate] = useState("2025-11-01");
+  const { user } = useAuth(); // Lấy user từ AuthContext
 
   const tabs = [
     "Đánh giá chung",
@@ -123,7 +125,7 @@ const DashUser: React.FC = () => {
           {/* Student Summary */}
           <div className="student-summary">
             <h3 className="summary-title">
-              TỔNG QUAN TOÀN BỘ KIẾN THỨC - <span className="student-name">DUONG NGUYEN DINH </span>
+              TỔNG QUAN TOÀN BỘ KIẾN THỨC - <span className="student-name">{user?.fullName?.toUpperCase() || "STUDENT"}</span>
             </h3>
             
             <div className="legend">

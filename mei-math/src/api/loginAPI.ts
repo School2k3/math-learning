@@ -7,29 +7,23 @@ export interface LoginResponse {
   success: boolean;
   message: string;
   data?: {
-    token: string;
+    accessToken: string;
     refreshToken: string;
     user: {
       id: number;
       username: string;
       fullName: string;
       email: string;
+      role: string;
       grade: number;
-      address: string;
-      avatar?: string;
+      avatarUrl?: string;
     };
   };
 }
 
-
-
-
-
-
-
-
-export const loginAPI = async (loginData: LoginRequest): Promise<LoginResponse> => {
-
+export const loginAPI = async (
+  loginData: LoginRequest
+): Promise<LoginResponse> => {
   try {
     const response = await fetch("http://localhost:3000/api/auth/login", {
       method: "POST",
@@ -45,10 +39,4 @@ export const loginAPI = async (loginData: LoginRequest): Promise<LoginResponse> 
     console.error("Lỗi khi gọi API đăng nhập:", error);
     throw new Error("Không thể kết nối đến server");
   }
-
-
 };
-
-
-
-

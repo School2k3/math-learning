@@ -104,3 +104,84 @@ export async function deleteExamById(id: number) {
   }
   return response.json();
 }
+
+// Lấy tiến trình hiện tại của một exam (GET /api/exams/progress/{resultId})
+export async function fetchExamProgress(resultId: number) {
+  const url = `/api/exams/progress/${resultId}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch exam progress");
+  }
+  return response.json();
+}
+
+// Lấy bài kiểm tra đang active cho user (GET /api/exams/active/{userId})
+export async function fetchActiveExamByUser(userId: number) {
+  const url = `/api/exams/active/${userId}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch active exam for user");
+  }
+  return response.json();
+}
+
+// Kết thúc bài kiểm tra (POST /api/exams/finish/{resultId})
+export async function finishExam(resultId: number) {
+  const url = `/api/exams/finish/${resultId}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to finish exam");
+  }
+  return response.json();
+}
+
+// Lưu đáp án cho 1 câu hỏi trong bài kiểm tra (POST /api/exams/answer)
+export async function saveExamAnswer({
+  resultId,
+  questionId,
+  chosenAnswerId,
+  isFlagged = false,
+}: {
+  resultId: number;
+  questionId: number;
+  chosenAnswerId: number;
+  isFlagged?: boolean;
+}) {
+  const url = `/api/exams/answer`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resultId, questionId, chosenAnswerId, isFlagged }),
+  });
+  if (!response.ok) {
+    let bodyText = "";
+    try {
+      bodyText = await response.text();
+    } catch {}
+    throw new Error(`Failed to save exam answer: ${bodyText}`);
+  }
+  return response.json();
+}
+
+// Lấy lịch sử các bài kiểm tra của user
+export async function fetchExamHistory(userId: number) {
+  const url = `/api/exams/history/${userId}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch exam history");
+  }
+  return response.json();
+}
+
+// Lấy chi tiết kết quả một bài kiểm tra đã làm
+export async function fetchExamResultDetail(resultId: number) {
+  const url = `/api/exams/result/${resultId}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch exam result detail");
+  }
+  return response.json();
+}

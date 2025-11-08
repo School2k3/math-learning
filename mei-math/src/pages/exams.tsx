@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/header";
+import { saveExamAnswer, finishExam } from "../api/examAPI";
 import "../css/exams.css";
 
 type Status = "not_answered" | "current" | "review" | "answered";
@@ -16,6 +17,7 @@ const Exams: React.FC = () => {
   const examTitle = exam?.title || "Bài kiểm tra";
   const chapterId = location.state?.chapterId; // Sửa lại, không lấy từ searchParams
   const chapterTitle = location.state?.chapterTitle || ""; // Truyền từ study-page khi navigate
+  const examResultId = location.state?.examResult?.id; // Lấy resultId từ startExam
 
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(examQuestions.length).fill(null));
@@ -24,6 +26,14 @@ const Exams: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [showReview, setShowReview] = useState(false);
+
+  // Log để debug
+  useEffect(() => {
+    console.log("=== EXAMS COMPONENT MOUNTED ===");
+    console.log("Exam Result ID:", examResultId);
+    console.log("Exam Questions:", examQuestions);
+    console.log("Duration:", durationMinutes);
+  }, []);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -45,20 +55,80 @@ const Exams: React.FC = () => {
     setCurrent(idx);
   };
 
-  const handleAnswer = (idx: number) => {
+  const handleAnswer = async (answerIdx: number) => {
+    // Cập nhật state local
     setAnswers(ans => {
       const newAns = [...ans];
-      newAns[current] = idx;
+      newAns[current] = answerIdx;
       return newAns;
     });
+
+    // Lưu đáp án lên server
+    if (examResultId) {
+      try {
+        const currentQuestion = examQuestions[current];
+        const questionId = currentQuestion?.question?.id;
+        const chosenAnswerId = currentQuestion?.question?.answers[answerIdx]?.id;
+        
+        if (!questionId || !chosenAnswerId) {
+          console.error("❌ Missing questionId or chosenAnswerId");
+          return;
+        }
+
+        console.log("📝 Saving answer...");
+        console.log("  - Result ID:", examResultId);
+        console.log("  - Question ID:", questionId);
+        console.log("  - Chosen Answer ID:", chosenAnswerId);
+        console.log("  - Is Flagged:", reviewFlags[current]);
+
+        const result = await saveExamAnswer({
+          resultId: examResultId,
+          questionId: questionId,
+          chosenAnswerId: chosenAnswerId,
+          isFlagged: reviewFlags[current],
+        });
+
+        console.log("✅ Save answer SUCCESS:", result);
+      } catch (error) {
+        console.error("❌ Save answer ERROR:", error);
+      }
+    } else {
+      console.warn("⚠️ No examResultId, cannot save answer");
+    }
   };
 
-  const handleReviewFlag = () => {
+  const handleReviewFlag = async () => {
+    const newFlagValue = !reviewFlags[current];
+    
+    // Cập nhật state local
     setReviewFlags(flags => {
       const newFlags = [...flags];
-      newFlags[current] = !newFlags[current];
+      newFlags[current] = newFlagValue;
       return newFlags;
     });
+
+    // Nếu đã có đáp án, cập nhật flag lên server
+    if (examResultId && answers[current] !== null) {
+      try {
+        const currentQuestion = examQuestions[current];
+        const questionId = currentQuestion?.question?.id;
+        const chosenAnswerId = currentQuestion?.question?.answers[answers[current]!]?.id;
+
+        console.log("🚩 Updating flag...");
+        console.log("  - New flag value:", newFlagValue);
+
+        const result = await saveExamAnswer({
+          resultId: examResultId,
+          questionId: questionId,
+          chosenAnswerId: chosenAnswerId,
+          isFlagged: newFlagValue,
+        });
+
+        console.log("✅ Update flag SUCCESS:", result);
+      } catch (error) {
+        console.error("❌ Update flag ERROR:", error);
+      }
+    }
   };
 
   // Hàm format thời gian
@@ -75,13 +145,41 @@ const Exams: React.FC = () => {
     // eslint-disable-next-line
   }, [secondsLeft]);
 
-  const handleSubmitExam = () => {
+  const handleSubmitExam = async () => {
+    console.log("🎯 Submitting exam...");
+    
+    // Tính điểm local
     let correct = 0;
     examQuestions.forEach((q: any, idx: number) => {
       const correctIdx = q.question.answers?.findIndex((a: any) => a.isCorrect);
       if (answers[idx] === correctIdx) correct++;
     });
     setScore(correct);
+
+    // Gọi API finish exam
+    if (examResultId) {
+      try {
+        console.log("📤 Calling finishExam API...");
+        console.log("  - Result ID:", examResultId);
+        
+        const result = await finishExam(examResultId);
+        
+        console.log("✅ Finish exam SUCCESS:", result);
+        console.log("  - Final score from API:", result.score);
+        console.log("  - Correct answers:", result.correctAnswers);
+        console.log("  - Total questions:", result.totalQuestions);
+        
+        // Có thể cập nhật score từ API thay vì tính local
+        if (result.score !== undefined) {
+          setScore(result.correctAnswers || correct);
+        }
+      } catch (error) {
+        console.error("❌ Finish exam ERROR:", error);
+      }
+    } else {
+      console.warn("⚠️ No examResultId, cannot finish exam on server");
+    }
+
     setShowResult(true);
   };
 

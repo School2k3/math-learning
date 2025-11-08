@@ -4,6 +4,8 @@ import StudyPage from "./pages/study-page";
 import TheoreticalVideo from "./pages/theoretical-video";
 import Pratice from "./pages/pratice";
 import Exams from "./pages/exams";
+import ExamsHistory from "./pages/exams-history";
+import ExamsReview from "./pages/exams-review";
 import DashUser from "./pages/dash-user";
 import Login from "./auth/login";
 import Register from "./auth/register";
@@ -28,6 +30,8 @@ function App() {
           <Route path="/theoretical-video" element={<TheoreticalVideo />} />
           <Route path="/pratice" element={<Pratice />} />
           <Route path="/exams" element={<Exams />} />
+          <Route path="/exams/history" element={<ExamsHistory />} />
+          <Route path="/exams/review/:resultId" element={<ExamsReview />} />
           <Route path="/dashboard" element={<DashUser />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
