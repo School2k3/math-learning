@@ -287,7 +287,11 @@ const examController: Controller = {
           },
           examAnswers: {
             include: {
-              question: true,
+              question: {
+                include: {
+                  answers: true, // Include all answers to find the correct one
+                },
+              },
               chosenAnswer: true,
             },
           },
@@ -299,7 +303,33 @@ const examController: Controller = {
         return;
       }
       
-      res.status(200).json({ examResult });
+      // Enhance examAnswers with correct answer information
+      const enhancedExamAnswers = examResult.examAnswers.map(examAnswer => {
+        // Find the correct answer for this question
+        const correctAnswer = examAnswer.question.answers.find(answer => answer.isCorrect);
+        
+        return {
+          ...examAnswer,
+          correctAnswer: correctAnswer ? {
+            id: correctAnswer.id,
+            answerText: correctAnswer.answerText,
+            isCorrect: correctAnswer.isCorrect,
+          } : null,
+          // Remove the full answers array from question to keep response clean
+          question: {
+            ...examAnswer.question,
+            answers: undefined,
+          },
+        };
+      });
+      
+      // Return the enhanced result
+      const enhancedExamResult = {
+        ...examResult,
+        examAnswers: enhancedExamAnswers,
+      };
+      
+      res.status(200).json({ examResult: enhancedExamResult });
     } catch (error) {
       console.error('Error getting exam result:', error);
       res.status(500).json({ message: 'Error getting exam result', error: (error as Error).message });
