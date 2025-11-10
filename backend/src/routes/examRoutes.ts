@@ -573,11 +573,108 @@ router.post('/questions', examController.addQuestionToExam);
 
 /**
  * @swagger
- * /api/exams/questions/{id}:
- *   delete:
+ * /api/exams/questions/multiple:
+ *   post:
+ *     summary: Add multiple questions to an exam
+ *     tags: [Exams]
+ *     description: Associate multiple existing questions with an exam in a single request
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - examId
+ *               - questionIds
+ *             properties:
+ *               examId:
+ *                 type: integer
+ *                 description: ID of the exam
+ *               questionIds:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Array of question IDs to add to the exam
+ *                 example: [1, 2, 3, 4, 5]
+ *     responses:
+ *       201:
+ *         description: Questions added to exam successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 addedQuestions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 skippedQuestions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     totalRequested:
+ *                       type: integer
+ *                     successfullyAdded:
+ *                       type: integer
+ *                     skipped:
+ *                       type: integer
+ *       400:
+ *         description: Missing required fields or invalid data
+ *       404:
+ *         description: Exam not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/questions/multiple', examController.addMultipleQuestionsToExam);
+
+/**
+ * @swagger
+ * /api/exams/questions/remove:
+ *   post:
  *     summary: Remove a question from an exam
  *     tags: [Exams]
- *     description: Delete the association between a question and an exam
+ *     description: Remove the association between a question and an exam using examId and questionId
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - examId
+ *               - questionId
+ *             properties:
+ *               examId:
+ *                 type: integer
+ *                 description: ID of the exam
+ *               questionId:
+ *                 type: integer
+ *                 description: ID of the question to remove
+ *     responses:
+ *       200:
+ *         description: Question removed from exam successfully
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: Exam, question, or association not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/questions/remove', examController.removeQuestionFromExam);
+
+/**
+ * @swagger
+ * /api/exams/questions/{id}:
+ *   delete:
+ *     summary: Remove a question from an exam (legacy)
+ *     tags: [Exams]
+ *     description: Delete the association between a question and an exam using examQuestionId (deprecated - use /questions/remove instead)
  *     parameters:
  *       - in: path
  *         name: id
@@ -593,6 +690,6 @@ router.post('/questions', examController.addQuestionToExam);
  *       500:
  *         description: Server error
  */
-router.delete('/questions/:id', examController.removeQuestionFromExam);
+router.delete('/questions/:id', examController.removeQuestionFromExamLegacy);
 
 export default router;
