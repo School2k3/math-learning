@@ -418,9 +418,44 @@ const QuestionAdmin: React.FC = () => {
             <h1>Câu hỏi</h1>
             <p>{filteredQuestions.length} câu hỏi</p>
           </div>
-          <button className="btn-add" onClick={() => setShowAddForm(true)}>
-            + Thêm mới
-          </button>
+          <div className="header-actions">
+            <button 
+              className="btn-manage" 
+              onClick={() => navigate("/admin/answers")}
+              style={{
+                marginRight: "10px",
+                background: "#9C27B0",
+                color: "white",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600",
+              }}
+            >
+              ✏️ Quản lý đáp án
+            </button>
+            <button 
+              className="btn-add" 
+              onClick={() => {
+                // Pre-fill form với giá trị filter hiện tại
+                setNewQuestion({
+                  grade: filterGrade !== "all" ? Number(filterGrade) : undefined,
+                  lessonId: filterLesson !== "all" ? Number(filterLesson) : undefined,
+                  type: filterType !== "all" ? filterType as "practice" | "exam" : undefined,
+                  answerType: filterAnswerType !== "all" ? filterAnswerType as "choice" | "input" | "drag" : undefined,
+                  questionText: "",
+                  imageUrl: "",
+                  audioUrl: "",
+                  explanationText: "",
+                  explanationImg: "",
+                });
+                setShowAddForm(true);
+              }}
+            >
+              + Thêm mới câu hỏi
+            </button>
+          </div>
         </div>
         {/* Filters */}
         <div className="question-filters">

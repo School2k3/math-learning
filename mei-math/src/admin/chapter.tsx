@@ -311,17 +311,43 @@ const ChapterAdmin: React.FC = () => {
             <h1>Chương học</h1>
             <p>{filteredChapters.length} chương</p>
           </div>
-          <button
-            className="btn-add"
-            onClick={() => setShowAddForm(true)}
-            disabled={loading}
-            style={{
-              opacity: loading ? 0.6 : 1,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-          >
-            {loading ? "⏳ Đang xử lý..." : "+ Thêm mới"}
-          </button>
+          <div className="header-actions">
+            <button
+              className="btn-manage"
+              onClick={() => navigate("/admin/lessons")}
+              style={{
+                marginRight: "10px",
+                background: "#2196F3",
+                color: "white",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600",
+              }}
+            >
+              📚 Quản lý bài học
+            </button>
+            <button
+              className="btn-add"
+              onClick={() => {
+                // Pre-fill form với giá trị filter hiện tại
+                setNewChapter({
+                  grade: filterGrade !== "all" ? Number(filterGrade) : undefined,
+                  volume: filterVolume !== "all" ? Number(filterVolume) : undefined,
+                  title: "",
+                });
+                setShowAddForm(true);
+              }}
+              disabled={loading}
+              style={{
+                opacity: loading ? 0.6 : 1,
+                cursor: loading ? "not-allowed" : "pointer",
+              }}
+            >
+              {loading ? "⏳ Đang xử lý..." : "+ Thêm mới chương"}
+            </button>
+          </div>
         </div>
 
         {/* Filter Section */}
