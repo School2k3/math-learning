@@ -32,4 +32,33 @@ export const uploadImage = async (req: Request, res: Response, _next: NextFuncti
 	}
 };
 
+export const uploadVideo = async (req: Request, res: Response, _next: NextFunction) => {
+	try {
+		const file = req.file;
+		if (!file) {
+			return res.status(400).json({ message: 'No file uploaded' });
+		}
+
+		const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+			const uploadStream = cloudinary.uploader.upload_stream(
+				{ folder: 'math-learning', resource_type: 'video' },
+				(error, uploadResult) => {
+					if (error) return reject(error);
+					if (!uploadResult) return reject(new Error('Empty Cloudinary response'));
+					return resolve({ secure_url: uploadResult.secure_url });
+				}
+			);
+
+			const bufferStream = new stream.PassThrough();
+			bufferStream.end(file.buffer);
+			bufferStream.pipe(uploadStream);
+		});
+
+		return res.status(201).json({ url: result.secure_url });
+	} catch (err) {
+		console.error('Cloudinary video upload failed:', err);
+		return res.status(500).json({ message: 'Video upload failed' });
+	}
+};
+
 

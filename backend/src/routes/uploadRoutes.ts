@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadImage } from '../controllers/uploadController.js';
+import { uploadImage, uploadVideo } from '../controllers/uploadController.js';
 
 const router = Router();
 
@@ -8,7 +8,10 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 // Single file field name: 'image'
-router.post('/', upload.single('image'), uploadImage);
+router.post('/image', upload.single('image'), uploadImage);
+
+// Video upload: field 'video'
+router.post('/video', upload.single('video'), uploadVideo);
 
 export default router;
 
