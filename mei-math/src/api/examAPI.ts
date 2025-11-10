@@ -218,3 +218,47 @@ export async function fetchExamResultById(resultId: number) {
   }
   return response.json();
 }
+
+// ============ QUẢN LÝ CÂU HỎI TRONG BÀI KIỂM TRA ============
+
+// GET /api/questions/exam/{examId} - Lấy danh sách câu hỏi trong bài kiểm tra
+export async function fetchExamQuestions(examId: number) {
+  const url = `/api/questions/exam/${examId}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch exam questions");
+  }
+  return response.json();
+}
+
+// POST /api/exams/questions - Thêm câu hỏi vào bài kiểm tra
+export async function addQuestionToExam(data: {
+  examId: number;
+  questionId: number;
+}) {
+  console.log("addQuestionToExam data:", data);
+  const response = await fetch("/api/exams/questions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  console.log("addQuestionToExam response status:", response.status);
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("addQuestionToExam error:", errorText);
+    throw new Error(`Failed to add question to exam: ${errorText}`);
+  }
+  return response.json();
+}
+
+// DELETE /api/exams/questions/{id} - Xóa câu hỏi khỏi bài kiểm tra
+export async function removeQuestionFromExam(id: number) {
+  const response = await fetch(`/api/exams/questions/${id}`, {
+    method: "DELETE",
+  });
+  console.log("removeQuestionFromExam response status:", id);
+  if (!response.ok) {
+    throw new Error("Failed to remove question from exam");
+  }
+  return response.json();
+}

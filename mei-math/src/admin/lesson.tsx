@@ -9,6 +9,7 @@ import {
   updateLesson,
   deleteLesson,
 } from "../api/lessonAPI";
+import { uploadImageFile, uploadVideoFile } from "../api/uploadAPI";
 
 interface Lesson {
   id: number;
@@ -40,6 +41,78 @@ const LessonAdmin: React.FC = () => {
   const [editData, setEditData] = useState<Partial<Lesson>>({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLesson, setNewLesson] = useState<Partial<Lesson>>({});
+
+  // Upload states
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadingEditImage, setUploadingEditImage] = useState(false);
+  const [uploadingEditVideo, setUploadingEditVideo] = useState(false);
+
+  // Upload handlers for add mode
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      const url = await uploadImageFile(file);
+      setNewLesson({ ...newLesson, imageUrl: url });
+      alert('Upload ảnh thành công!');
+    } catch (error) {
+      alert('Upload ảnh thất bại!');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingVideo(true);
+      const url = await uploadVideoFile(file);
+      setNewLesson({ ...newLesson, videoUrl: url });
+      alert('Upload video thành công!');
+    } catch (error) {
+      alert('Upload video thất bại!');
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  // Upload handlers for edit mode
+  const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingEditImage(true);
+      const url = await uploadImageFile(file);
+      setEditData({ ...editData, imageUrl: url });
+      alert('Upload ảnh thành công!');
+    } catch (error) {
+      alert('Upload ảnh thất bại!');
+    } finally {
+      setUploadingEditImage(false);
+    }
+  };
+
+  const handleEditVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingEditVideo(true);
+      const url = await uploadVideoFile(file);
+      setEditData({ ...editData, videoUrl: url });
+      alert('Upload video thành công!');
+    } catch (error) {
+      alert('Upload video thất bại!');
+    } finally {
+      setUploadingEditVideo(false);
+    }
+  };
 
   // Load data từ API
   const loadData = async () => {
@@ -463,26 +536,43 @@ const LessonAdmin: React.FC = () => {
                     </select>
                   </td>
                   <td>
-                    <input
-                      type="text"
-                      value={newLesson.videoUrl || ""}
-                      onChange={(e) =>
-                        setNewLesson({ ...newLesson, videoUrl: e.target.value })
-                      }
-                      placeholder="URL video"
-                      className="input-field"
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <input
+                        type="text"
+                        value={newLesson.videoUrl || ""}
+                        onChange={(e) =>
+                          setNewLesson({ ...newLesson, videoUrl: e.target.value })
+                        }
+                        placeholder="URL hoặc upload video"
+                        className="input-field"
+                      />
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <input type="file" accept="video/*" onChange={handleVideoUpload} style={{ display: 'none' }} id="new-video-upload" />
+                        <label htmlFor="new-video-upload" style={{ padding: '4px 8px', background: '#28a745', color: 'white', borderRadius: '4px', cursor: uploadingVideo ? 'not-allowed' : 'pointer', fontSize: '12px' }}>
+                          {uploadingVideo ? '⏳' : '🎥 Upload'}
+                        </label>
+                      </div>
+                    </div>
                   </td>
                   <td>
-                    <input
-                      type="text"
-                      value={newLesson.imageUrl || ""}
-                      onChange={(e) =>
-                        setNewLesson({ ...newLesson, imageUrl: e.target.value })
-                      }
-                      placeholder="URL hình ảnh"
-                      className="input-field"
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <input
+                        type="text"
+                        value={newLesson.imageUrl || ""}
+                        onChange={(e) =>
+                          setNewLesson({ ...newLesson, imageUrl: e.target.value })
+                        }
+                        placeholder="URL hoặc upload ảnh"
+                        className="input-field"
+                      />
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} id="new-image-upload" />
+                        <label htmlFor="new-image-upload" style={{ padding: '4px 8px', background: '#007bff', color: 'white', borderRadius: '4px', cursor: uploadingImage ? 'not-allowed' : 'pointer', fontSize: '12px' }}>
+                          {uploadingImage ? '⏳' : '📤 Upload'}
+                        </label>
+                        {newLesson.imageUrl && <img src={newLesson.imageUrl} alt="Preview" style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }} />}
+                      </div>
+                    </div>
                   </td>
                   <td>
                     <div className="action-buttons">
@@ -541,15 +631,41 @@ const LessonAdmin: React.FC = () => {
                   </td>
                   <td>
                     {editingId === lesson.id ? (
-                      <input
-                        type="url"
-                        value={editData.videoUrl || ""}
-                        onChange={(e) =>
-                          setEditData({ ...editData, videoUrl: e.target.value })
-                        }
-                        className="input-field"
-                        placeholder="URL video"
-                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <input
+                          type="url"
+                          value={editData.videoUrl || ""}
+                          onChange={(e) =>
+                            setEditData({ ...editData, videoUrl: e.target.value })
+                          }
+                          className="input-field"
+                          placeholder="URL video"
+                        />
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <input
+                            type="file"
+                            accept="video/*,audio/*"
+                            onChange={handleEditVideoUpload}
+                            style={{ display: 'none' }}
+                            id={`edit-lesson-video-${lesson.id}`}
+                          />
+                          <label
+                            htmlFor={`edit-lesson-video-${lesson.id}`}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#9c27b0',
+                              color: 'white',
+                              borderRadius: '4px',
+                              cursor: uploadingEditVideo ? 'not-allowed' : 'pointer',
+                              fontSize: '12px',
+                              border: 'none',
+                              opacity: uploadingEditVideo ? 0.7 : 1
+                            }}
+                          >
+                            {uploadingEditVideo ? '⏳' : '🎥 Upload'}
+                          </label>
+                        </div>
+                      </div>
                     ) : (
                       <div className="media-cell">
                         {lesson.videoUrl ? (
@@ -562,15 +678,48 @@ const LessonAdmin: React.FC = () => {
                   </td>
                   <td>
                     {editingId === lesson.id ? (
-                      <input
-                        type="url"
-                        value={editData.imageUrl || ""}
-                        onChange={(e) =>
-                          setEditData({ ...editData, imageUrl: e.target.value })
-                        }
-                        className="input-field"
-                        placeholder="URL hình ảnh"
-                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <input
+                          type="url"
+                          value={editData.imageUrl || ""}
+                          onChange={(e) =>
+                            setEditData({ ...editData, imageUrl: e.target.value })
+                          }
+                          className="input-field"
+                          placeholder="URL hình ảnh"
+                        />
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleEditImageUpload}
+                            style={{ display: 'none' }}
+                            id={`edit-lesson-image-${lesson.id}`}
+                          />
+                          <label
+                            htmlFor={`edit-lesson-image-${lesson.id}`}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#2196f3',
+                              color: 'white',
+                              borderRadius: '4px',
+                              cursor: uploadingEditImage ? 'not-allowed' : 'pointer',
+                              fontSize: '12px',
+                              border: 'none',
+                              opacity: uploadingEditImage ? 0.7 : 1
+                            }}
+                          >
+                            {uploadingEditImage ? '⏳' : '📤 Upload'}
+                          </label>
+                          {editData.imageUrl && (
+                            <img 
+                              src={editData.imageUrl} 
+                              alt="Preview" 
+                              style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }}
+                            />
+                          )}
+                        </div>
+                      </div>
                     ) : (
                       <div className="media-cell">
                         {lesson.imageUrl ? (
