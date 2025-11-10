@@ -5,8 +5,9 @@ import { fetchQuestionsByGradeTypeAnswerType } from "../api/questionAPI";
 import { fetchAllLessons } from "../api/lessonAPI";
 import { fetchAllChapters } from "../api/chapterAPI";
 import { createQuestionWithAnswers } from "../api/questionAPI";
-import { deleteQuestionById } from "../api/questionAPI"; // Thêm import này
-import { updateQuestionById } from "../api/questionAPI"; // Thêm import này
+import { deleteQuestionById } from "../api/questionAPI";
+import { updateQuestionById } from "../api/questionAPI";
+import { uploadImageFile, uploadVideoFile } from "../api/uploadAPI";
 
 interface Answer {
   id: number;
@@ -64,6 +65,152 @@ const QuestionAdmin: React.FC = () => {
   const [filterLesson, setFilterLesson] = useState("all");
   const [filterAnswerType, setFilterAnswerType] = useState<string>("all");
   const navigate = useNavigate();
+
+  // Upload states
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
+  const [uploadingExplanationImg, setUploadingExplanationImg] = useState(false);
+  
+  // Upload states for edit mode
+  const [uploadingEditImage, setUploadingEditImage] = useState(false);
+  const [uploadingEditAudio, setUploadingEditAudio] = useState(false);
+  const [uploadingEditExplanationImg, setUploadingEditExplanationImg] = useState(false);
+
+  // Hàm upload ảnh câu hỏi
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file ảnh!');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const url = await uploadImageFile(file);
+      setNewQuestion({ ...newQuestion, imageUrl: url });
+      alert('Upload ảnh thành công!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Upload ảnh thất bại!');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Hàm upload video/audio
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
+      alert('Vui lòng chọn file audio hoặc video!');
+      return;
+    }
+
+    try {
+      setUploadingAudio(true);
+      const url = await uploadVideoFile(file);
+      setNewQuestion({ ...newQuestion, audioUrl: url });
+      alert('Upload audio thành công!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Upload audio thất bại!');
+    } finally {
+      setUploadingAudio(false);
+    }
+  };
+
+  // Hàm upload ảnh giải thích
+  const handleExplanationImgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file ảnh!');
+      return;
+    }
+
+    try {
+      setUploadingExplanationImg(true);
+      const url = await uploadImageFile(file);
+      setNewQuestion({ ...newQuestion, explanationImg: url });
+      alert('Upload ảnh giải thích thành công!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Upload ảnh giải thích thất bại!');
+    } finally {
+      setUploadingExplanationImg(false);
+    }
+  };
+
+  // Hàm upload cho edit mode
+  const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file ảnh!');
+      return;
+    }
+
+    try {
+      setUploadingEditImage(true);
+      const url = await uploadImageFile(file);
+      setEditData({ ...editData, imageUrl: url });
+      alert('Upload ảnh thành công!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Upload ảnh thất bại!');
+    } finally {
+      setUploadingEditImage(false);
+    }
+  };
+
+  const handleEditAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
+      alert('Vui lòng chọn file audio hoặc video!');
+      return;
+    }
+
+    try {
+      setUploadingEditAudio(true);
+      const url = await uploadVideoFile(file);
+      setEditData({ ...editData, audioUrl: url });
+      alert('Upload audio thành công!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Upload audio thất bại!');
+    } finally {
+      setUploadingEditAudio(false);
+    }
+  };
+
+  const handleEditExplanationImgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file ảnh!');
+      return;
+    }
+
+    try {
+      setUploadingEditExplanationImg(true);
+      const url = await uploadImageFile(file);
+      setEditData({ ...editData, explanationImg: url });
+      alert('Upload ảnh giải thích thành công!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Upload ảnh giải thích thất bại!');
+    } finally {
+      setUploadingEditExplanationImg(false);
+    }
+  };
 
   // Lấy tên bài học theo ID
   const getLessonTitle = (lessonId: number) => {
@@ -629,32 +776,92 @@ const QuestionAdmin: React.FC = () => {
                     </select>
                   </td>
                   <td>
-                    <input
-                      type="url"
-                      value={newQuestion.imageUrl || ""}
-                      onChange={(e) =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          imageUrl: e.target.value,
-                        })
-                      }
-                      placeholder="URL hình ảnh"
-                      className="input-field"
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <input
+                        type="url"
+                        value={newQuestion.imageUrl || ""}
+                        onChange={(e) =>
+                          setNewQuestion({
+                            ...newQuestion,
+                            imageUrl: e.target.value,
+                          })
+                        }
+                        placeholder="Nhập URL hoặc upload ảnh"
+                        className="input-field"
+                      />
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          style={{ display: 'none' }}
+                          id="image-upload"
+                        />
+                        <label
+                          htmlFor="image-upload"
+                          style={{
+                            padding: '6px 12px',
+                            background: '#007bff',
+                            color: 'white',
+                            borderRadius: '4px',
+                            cursor: uploadingImage ? 'not-allowed' : 'pointer',
+                            fontSize: '13px',
+                            opacity: uploadingImage ? 0.6 : 1,
+                          }}
+                        >
+                          {uploadingImage ? '⏳ Đang upload...' : '📤 Upload ảnh'}
+                        </label>
+                        {newQuestion.imageUrl && (
+                          <img 
+                            src={newQuestion.imageUrl} 
+                            alt="Preview" 
+                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                          />
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td>
-                    <input
-                      type="url"
-                      value={newQuestion.audioUrl || ""}
-                      onChange={(e) =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          audioUrl: e.target.value,
-                        })
-                      }
-                      placeholder="URL audio"
-                      className="input-field"
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <input
+                        type="url"
+                        value={newQuestion.audioUrl || ""}
+                        onChange={(e) =>
+                          setNewQuestion({
+                            ...newQuestion,
+                            audioUrl: e.target.value,
+                          })
+                        }
+                        placeholder="Nhập URL hoặc upload audio/video"
+                        className="input-field"
+                      />
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="file"
+                          accept="audio/*,video/*"
+                          onChange={handleAudioUpload}
+                          style={{ display: 'none' }}
+                          id="audio-upload"
+                        />
+                        <label
+                          htmlFor="audio-upload"
+                          style={{
+                            padding: '6px 12px',
+                            background: '#28a745',
+                            color: 'white',
+                            borderRadius: '4px',
+                            cursor: uploadingAudio ? 'not-allowed' : 'pointer',
+                            fontSize: '13px',
+                            opacity: uploadingAudio ? 0.6 : 1,
+                          }}
+                        >
+                          {uploadingAudio ? '⏳ Đang upload...' : '🎵 Upload audio'}
+                        </label>
+                        {newQuestion.audioUrl && (
+                          <span style={{ fontSize: '12px', color: '#28a745' }}>✓ Đã có file</span>
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td>
                     <select
@@ -677,18 +884,62 @@ const QuestionAdmin: React.FC = () => {
                     </select>
                   </td>
                   <td>
-                    <input
-                      type="text"
-                      value={newQuestion.explanationText || ""}
-                      onChange={(e) =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          explanationText: e.target.value,
-                        })
-                      }
-                      placeholder="Giải thích"
-                      className="input-field"
-                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <input
+                        type="text"
+                        value={newQuestion.explanationText || ""}
+                        onChange={(e) =>
+                          setNewQuestion({
+                            ...newQuestion,
+                            explanationText: e.target.value,
+                          })
+                        }
+                        placeholder="Nhập text giải thích"
+                        className="input-field"
+                      />
+                      <input
+                        type="url"
+                        value={newQuestion.explanationImg || ""}
+                        onChange={(e) =>
+                          setNewQuestion({
+                            ...newQuestion,
+                            explanationImg: e.target.value,
+                          })
+                        }
+                        placeholder="URL ảnh giải thích hoặc upload"
+                        className="input-field"
+                      />
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleExplanationImgUpload}
+                          style={{ display: 'none' }}
+                          id="explanation-img-upload"
+                        />
+                        <label
+                          htmlFor="explanation-img-upload"
+                          style={{
+                            padding: '6px 12px',
+                            background: '#6c757d',
+                            color: 'white',
+                            borderRadius: '4px',
+                            cursor: uploadingExplanationImg ? 'not-allowed' : 'pointer',
+                            fontSize: '13px',
+                            opacity: uploadingExplanationImg ? 0.6 : 1,
+                          }}
+                        >
+                          {uploadingExplanationImg ? '⏳ Uploading...' : '🖼️ Upload ảnh GT'}
+                        </label>
+                        {newQuestion.explanationImg && (
+                          <img 
+                            src={newQuestion.explanationImg} 
+                            alt="Explanation Preview" 
+                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                          />
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td>
                     <div className="action-buttons">
@@ -709,6 +960,49 @@ const QuestionAdmin: React.FC = () => {
                   <td colSpan={11}>
                     <div className="answer-form-modal">
                       <h3>Nhập đáp án cho câu hỏi</h3>
+                      
+                      {/* Hiển thị thông tin câu hỏi vừa nhập */}
+                      <div style={{ 
+                        background: '#f8f9fa', 
+                        padding: '16px', 
+                        borderRadius: '8px', 
+                        marginBottom: '20px',
+                        border: '2px solid #007bff'
+                      }}>
+                        <h4 style={{ margin: '0 0 12px 0', color: '#007bff' }}>📝 Thông tin câu hỏi:</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <div>
+                            <strong>Câu hỏi:</strong> {newQuestion.questionText}
+                          </div>
+                          <div>
+                            <strong>Lớp:</strong> Lớp {newQuestion.grade}
+                          </div>
+                          <div>
+                            <strong>Bài học:</strong> {allLessons.find(l => l.id === newQuestion.lessonId)?.title || 'N/A'}
+                          </div>
+                          <div>
+                            <strong>Loại:</strong> {newQuestion.type === 'practice' ? 'Luyện tập' : 'Kiểm tra'}
+                          </div>
+                          <div>
+                            <strong>Kiểu đáp án:</strong> {
+                              newQuestion.answerType === 'choice' ? 'Trắc nghiệm' :
+                              newQuestion.answerType === 'input' ? 'Nhập liệu' : 'Kéo thả'
+                            }
+                          </div>
+                          {newQuestion.imageUrl && (
+                            <div>
+                              <strong>Hình ảnh:</strong>{' '}
+                              <img 
+                                src={newQuestion.imageUrl} 
+                                alt="Preview" 
+                                style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px', verticalAlign: 'middle' }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <h4 style={{ marginTop: '16px', marginBottom: '12px' }}>Danh sách đáp án:</h4>
                       {newAnswers.map((ans, idx) => (
                         <div
                           key={idx}
@@ -891,18 +1185,50 @@ const QuestionAdmin: React.FC = () => {
                     </td>
                     <td>
                       {isEditing ? (
-                        <input
-                          type="url"
-                          value={editData.imageUrl || ""}
-                          onChange={(e) =>
-                            setEditData({
-                              ...editData,
-                              imageUrl: e.target.value,
-                            })
-                          }
-                          className="input-field"
-                          placeholder="URL hình ảnh"
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <input
+                            type="url"
+                            value={editData.imageUrl || ""}
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                imageUrl: e.target.value,
+                              })
+                            }
+                            className="input-field"
+                            placeholder="URL hoặc upload"
+                          />
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleEditImageUpload}
+                              style={{ display: 'none' }}
+                              id={`edit-image-${question.id}`}
+                            />
+                            <label
+                              htmlFor={`edit-image-${question.id}`}
+                              style={{
+                                padding: '4px 8px',
+                                background: '#007bff',
+                                color: 'white',
+                                borderRadius: '4px',
+                                cursor: uploadingEditImage ? 'not-allowed' : 'pointer',
+                                fontSize: '12px',
+                                opacity: uploadingEditImage ? 0.6 : 1,
+                              }}
+                            >
+                              {uploadingEditImage ? '⏳' : '📤'}
+                            </label>
+                            {editData.imageUrl && (
+                              <img 
+                                src={editData.imageUrl} 
+                                alt="Preview" 
+                                style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }}
+                              />
+                            )}
+                          </div>
+                        </div>
                       ) : (
                         <div className="media-cell">
                           {question.imageUrl ? (
@@ -915,18 +1241,43 @@ const QuestionAdmin: React.FC = () => {
                     </td>
                     <td>
                       {isEditing ? (
-                        <input
-                          type="url"
-                          value={editData.audioUrl || ""}
-                          onChange={(e) =>
-                            setEditData({
-                              ...editData,
-                              audioUrl: e.target.value,
-                            })
-                          }
-                          className="input-field"
-                          placeholder="URL audio"
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <input
+                            type="url"
+                            value={editData.audioUrl || ""}
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                audioUrl: e.target.value,
+                              })
+                            }
+                            className="input-field"
+                            placeholder="URL hoặc upload"
+                          />
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                              type="file"
+                              accept="audio/*,video/*"
+                              onChange={handleEditAudioUpload}
+                              style={{ display: 'none' }}
+                              id={`edit-audio-${question.id}`}
+                            />
+                            <label
+                              htmlFor={`edit-audio-${question.id}`}
+                              style={{
+                                padding: '4px 8px',
+                                background: '#28a745',
+                                color: 'white',
+                                borderRadius: '4px',
+                                cursor: uploadingEditAudio ? 'not-allowed' : 'pointer',
+                                fontSize: '12px',
+                                opacity: uploadingEditAudio ? 0.6 : 1,
+                              }}
+                            >
+                              {uploadingEditAudio ? '⏳' : '🎵'}
+                            </label>
+                          </div>
+                        </div>
                       ) : (
                         <div className="media-cell">
                           {question.audioUrl ? (
