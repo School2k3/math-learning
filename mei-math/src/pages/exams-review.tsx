@@ -142,13 +142,8 @@ const ExamsReview: React.FC = () => {
             examDetail.examAnswers.map((answer: any, index: number) => {
               const question = answer.question;
               const chosenAnswer = answer.chosenAnswer;
-              let correctAnswerText = "";
-              if (question?.answers && Array.isArray(question.answers)) {
-                const correct = question.answers.find((a: any) => a.isCorrect);
-                correctAnswerText = correct?.answerText || "";
-              } else if (question?.correctAnswerText) {
-                correctAnswerText = question.correctAnswerText;
-              }
+              // Lấy đáp án đúng từ trường correctAnswer mới của API
+              const correctAnswerText = answer.correctAnswer?.answerText || "";
 
               return (
                 <div 
@@ -193,16 +188,6 @@ const ExamsReview: React.FC = () => {
                         </span>
                       </div>
                     )}
-
-                    {/* Nếu muốn vẫn giữ dòng Đáp án đúng cũ, có thể bỏ dòng dưới */}
-                    {/* {!answer.isCorrect && correctAnswer && (
-                      <div className="answer-item correct-answer">
-                        <strong>Đáp án đúng:</strong>
-                        <span className="correct-text">
-                          {correctAnswer.answerText}
-                        </span>
-                      </div>
-                    )} */}
 
                     {question?.explanationText && (
                       <div className="explanation-box">

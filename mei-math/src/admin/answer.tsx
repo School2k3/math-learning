@@ -259,10 +259,20 @@ const AnswerAdmin: React.FC = () => {
             <h1>Đáp án câu hỏi</h1>
             <p>{filteredAnswers.length} đáp án</p>
           </div>
-          {/* Tạm ẩn nút thêm mới trên cùng */}
-          {/* <button className="btn-add" onClick={() => setShowAddForm(true)}>
-            + Thêm mới
-          </button> */}
+          <button 
+            className="btn-add" 
+            onClick={() => {
+              // Pre-fill với câu hỏi đã chọn từ filter
+              setNewAnswer({
+                questionId: filterQuestion !== "all" ? Number(filterQuestion) : undefined,
+                answerText: "",
+                isCorrect: false,
+              });
+              setShowAddForm(true);
+            }}
+          >
+            + Thêm mới đáp án
+          </button>
         </div>
         {/* Thanh lọc */}
         <div className="question-filters">

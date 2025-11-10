@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../css/admin-css/lesson.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { fetchAllChapters } from "../api/chapterAPI";
 import {
   createLesson,
@@ -30,6 +30,7 @@ const LessonAdmin: React.FC = () => {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // Filter states
   const [filterChapter, setFilterChapter] = useState<string>("all");
@@ -284,9 +285,40 @@ const LessonAdmin: React.FC = () => {
             <h1>Bài học</h1>
             <p>{filteredLessons.length} bài học</p>
           </div>
-          <button className="btn-add" onClick={() => setShowAddForm(true)}>
-            + Thêm mới
-          </button>
+          <div className="header-actions">
+            <button 
+              className="btn-manage" 
+              onClick={() => navigate("/admin/questions")}
+              style={{
+                marginRight: "10px",
+                background: "#FF9800",
+                color: "white",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600",
+              }}
+            >
+              ❓ Quản lý câu hỏi
+            </button>
+            <button 
+              className="btn-add" 
+              onClick={() => {
+                // Pre-fill form với giá trị filter hiện tại
+                const selectedChapter = filterChapter !== "all" ? Number(filterChapter) : undefined;
+                setNewLesson({
+                  chapterId: selectedChapter,
+                  title: "",
+                  videoUrl: "",
+                  imageUrl: "",
+                });
+                setShowAddForm(true);
+              }}
+            >
+              + Thêm mới bài học
+            </button>
+          </div>
         </div>
 
         {/* Filter Section */}
