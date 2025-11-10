@@ -16,6 +16,7 @@ const router = express.Router();
  * /api/lessons:
  *   get:
  *     summary: Get all lessons
+ *     tags: [Lessons]
  *     description: Retrieve a list of all lessons with optional filtering by chapter ID.
  *     parameters:
  *       - in: query
@@ -45,6 +46,7 @@ router.get('/', lessonController.getAllLessons);
  * /api/lessons/{id}:
  *   get:
  *     summary: Get a lesson by ID
+ *     tags: [Lessons]
  *     description: Retrieve details for a specific lesson by its ID.
  *     parameters:
  *       - in: path
@@ -75,6 +77,7 @@ router.get('/:id', lessonController.getLessonById);
  * /api/lessons/chapter/{chapterId}:
  *   get:
  *     summary: Get lessons by chapter
+ *     tags: [Lessons]
  *     description: Retrieve a list of lessons for a specific chapter.
  *     parameters:
  *       - in: path
@@ -105,6 +108,7 @@ router.get('/chapter/:chapterId', lessonController.getLessonsByChapter);
  * /api/lessons:
  *   post:
  *     summary: Create a new lesson
+ *     tags: [Lessons]
  *     description: Create a new lesson with the provided data.
  *     requestBody:
  *       required: true
@@ -156,6 +160,7 @@ router.post('/', validateRequest(createLessonSchema), lessonController.createLes
  * /api/lessons/{id}:
  *   put:
  *     summary: Update a lesson
+ *     tags: [Lessons]
  *     description: Update an existing lesson by ID.
  *     parameters:
  *       - in: path
@@ -213,6 +218,7 @@ router.put('/:id', validateRequest(lessonIdSchema, 'params'), validateRequest(up
  * /api/lessons/{id}:
  *   delete:
  *     summary: Delete a lesson
+ *     tags: [Lessons]
  *     description: Delete an existing lesson by ID. Only lessons with no questions can be deleted.
  *     parameters:
  *       - in: path

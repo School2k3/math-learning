@@ -9,6 +9,7 @@ const router = express.Router();
  * /api/practice/session:
  *   post:
  *     summary: Create or update a practice session
+ *     tags: [Practice]
  *     description: Creates a new practice session or updates an existing one
  *     security:
  *       - bearerAuth: []
@@ -40,6 +41,7 @@ router.post('/session', practiceController.createOrUpdateSession);
  * /api/practice/answer:
  *   post:
  *     summary: Save a practice answer
+ *     tags: [Practice]
  *     description: Saves a user's answer for a practice question
  *     security:
  *       - bearerAuth: []
@@ -76,6 +78,7 @@ router.post('/answer', practiceController.saveAnswer);
  * /api/practice/session/{practiceId}/complete:
  *   put:
  *     summary: Complete a practice session
+ *     tags: [Practice]
  *     description: Marks a practice session as complete and calculates the final score
  *     security:
  *       - bearerAuth: []
@@ -99,6 +102,7 @@ router.put('/session/:practiceId/complete', practiceController.completeSession);
  * /api/practice/history/{userId}:
  *   get:
  *     summary: Get user practice history
+ *     tags: [Practice]
  *     description: Retrieves practice session history for a specific user
  *     security:
  *       - bearerAuth: []
@@ -122,6 +126,7 @@ router.get('/history/:userId', practiceController.getUserPracticeHistory);
  * /api/practice/session/{practiceId}/score:
  *   get:
  *     summary: Get current practice session score
+ *     tags: [Practice]
  *     description: Retrieves the current score and stats for a specific practice session
  *     security:
  *       - bearerAuth: []

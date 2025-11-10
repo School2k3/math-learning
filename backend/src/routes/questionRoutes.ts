@@ -14,6 +14,7 @@ const router = express.Router();
  * /api/questions:
  *   get:
  *     summary: Get all questions
+ *     tags: [Questions]
  *     description: Retrieve a list of all questions with optional filtering by grade, topic, and type.
  *     parameters:
  *       - in: query
@@ -53,6 +54,7 @@ router.get('/', questionController.getAllQuestions);
  * /api/questions/grade/{grade}:
  *   get:
  *     summary: Get questions by grade
+ *     tags: [Questions]
  *     description: Retrieve all questions for a specific grade level.
  *     parameters:
  *       - in: path
@@ -74,6 +76,7 @@ router.get('/grade/:grade', questionController.getQuestionsByGrade);
  * /api/questions/lesson/{lessonId}:
  *   get:
  *     summary: Get questions by lesson
+ *     tags: [Questions]
  *     description: Retrieve all questions for a specific lesson.
  *     parameters:
  *       - in: path
@@ -95,6 +98,7 @@ router.get('/lesson/:lessonId', questionController.getQuestionsByLesson);
  * /api/questions/lesson/{lessonId}/practice:
  *   get:
  *     summary: Get practice questions by lesson
+ *     tags: [Questions]
  *     description: Retrieve all practice questions for a specific lesson.
  *     parameters:
  *       - in: path
@@ -116,6 +120,7 @@ router.get('/lesson/:lessonId/practice', questionController.getPracticeQuestions
  * /api/questions/exam/{examId}:
  *   get:
  *     summary: Get questions by exam
+ *     tags: [Questions]
  *     description: Retrieve all questions for a specific exam.
  *     parameters:
  *       - in: path
@@ -137,6 +142,7 @@ router.get('/exam/:examId', questionController.getQuestionsByExamId);
  * /api/questions/{id}:
  *   get:
  *     summary: Get a question by ID
+ *     tags: [Questions]
  *     description: Retrieve a question and its answers by question ID.
  *     parameters:
  *       - in: path
@@ -167,6 +173,7 @@ router.get('/:id', questionController.getQuestionById);
  * /api/questions/{id}/audio:
  *   get:
  *     summary: Get audio for a question
+ *     tags: [Questions]
  *     description: Retrieve the audio URL for a specific question by ID.
  *     parameters:
  *       - in: path
@@ -199,6 +206,7 @@ router.get('/:id/audio', questionController.getQuestionAudio);
  * /api/questions:
  *   post:
  *     summary: Create a new question with answers
+ *     tags: [Questions]
  *     description: Create a new question with associated answers.
  *     requestBody:
  *       required: true
@@ -276,6 +284,7 @@ router.post('/', validateRequest(createQuestionSchema), questionController.creat
  * /api/questions/{id}:
  *   put:
  *     summary: Update a question
+ *     tags: [Questions]
  *     description: Update an existing question by ID.
  *     parameters:
  *       - in: path
@@ -343,6 +352,7 @@ router.put('/:id', validateRequest(updateQuestionSchema), questionController.upd
  * /api/questions/{id}/answers:
  *   put:
  *     summary: Update answers for a question
+ *     tags: [Questions]
  *     description: Update, add, or delete answers for an existing question.
  *     parameters:
  *       - in: path
@@ -389,6 +399,7 @@ router.put('/:id/answers', validateRequest(updateAnswersSchema), questionControl
  * /api/questions/{id}:
  *   delete:
  *     summary: Delete a question
+ *     tags: [Questions]
  *     description: Delete an existing question by ID.
  *     parameters:
  *       - in: path

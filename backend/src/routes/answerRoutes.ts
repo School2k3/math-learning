@@ -14,6 +14,7 @@ const router = express.Router();
  * /api/answers/question/{questionId}:
  *   get:
  *     summary: Get all answers for a question
+ *     tags: [Answers]
  *     description: Retrieve all answers for a specific question ID.
  *     parameters:
  *       - in: path
@@ -44,6 +45,7 @@ router.get('/question/:questionId', answerController.getAnswersByQuestionId);
  * /api/answers/{id}:
  *   get:
  *     summary: Get an answer by ID
+ *     tags: [Answers]
  *     description: Retrieve an answer by its ID.
  *     parameters:
  *       - in: path
@@ -74,6 +76,7 @@ router.get('/:id', answerController.getAnswerById);
  * /api/answers/correct/{questionId}:
  *   get:
  *     summary: Get all correct answers for a question
+ *     tags: [Answers]
  *     description: Retrieve all answers marked as correct for a specific question.
  *     parameters:
  *       - in: path
@@ -95,6 +98,7 @@ router.get('/correct/:questionId', answerController.getCorrectAnswers);
  * /api/answers:
  *   post:
  *     summary: Create a new answer
+ *     tags: [Answers]
  *     description: Create a new answer for a specific question.
  *     requestBody:
  *       required: true
@@ -142,6 +146,7 @@ router.post('/', validateRequest(createAnswerSchema), answerController.createAns
  * /api/answers/batch:
  *   post:
  *     summary: Create multiple answers
+ *     tags: [Answers]
  *     description: Create multiple answers at once.
  *     requestBody:
  *       required: true
@@ -196,6 +201,7 @@ router.post('/batch', validateRequest(createMultipleAnswersSchema), answerContro
  * /api/answers/{id}:
  *   put:
  *     summary: Update an answer
+ *     tags: [Answers]
  *     description: Update an existing answer by ID.
  *     parameters:
  *       - in: path
@@ -245,6 +251,7 @@ router.put('/:id', validateRequest(updateAnswerSchema), answerController.updateA
  * /api/answers/{id}:
  *   delete:
  *     summary: Delete an answer
+ *     tags: [Answers]
  *     description: Delete an existing answer by ID. Cannot delete answers used in practice or exams, the only answer for a question, or the only correct answer.
  *     parameters:
  *       - in: path

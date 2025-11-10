@@ -182,7 +182,7 @@ router.post('/refresh', refreshToken);
  * /api/auth/me:
  *   get:
  *     summary: Get current user information
- *     tags: [Authentication]
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:

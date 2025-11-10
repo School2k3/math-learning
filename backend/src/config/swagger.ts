@@ -18,6 +18,17 @@ const options: swaggerJsdoc.Options = {
         description: 'Development server',
       },
     ],
+    tags: [
+      { name: 'Users', description: 'User profile and management' },
+      { name: 'Authentication', description: 'Auth, tokens, OTP' },
+      { name: 'Chapters', description: 'Chapters management' },
+      { name: 'Lessons', description: 'Lessons management' },
+      { name: 'Questions', description: 'Questions and related operations' },
+      { name: 'Answers', description: 'Answers management' },
+      { name: 'Exams', description: 'Exams and results' },
+      { name: 'Uploads', description: 'Media uploads (images, videos)' },
+      { name: 'Practice', description: 'Practice sessions and logic' }
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -27,6 +38,13 @@ const options: swaggerJsdoc.Options = {
           description: 'Enter your JWT token in the format: Bearer <token>'
         }
       },
+      // Tag definitions (to organize the UI)
+      // Actual grouping is driven by adding \"tags\" to each operation in route docs
+      // These tags will appear in the sidebar
+      // Note: Some tags may be defined here even if not yet used by all routes
+      // to make the structure clearer for future additions.
+      // OpenAPI 3 allows top-level tags either under root or via definition extension.
+      // We'll add them under root below as well for better UI support.
       schemas: {
         Chapter: {
           type: 'object',

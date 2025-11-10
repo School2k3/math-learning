@@ -8,6 +8,7 @@ const router = express.Router();
  * /api/exams:
  *   get:
  *     summary: Get all exams
+ *     tags: [Exams]
  *     description: Retrieve a list of all exams with optional filtering by grade and chapter.
  *     parameters:
  *       - in: query
@@ -42,6 +43,7 @@ router.get('/', examController.getAllExams);
  * /api/exams/grade/{grade}:
  *   get:
  *     summary: Get exams by grade
+ *     tags: [Exams]
  *     description: Retrieve all exams for a specific grade level.
  *     parameters:
  *       - in: path
@@ -63,6 +65,7 @@ router.get('/grade/:grade', examController.getExamsByGrade);
  * /api/exams/chapter/{chapterId}:
  *   get:
  *     summary: Get exams by chapter
+ *     tags: [Exams]
  *     description: Retrieve all exams for a specific chapter.
  *     parameters:
  *       - in: path
@@ -84,6 +87,7 @@ router.get('/chapter/:chapterId', examController.getExamsByChapter);
  * /api/exams/results/user/{userId}:
  *   get:
  *     summary: Get exam results by user
+ *     tags: [Exams]
  *     description: Retrieve all exam results for a specific user.
  *     parameters:
  *       - in: path
@@ -105,6 +109,7 @@ router.get('/results/user/:userId', examController.getExamResultsByUser);
  * /api/exams/{examId}/results:
  *   get:
  *     summary: Get all exam results by exam ID
+ *     tags: [Exams]
  *     description: Retrieve all exam results/attempts for a specific exam.
  *     parameters:
  *       - in: path
@@ -155,6 +160,7 @@ router.get('/:examId/results', examController.getExamResultsByExamId);
  * /api/exams/results/{id}:
  *   get:
  *     summary: Get an exam result by ID
+ *     tags: [Exams]
  *     description: Retrieve detailed information about a specific exam result.
  *     parameters:
  *       - in: path
@@ -178,6 +184,7 @@ router.get('/results/:id', examController.getExamResultById);
  * /api/exams/{id}:
  *   get:
  *     summary: Get an exam by ID
+ *     tags: [Exams]
  *     description: Retrieve a specific exam with its questions and answers.
  *     parameters:
  *       - in: path
@@ -201,6 +208,7 @@ router.get('/:id', examController.getExamById);
  * /api/exams/start:
  *   post:
  *     summary: Start an exam
+ *     tags: [Exams]
  *     description: Start a new exam for a user and create an exam result record.
  *     requestBody:
  *       required: true
@@ -248,6 +256,7 @@ router.post('/start', examController.startExam);
  * /api/exams/answer:
  *   post:
  *     summary: Save an exam answer
+ *     tags: [Exams]
  *     description: Save or update an answer for a question during the exam.
  *     requestBody:
  *       required: true
@@ -299,6 +308,7 @@ router.post('/answer', examController.saveExamAnswer);
  * /api/exams/finish/{resultId}:
  *   post:
  *     summary: Finish an exam
+ *     tags: [Exams]
  *     description: Finish an exam, calculate the final score, and update the exam result.
  *     parameters:
  *       - in: path
@@ -343,6 +353,7 @@ router.post('/finish/:resultId', examController.finishExam);
  * /api/exams/progress/{resultId}:
  *   get:
  *     summary: Get exam progress
+ *     tags: [Exams]
  *     description: Get current progress and time remaining for an active exam.
  *     parameters:
  *       - in: path
@@ -382,6 +393,7 @@ router.get('/progress/:resultId', examController.getExamProgress);
  * /api/exams/active/{userId}:
  *   get:
  *     summary: Get active exam for user
+ *     tags: [Exams]
  *     description: Get the currently active exam for a user, if one exists. This enables resuming exams if accidentally navigated away.
  *     parameters:
  *       - in: path
@@ -421,6 +433,7 @@ router.get('/active/:userId', examController.getActiveExamForUser);
  * /api/exams:
  *   post:
  *     summary: Create a new exam
+ *     tags: [Exams]
  *     description: Create a new exam with the specified details
  *     requestBody:
  *       required: true
@@ -460,6 +473,7 @@ router.post('/', examController.createExam);
  * /api/exams/{id}:
  *   put:
  *     summary: Update an exam
+ *     tags: [Exams]
  *     description: Update an existing exam with new details
  *     parameters:
  *       - in: path
@@ -501,6 +515,7 @@ router.put('/:id', examController.updateExam);
  * /api/exams/{id}:
  *   delete:
  *     summary: Delete an exam
+ *     tags: [Exams]
  *     description: Delete an exam and all its related questions
  *     parameters:
  *       - in: path
@@ -526,6 +541,7 @@ router.delete('/:id', examController.deleteExam);
  * /api/exams/questions:
  *   post:
  *     summary: Add a question to an exam
+ *     tags: [Exams]
  *     description: Associate an existing question with an exam
  *     requestBody:
  *       required: true
@@ -560,6 +576,7 @@ router.post('/questions', examController.addQuestionToExam);
  * /api/exams/questions/{id}:
  *   delete:
  *     summary: Remove a question from an exam
+ *     tags: [Exams]
  *     description: Delete the association between a question and an exam
  *     parameters:
  *       - in: path

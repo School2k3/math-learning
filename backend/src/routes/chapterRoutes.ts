@@ -15,6 +15,7 @@ const router = express.Router();
  * /api/chapters:
  *   get:
  *     summary: Get all chapters
+ *     tags: [Chapters]
  *     description: Retrieve a list of all chapters with optional filtering by grade and volume.
  *     parameters:
  *       - in: query
@@ -49,6 +50,7 @@ router.get('/', chapterController.getAllChapters);
  * /api/chapters/{id}:
  *   get:
  *     summary: Get a chapter by ID
+ *     tags: [Chapters]
  *     description: Retrieve details for a specific chapter by its ID.
  *     parameters:
  *       - in: path
@@ -79,6 +81,7 @@ router.get('/:id', chapterController.getChapterById);
  * /api/chapters/grade/{grade}:
  *   get:
  *     summary: Get chapters by grade
+ *     tags: [Chapters]
  *     description: Retrieve a list of chapters for a specific grade level.
  *     parameters:
  *       - in: path
@@ -109,6 +112,7 @@ router.get('/grade/:grade', chapterController.getChaptersByGrade);
  * /api/chapters:
  *   post:
  *     summary: Create a new chapter
+ *     tags: [Chapters]
  *     description: Create a new chapter with the provided data.
  *     requestBody:
  *       required: true
@@ -156,6 +160,7 @@ router.post('/', validateRequest(createChapterSchema), chapterController.createC
  * /api/chapters/{id}:
  *   put:
  *     summary: Update a chapter
+ *     tags: [Chapters]
  *     description: Update an existing chapter by ID.
  *     parameters:
  *       - in: path
@@ -208,6 +213,7 @@ router.put('/:id', validateRequest(updateChapterSchema), chapterController.updat
  * /api/chapters/{id}:
  *   delete:
  *     summary: Delete a chapter
+ *     tags: [Chapters]
  *     description: Delete an existing chapter by ID. Only chapters with no lessons can be deleted.
  *     parameters:
  *       - in: path
