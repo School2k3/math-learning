@@ -13,6 +13,7 @@ import {
 import { fetchAllChapters } from "../api/chapterAPI";
 import { fetchAllQuestions, createQuestionWithAnswers } from "../api/questionAPI";
 import { fetchAllLessons } from "../api/lessonAPI";
+import { uploadImageFile } from "../api/uploadAPI";
 
 interface Exam {
   id: number;
@@ -62,18 +63,26 @@ const ExamAdmin: React.FC = () => {
   const [isNewExam, setIsNewExam] = useState(false); // Track nếu là exam mới tạo
   
   // State cho form tạo câu hỏi mới (manual mode)
-  const [newQuestion, setNewQuestion] = useState({
+  const [questionsList, setQuestionsList] = useState<Array<{
+    questionText: string;
+    imageUrl: string;
+    imageFile: File | null;
+    explanationText: string;
+    answerType: 'choice' | 'fill';
+    answers: Array<{ answerText: string; isCorrect: boolean }>;
+  }>>([{
     questionText: '',
     imageUrl: '',
+    imageFile: null,
     explanationText: '',
-    answerType: 'choice' as 'choice' | 'fill',
+    answerType: 'choice',
     answers: [
       { answerText: '', isCorrect: false },
       { answerText: '', isCorrect: false },
       { answerText: '', isCorrect: false },
       { answerText: '', isCorrect: false }
     ]
-  });
+  }]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -178,9 +187,10 @@ const ExamAdmin: React.FC = () => {
     setAddMode('bank');
     setIsNewExam(false);
     // Reset form tạo câu hỏi mới
-    setNewQuestion({
+    setQuestionsList([{
       questionText: '',
       imageUrl: '',
+      imageFile: null,
       explanationText: '',
       answerType: 'choice',
       answers: [
@@ -189,31 +199,26 @@ const ExamAdmin: React.FC = () => {
         { answerText: '', isCorrect: false },
         { answerText: '', isCorrect: false }
       ]
-    });
+    }]);
   };
 
-  // Thêm câu hỏi thủ công - TẠO MỚI câu hỏi
+  // Thêm câu hỏi thủ công - TẠO MỚI nhiều câu hỏi
   const handleAddManualQuestion = async () => {
     if (!selectedExamId || !selectedExamChapter || !selectedExamGrade) {
       alert("Thiếu thông tin exam!");
       return;
     }
     
-    if (!newQuestion.questionText.trim()) {
-      alert("Vui lòng nhập nội dung câu hỏi!");
-      return;
-    }
+    // Validate tất cả câu hỏi
+    const validQuestions = questionsList.filter(q => {
+      const hasText = q.questionText.trim();
+      const validAnswers = q.answers.filter(a => a.answerText.trim());
+      const hasCorrect = validAnswers.some(a => a.isCorrect);
+      return hasText && validAnswers.length >= 2 && hasCorrect;
+    });
     
-    // Kiểm tra đáp án
-    const validAnswers = newQuestion.answers.filter(a => a.answerText.trim());
-    if (validAnswers.length < 2) {
-      alert("Vui lòng nhập ít nhất 2 đáp án!");
-      return;
-    }
-    
-    const hasCorrectAnswer = validAnswers.some(a => a.isCorrect);
-    if (!hasCorrectAnswer) {
-      alert("Vui lòng đánh dấu đáp án đúng!");
+    if (validQuestions.length === 0) {
+      alert("Vui lòng nhập ít nhất 1 câu hỏi hợp lệ!\n(Cần: nội dung, min 2 đáp án, 1 đáp án đúng)");
       return;
     }
     
@@ -225,34 +230,49 @@ const ExamAdmin: React.FC = () => {
         return;
       }
       
-      // 1. Tạo câu hỏi mới
-      const questionData = {
-        questionText: newQuestion.questionText,
-        imageUrl: newQuestion.imageUrl || undefined,
-        explanationText: newQuestion.explanationText || undefined,
-        grade: selectedExamGrade,
-        type: 'exam',
-        answerType: newQuestion.answerType,
-        lessonId: lesson.id,
-        answers: validAnswers
-      };
+      let createdCount = 0;
       
-      const createRes = await createQuestionWithAnswers(questionData);
-      const newQuestionId = createRes.data?.question?.id || createRes.data?.id || createRes.question?.id || createRes.id;
-      
-      if (!newQuestionId) {
-        throw new Error("Không lấy được ID câu hỏi vừa tạo");
+      for (const q of validQuestions) {
+        // Upload hình ảnh nếu có file
+        let imageUrl = q.imageUrl;
+        if (q.imageFile) {
+          imageUrl = await uploadImageFile(q.imageFile);
+        }
+        
+        const validAnswers = q.answers.filter(a => a.answerText.trim());
+        
+        // Tạo câu hỏi
+        const questionData = {
+          questionText: q.questionText,
+          imageUrl: imageUrl || undefined,
+          explanationText: q.explanationText || undefined,
+          grade: selectedExamGrade,
+          type: 'exam',
+          answerType: q.answerType,
+          lessonId: lesson.id,
+          answers: validAnswers
+        };
+        
+        const createRes = await createQuestionWithAnswers(questionData);
+        const newQuestionId = createRes.data?.question?.id || createRes.data?.id || createRes.question?.id || createRes.id;
+        
+        if (!newQuestionId) {
+          console.error("Không lấy được ID câu hỏi:", createRes);
+          continue;
+        }
+        
+        // Thêm vào exam
+        await addQuestionToExam({ examId: selectedExamId, questionId: newQuestionId });
+        createdCount++;
       }
       
-      // 2. Thêm câu hỏi vào exam
-      await addQuestionToExam({ examId: selectedExamId, questionId: newQuestionId });
-      
-      alert("✅ Đã tạo và thêm câu hỏi mới vào đề thi!");
+      alert(`✅ Đã tạo và thêm ${createdCount}/${validQuestions.length} câu hỏi vào đề thi!`);
       
       // Reset form
-      setNewQuestion({
+      setQuestionsList([{
         questionText: '',
         imageUrl: '',
+        imageFile: null,
         explanationText: '',
         answerType: 'choice',
         answers: [
@@ -261,17 +281,17 @@ const ExamAdmin: React.FC = () => {
           { answerText: '', isCorrect: false },
           { answerText: '', isCorrect: false }
         ]
-      });
+      }]);
       
       loadExamQuestions(selectedExamId);
       const examsRes = await fetchAllExams();
       setExams(examsRes.data?.exams || examsRes.exams || []);
       
-      // Reload allQuestions để cập nhật danh sách
+      // Reload allQuestions
       const questionsRes = await fetchAllQuestions();
       setAllQuestions(questionsRes.data?.questions || questionsRes.questions || []);
     } catch (err: any) {
-      console.error("Error creating question:", err);
+      console.error("Error creating questions:", err);
       alert(`❌ Lỗi: ${err.message || 'Không thể tạo câu hỏi'}`);
     }
   };
@@ -339,14 +359,13 @@ const ExamAdmin: React.FC = () => {
   };
 
   // Xóa câu hỏi khỏi exam
-  const handleRemoveQuestion = async (examQuestionId: number) => {
+  const handleRemoveQuestion = async (questionId: number) => {
+    if (!selectedExamId) return;
     if (!window.confirm("Bạn có chắc muốn xóa câu hỏi này khỏi đề thi?")) return;
     try {
-      await removeQuestionFromExam(examQuestionId);
+      await removeQuestionFromExam(selectedExamId, questionId);
       alert("✅ Đã xóa câu hỏi!");
-      if (selectedExamId) {
-        loadExamQuestions(selectedExamId);
-      }
+      loadExamQuestions(selectedExamId);
       const examsRes = await fetchAllExams();
       setExams(examsRes.data?.exams || examsRes.exams || []);
     } catch (err) {
@@ -695,38 +714,105 @@ const ExamAdmin: React.FC = () => {
               {filteredExams.map((exam, index) => (
                 <tr key={exam.id}>
                   <td>{index + 1}</td>
-                  <td>{exam.title}</td>
-                  <td>Lớp {exam.grade}</td>
-                  <td>{exam.durationMinutes} phút</td>
-                  <td>{getChapterTitle(exam.chapterId)}</td>
-                  <td>{getQuestionCount(exam)} câu</td>
-                  <td>{formatDateTime(exam.createdAt)}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button 
-                        className="btn-manage" 
-                        onClick={() => openQuestionManager(exam.id)}
-                        title="Quản lý câu hỏi"
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#2196f3',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '13px'
-                        }}
-                      >
-                        📝 Câu hỏi
-                      </button>
-                      <button className="btn-edit" onClick={() => handleEdit(exam)}>
-                        ✏️
-                      </button>
-                      <button className="btn-delete" onClick={() => handleDelete(exam.id)}>
-                        �️
-                      </button>
-                    </div>
-                  </td>
+                  
+                  {/* Chế độ chỉnh sửa */}
+                  {editingId === exam.id ? (
+                    <>
+                      <td>
+                        <input
+                          type="text"
+                          value={editData.title || ''}
+                          onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                          placeholder="Tiêu đề"
+                          style={{ width: '100%', padding: '4px' }}
+                        />
+                      </td>
+                      <td>
+                        <select
+                          value={editData.grade || ''}
+                          onChange={(e) => setEditData({ ...editData, grade: Number(e.target.value) })}
+                          style={{ width: '100%', padding: '4px' }}
+                        >
+                          <option value="">Chọn lớp</option>
+                          {[1, 2, 3, 4, 5].map(g => (
+                            <option key={g} value={g}>Lớp {g}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={editData.durationMinutes || ''}
+                          onChange={(e) => setEditData({ ...editData, durationMinutes: Number(e.target.value) })}
+                          placeholder="Phút"
+                          style={{ width: '100%', padding: '4px' }}
+                        />
+                      </td>
+                      <td>
+                        <select
+                          value={editData.chapterId || ''}
+                          onChange={(e) => setEditData({ ...editData, chapterId: Number(e.target.value) })}
+                          style={{ width: '100%', padding: '4px' }}
+                        >
+                          <option value="">Chọn chương</option>
+                          {chapters
+                            .filter(ch => ch.grade === editData.grade)
+                            .map(chapter => (
+                              <option key={chapter.id} value={chapter.id}>
+                                {chapter.title}
+                              </option>
+                            ))}
+                        </select>
+                      </td>
+                      <td>{getQuestionCount(exam)} câu</td>
+                      <td>{formatDateTime(exam.createdAt)}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <button className="btn-save" onClick={handleSave} title="Lưu thay đổi">
+                            💾
+                          </button>
+                          <button className="btn-cancel" onClick={handleCancel} title="Hủy chỉnh sửa">
+                            ❌
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{exam.title}</td>
+                      <td>Lớp {exam.grade}</td>
+                      <td>{exam.durationMinutes} phút</td>
+                      <td>{getChapterTitle(exam.chapterId)}</td>
+                      <td>{getQuestionCount(exam)} câu</td>
+                      <td>{formatDateTime(exam.createdAt)}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <button 
+                            className="btn-manage" 
+                            onClick={() => openQuestionManager(exam.id)}
+                            title="Quản lý câu hỏi"
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: '#2196f3',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '13px'
+                            }}
+                          >
+                            📝 Câu hỏi
+                          </button>
+                          <button className="btn-edit" onClick={() => handleEdit(exam)} title="Chỉnh sửa bài kiểm tra">
+                            ✏️
+                          </button>
+                          <button className="btn-delete" onClick={() => handleDelete(exam.id)} title="Xóa bài kiểm tra">
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -804,106 +890,186 @@ const ExamAdmin: React.FC = () => {
                 </button>
               </div>
 
-              {/* Chế độ nhập tay - TẠO CÂU HỎI MỚI */}
+              {/* Chế độ nhập tay - TẠO NHIỀU CÂU HỎI MỚI */}
               {addMode === 'manual' && (
-                <div style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '4px', marginBottom: '20px', maxHeight: '500px', overflow: 'auto' }}>
-                  <h4>Tạo câu hỏi mới</h4>
+                <div style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '4px', marginBottom: '20px', maxHeight: '600px', overflow: 'auto' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h4>Tạo câu hỏi mới ({questionsList.length} câu)</h4>
+                    <button
+                      onClick={() => setQuestionsList([...questionsList, {
+                        questionText: '',
+                        imageUrl: '',
+                        imageFile: null,
+                        explanationText: '',
+                        answerType: 'choice',
+                        answers: [
+                          { answerText: '', isCorrect: false },
+                          { answerText: '', isCorrect: false },
+                          { answerText: '', isCorrect: false },
+                          { answerText: '', isCorrect: false }
+                        ]
+                      }])}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#2196f3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      ➕ Thêm câu hỏi
+                    </button>
+                  </div>
+                  
                   <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
                     Lớp: {selectedExamGrade} | Chương: {getChapterTitle(selectedExamChapter || 0)} | Loại: Exam
                   </p>
                   
-                  {/* Nội dung câu hỏi */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Nội dung câu hỏi *</label>
-                    <textarea
-                      value={newQuestion.questionText}
-                      onChange={(e) => setNewQuestion({...newQuestion, questionText: e.target.value})}
-                      placeholder="Nhập nội dung câu hỏi..."
-                      style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', minHeight: '60px' }}
-                    />
-                  </div>
-                  
-                  {/* Link hình ảnh */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px' }}>Link hình ảnh (tùy chọn)</label>
-                    <input
-                      type="text"
-                      value={newQuestion.imageUrl}
-                      onChange={(e) => setNewQuestion({...newQuestion, imageUrl: e.target.value})}
-                      placeholder="https://..."
-                      style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                    />
-                  </div>
-                  
-                  {/* Lời giải */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px' }}>Lời giải (tùy chọn)</label>
-                    <textarea
-                      value={newQuestion.explanationText}
-                      onChange={(e) => setNewQuestion({...newQuestion, explanationText: e.target.value})}
-                      placeholder="Nhập lời giải..."
-                      style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', minHeight: '50px' }}
-                    />
-                  </div>
-                  
-                  {/* Loại đáp án */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px' }}>Loại đáp án</label>
-                    <select
-                      value={newQuestion.answerType}
-                      onChange={(e) => setNewQuestion({...newQuestion, answerType: e.target.value as 'choice' | 'fill'})}
-                      style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                      title="Loại đáp án"
-                    >
-                      <option value="choice">Trắc nghiệm</option>
-                      <option value="fill">Điền vào chỗ trống</option>
-                    </select>
-                  </div>
-                  
-                  {/* Danh sách đáp án */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Đáp án * (tối thiểu 2 đáp án)</label>
-                    {newQuestion.answers.map((answer, idx) => (
-                      <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-                        <input
-                          type="checkbox"
-                          checked={answer.isCorrect}
+                  {questionsList.map((question, qIndex) => (
+                    <div key={qIndex} style={{ padding: '12px', backgroundColor: 'white', borderRadius: '4px', marginBottom: '12px', border: '2px solid #ddd' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <strong>Câu hỏi #{qIndex + 1}</strong>
+                        {questionsList.length > 1 && (
+                          <button
+                            onClick={() => setQuestionsList(questionsList.filter((_, i) => i !== qIndex))}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#f44336',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '11px'
+                            }}
+                          >
+                            🗑️ Xóa
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* Nội dung câu hỏi */}
+                      <div style={{ marginBottom: '8px' }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Nội dung *</label>
+                        <textarea
+                          value={question.questionText}
                           onChange={(e) => {
-                            const updated = [...newQuestion.answers];
-                            updated[idx].isCorrect = e.target.checked;
-                            setNewQuestion({...newQuestion, answers: updated});
+                            const updated = [...questionsList];
+                            updated[qIndex].questionText = e.target.value;
+                            setQuestionsList(updated);
                           }}
-                          title="Đáp án đúng"
-                        />
-                        <input
-                          type="text"
-                          value={answer.answerText}
-                          onChange={(e) => {
-                            const updated = [...newQuestion.answers];
-                            updated[idx].answerText = e.target.value;
-                            setNewQuestion({...newQuestion, answers: updated});
-                          }}
-                          placeholder={`Đáp án ${idx + 1}`}
-                          style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                          placeholder="Nhập nội dung câu hỏi..."
+                          style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ddd', minHeight: '50px', fontSize: '13px' }}
                         />
                       </div>
-                    ))}
-                  </div>
+                      
+                      {/* Upload hình ảnh */}
+                      <div style={{ marginBottom: '8px' }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Hình ảnh</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const updated = [...questionsList];
+                              updated[qIndex].imageFile = file;
+                              updated[qIndex].imageUrl = '';
+                              setQuestionsList(updated);
+                            }
+                          }}
+                          style={{ fontSize: '12px' }}
+                        />
+                        {question.imageFile && (
+                          <p style={{ fontSize: '11px', color: '#4caf50', marginTop: '4px' }}>
+                            ✓ {question.imageFile.name}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Lời giải */}
+                      <div style={{ marginBottom: '8px' }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Lời giải (tùy chọn)</label>
+                        <textarea
+                          value={question.explanationText}
+                          onChange={(e) => {
+                            const updated = [...questionsList];
+                            updated[qIndex].explanationText = e.target.value;
+                            setQuestionsList(updated);
+                          }}
+                          placeholder="Nhập lời giải..."
+                          style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ddd', minHeight: '40px', fontSize: '13px' }}
+                        />
+                      </div>
+                      
+                      {/* Loại đáp án */}
+                      <div style={{ marginBottom: '8px' }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Loại đáp án</label>
+                        <select
+                          value={question.answerType}
+                          onChange={(e) => {
+                            const updated = [...questionsList];
+                            updated[qIndex].answerType = e.target.value as 'choice' | 'fill';
+                            setQuestionsList(updated);
+                          }}
+                          style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px' }}
+                          title="Loại đáp án"
+                        >
+                          <option value="choice">Trắc nghiệm</option>
+                          <option value="fill">Điền vào chỗ trống</option>
+                        </select>
+                      </div>
+                      
+                      {/* Danh sách đáp án */}
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Đáp án * (min 2)</label>
+                        {question.answers.map((answer, aIndex) => (
+                          <div key={aIndex} style={{ display: 'flex', gap: '6px', marginBottom: '6px', alignItems: 'center' }}>
+                            <select
+                              value={answer.isCorrect ? 'true' : 'false'}
+                              onChange={(e) => {
+                                const updated = [...questionsList];
+                                updated[qIndex].answers[aIndex].isCorrect = e.target.value === 'true';
+                                setQuestionsList(updated);
+                              }}
+                              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px', width: '80px' }}
+                            >
+                              <option value="false">Sai</option>
+                              <option value="true">Đúng</option>
+                            </select>
+                            <input
+                              type="text"
+                              value={answer.answerText}
+                              onChange={(e) => {
+                                const updated = [...questionsList];
+                                updated[qIndex].answers[aIndex].answerText = e.target.value;
+                                setQuestionsList(updated);
+                              }}
+                              placeholder={`Đáp án ${aIndex + 1}`}
+                              style={{ flex: 1, padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px' }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                   
                   <button
                     onClick={handleAddManualQuestion}
                     style={{
-                      padding: '10px 20px',
+                      padding: '12px 24px',
                       backgroundColor: '#4caf50',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
                       cursor: 'pointer',
                       width: '100%',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
+                      fontSize: '14px'
                     }}
                   >
-                    ✅ Tạo và thêm câu hỏi vào đề thi
+                    ✅ Tạo và thêm {questionsList.length} câu hỏi vào đề thi
                   </button>
                 </div>
               )}
@@ -1028,7 +1194,7 @@ const ExamAdmin: React.FC = () => {
                         {eq.questionText && ` - ${eq.questionText}`}
                       </span>
                       <button
-                        onClick={() => handleRemoveQuestion(eq.id)}
+                        onClick={() => handleRemoveQuestion(eq.questionId)}
                         style={{
                           padding: '4px 12px',
                           backgroundColor: '#f44336',
