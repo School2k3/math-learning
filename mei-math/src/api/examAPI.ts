@@ -251,12 +251,19 @@ export async function addQuestionToExam(data: {
   return response.json();
 }
 
-// DELETE /api/exams/questions/{id} - Xóa câu hỏi khỏi bài kiểm tra
-export async function removeQuestionFromExam(id: number) {
-  const response = await fetch(`/api/exams/questions/${id}`, {
-    method: "DELETE",
+// POST /api/exams/questions/remove - Xóa câu hỏi khỏi bài kiểm tra
+export async function removeQuestionFromExam(
+  examId: number,
+  questionId: number
+) {
+  const response = await fetch(`/api/exams/questions/remove`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ examId, questionId }),
   });
-  console.log("removeQuestionFromExam response status:", id);
+  console.log("removeQuestionFromExam response status:", examId, questionId);
   if (!response.ok) {
     throw new Error("Failed to remove question from exam");
   }
