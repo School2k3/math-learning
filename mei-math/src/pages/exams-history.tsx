@@ -77,13 +77,8 @@ const ExamsHistory: React.FC = () => {
           <button 
             className="back-btn"
             onClick={() => {
-              // Lấy grade và chapterId từ location.state (đã truyền từ study-page hoặc exams)
-              const grade = location.state?.grade;
-              const chapterId = location.state?.chapterId;
-              
-              if (grade && chapterId) {
-                navigate(`/study?grade=${grade}&chapterId=${chapterId}`);
-              } else if (chapterId) {
+              const chapterId = examInfo?.chapterId;
+              if (chapterId) {
                 navigate(`/study?chapterId=${chapterId}`);
               } else {
                 navigate("/study");

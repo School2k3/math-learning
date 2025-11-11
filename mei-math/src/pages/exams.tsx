@@ -424,11 +424,7 @@ const Exams: React.FC = () => {
                     border: "none", borderRadius: "12px", padding: "12px 32px", cursor: "pointer"
                   }}
                   onClick={() => navigate("/exams-history", { 
-                    state: { 
-                      examId: exam.id,
-                      grade: exam.grade,
-                      chapterId: chapterId
-                    } 
+                    state: { examId: exam.id } 
                   })}
                 >
                   Xem lịch sử

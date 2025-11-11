@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import "../css/pratice.css";
 import { 
-  fetchQuestionsByLesson, 
+  fetchPracticeQuestionsByLesson, 
   fetchQuestionAudio,
   completePracticeSession,
   savePracticeAnswer, // Nhập hàm lưu đáp án
@@ -64,7 +64,7 @@ const Pratice: React.FC = () => {
   useEffect(() => {
     if (lessonId) {
       // Fetch questions trước, tạo practice session song song
-      const fetchQuestionsPromise = fetchQuestionsByLesson(lessonId)
+      const fetchQuestionsPromise = fetchPracticeQuestionsByLesson(lessonId)
         .then((data) => {
           console.log("Questions API Response:", data);
           const questionsData = data.data?.questions ?? [];

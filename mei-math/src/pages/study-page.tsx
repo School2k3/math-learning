@@ -477,11 +477,7 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                         textDecoration: "underline",
                       }}
                       onClick={() => navigate("/exams-history", { 
-                        state: { 
-                          examId: exam.id,
-                          grade: exam.grade,
-                          chapterId: selectedChapterId
-                        } 
+                        state: { examId: exam.id } 
                       })}
                     >
                       Lịch sử các lần làm bài

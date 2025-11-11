@@ -83,11 +83,7 @@ const ExamsReview: React.FC = () => {
           <button 
             className="back-btn"
             onClick={() => navigate("/exams-history", { 
-              state: { 
-                examId: examDetail.examId,
-                grade: examDetail.exam?.grade,
-                chapterId: examDetail.exam?.chapterId
-              } 
+              state: { examId: examDetail.examId } 
             })}
           >
             ← Quay lại danh sách
