@@ -367,3 +367,42 @@ export const verifyOtp = async (req: Request<{}, {}, OtpVerificationRequestBody>
     sendErrorResponse(res, 'Failed to verify OTP');
   }
 };
+
+/**
+ * Get user trophies
+ * 
+ * @route GET /api/auth/trophies/:userId
+ * @param {number} req.params.userId - User ID
+ * @returns {Object} User trophy count
+ */
+export const getUserTrophies = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      select: {
+        id: true,
+        username: true,
+        fullName: true,
+        trophies: true,
+        avatarUrl: true
+      }
+    });
+
+    if (!user) {
+      return sendBadRequestResponse(res, 'User not found');
+    }
+
+    sendSuccessResponse(res, {
+      userId: user.id,
+      username: user.username,
+      fullName: user.fullName,
+      trophies: user.trophies,
+      avatarUrl: user.avatarUrl
+    }, 'User trophies retrieved successfully');
+  } catch (error) {
+    console.error('Get user trophies error:', error);
+    sendErrorResponse(res, 'Failed to get user trophies');
+  }
+};

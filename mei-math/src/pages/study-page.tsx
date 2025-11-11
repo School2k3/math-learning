@@ -77,8 +77,11 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
               // Lấy session mới nhất (hoặc điểm cao nhất)
               const latestSession = sessions.sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt))[0];
               const score = latestSession ? latestSession.score : 0;
-              const completed = latestSession ? latestSession.score >= 100 : false;
-              return { lessonId: lesson.id, progress: score, completed };
+              // Completed if the session has finishedAt (which means they reached 100 points)
+              const completed = latestSession ? latestSession.finishedAt !== null : false;
+              // Progress should be 100% if completed, otherwise show actual score
+              const progress = completed ? 100 : score;
+              return { lessonId: lesson.id, progress: progress, completed };
             } catch {
               return { lessonId: lesson.id, progress: 0, completed: false };
             }

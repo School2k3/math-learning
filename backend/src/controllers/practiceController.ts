@@ -150,14 +150,28 @@ const practiceController: Controller = {
       
       // Check if the score has reached 100 or more
       let practiceCompleted = false;
+      let trophyAwarded = false;
       if (updatedSession.score >= 100 && !updatedSession.finishedAt) {
+        // Mark session as finished
         await prisma.practiceSession.update({
           where: { id: parseInt(practiceId) },
           data: {
             finishedAt: new Date(),
           },
         });
+        
+        // Award 1 trophy to the user
+        await prisma.user.update({
+          where: { id: currentSession.userId },
+          data: {
+            trophies: {
+              increment: 1,
+            },
+          },
+        });
+        
         practiceCompleted = true;
+        trophyAwarded = true;
       }
       
       res.status(201).json({ 
@@ -165,7 +179,8 @@ const practiceController: Controller = {
         isCorrect: answer.isCorrect,
         score: updatedSession.score,
         scoreChange,
-        practiceCompleted
+        practiceCompleted,
+        trophyAwarded
       });
     } catch (error) {
       console.error('Error saving practice answer:', error);

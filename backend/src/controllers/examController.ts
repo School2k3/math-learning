@@ -594,6 +594,20 @@ const examController: Controller = {
         },
       });
       
+      // Award 1 trophy if score >= 80 (equivalent to 8 out of 10)
+      let trophyAwarded = false;
+      if (score >= 80) {
+        await prisma.user.update({
+          where: { id: examResult.userId },
+          data: {
+            trophies: {
+              increment: 1,
+            },
+          },
+        });
+        trophyAwarded = true;
+      }
+      
       // Create progress history entry
       await prisma.progressHistory.create({
         data: {
@@ -610,6 +624,7 @@ const examController: Controller = {
         correctAnswers: correctAnswers,
         totalQuestions: totalQuestions,
         passed: score >= 60,
+        trophyAwarded,
       });
     } catch (error) {
       console.error('Error finishing exam:', error);

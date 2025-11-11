@@ -25,6 +25,7 @@ model User {
   grade             Int?              // 1-5, null for admin
   avatarUrl         String?           @map("avatar_url")
   isVerified        Boolean           @default(false) @map("is_verified")
+  trophies          Int               @default(0)     // Trophy count for rewards
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
   
@@ -210,8 +211,12 @@ model ExamAnswer {
 model Reward {
   id              Int               @id @default(autoincrement()) @map("reward_id")
   name            String
-  cost            Int               // points needed to redeem
-  type            String            // badge, item, decoration
+  cost            Int               // trophies needed to redeem
+  type            String            // avatar, badge, item, decoration
+  imageUrl        String?           @map("image_url") // URL for avatar image
+  description     String?           // Description of the reward
+  isActive        Boolean           @default(true) @map("is_active") // Whether the reward is available
+  createdAt       DateTime          @default(now()) @map("created_at")
   
   // Relations
   userRewards     UserReward[]
@@ -223,7 +228,8 @@ model UserReward {
   id              Int               @id @default(autoincrement()) @map("user_reward_id")
   userId          Int               @map("user_id")
   rewardId        Int               @map("reward_id")
-  acquiredAt      DateTime          @map("acquired_at")
+  acquiredAt      DateTime          @default(now()) @map("acquired_at")
+  isEquipped      Boolean           @default(false) @map("is_equipped") // For avatars - is it currently equipped
   
   // Relations
   user            User              @relation(fields: [userId], references: [id])

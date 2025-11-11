@@ -6,7 +6,8 @@ import {
   getMe,
   logout,
   requestOtp,
-  verifyOtp
+  verifyOtp,
+  getUserTrophies
 } from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -274,5 +275,53 @@ router.post('/request-otp', requestOtp);
  *         description: Server error
  */
 router.post('/verify-otp', verifyOtp);
+
+/**
+ * @swagger
+ * /api/auth/trophies/{userId}:
+ *   get:
+ *     summary: Get user's trophy count
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User trophies retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: User trophies retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     fullName:
+ *                       type: string
+ *                     trophies:
+ *                       type: integer
+ *                       description: Number of trophies earned
+ *                     avatarUrl:
+ *                       type: string
+ *       400:
+ *         description: Bad request - User not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/trophies/:userId', getUserTrophies);
 
 export default router;
