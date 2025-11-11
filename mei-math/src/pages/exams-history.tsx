@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import { useNavigate, useLocation } from "react-router-dom";
 import { fetchExamResultsByExamId } from "../api/examAPI";
-import { useAuth } from "../contexts/AuthContext";
 import "../css/exams-history.css";
 
 const ExamsHistory: React.FC = () => {
@@ -10,14 +9,19 @@ const ExamsHistory: React.FC = () => {
   const [examInfo, setExamInfo] = useState<any>(null);
   const [statistics, setStatistics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const loadHistory = async () => {
-      // Lấy examId từ location.state hoặc có thể hardcode tạm
-      const examId = location.state?.examId || 201; // Tạm thời dùng 201, sau này có thể truyền qua navigation
+      // Lấy examId từ location.state
+      const examId = location.state?.examId;
+
+      if (!examId) {
+        console.error("❌ No examId provided");
+        setLoading(false);
+        return;
+      }
 
       console.log("📊 Loading exam history for examId:", examId);
 
@@ -72,29 +76,53 @@ const ExamsHistory: React.FC = () => {
           </h1>
           <button 
             className="back-btn"
-            onClick={() => navigate("/study")}
+            onClick={() => {
+              // Lấy grade và chapterId từ location.state (đã truyền từ study-page hoặc exams)
+              const grade = location.state?.grade;
+              const chapterId = location.state?.chapterId;
+              
+              if (grade && chapterId) {
+                navigate(`/study?grade=${grade}&chapterId=${chapterId}`);
+              } else if (chapterId) {
+                navigate(`/study?chapterId=${chapterId}`);
+              } else {
+                navigate("/study");
+              }
+            }}
           >
             ← Quay lại
           </button>
         </div>
 
-        {/* Thống kê */}
-        {statistics && (
-          <div className="statistics-summary">
-            <div className="stat-item">
-              <span className="stat-label">Tổng lần làm:</span>
-              <span className="stat-value">{statistics.totalAttempts}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Điểm trung bình:</span>
-              <span className="stat-value">{statistics.averageScore?.toFixed(1)}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Tỷ lệ đạt:</span>
-              <span className="stat-value">{(statistics.passRate * 100).toFixed(0)}%</span>
-            </div>
+        {!location.state?.examId ? (
+          <div className="empty-state">
+            <p>Vui lòng chọn bài kiểm tra từ trang học tập.</p>
+            <button 
+              className="start-exam-btn"
+              onClick={() => navigate("/study")}
+            >
+              Quay lại trang học tập
+            </button>
           </div>
-        )}
+        ) : (
+          <>
+            {/* Thống kê */}
+            {statistics && (
+              <div className="statistics-summary">
+                <div className="stat-item">
+                  <span className="stat-label">Tổng lần làm:</span>
+                  <span className="stat-value">{statistics.totalAttempts}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Điểm trung bình:</span>
+                  <span className="stat-value">{statistics.averageScore?.toFixed(1)}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Tỷ lệ đạt:</span>
+                  <span className="stat-value">{(statistics.passRate * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+            )}
 
         {loading ? (
           <div className="loading-state">Đang tải lịch sử...</div>
@@ -157,6 +185,8 @@ const ExamsHistory: React.FC = () => {
               </tbody>
             </table>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

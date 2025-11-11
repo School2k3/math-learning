@@ -256,7 +256,7 @@ const AnswerAdmin: React.FC = () => {
       <div className="admin-main">
         <div className="question-header">
           <div className="question-title">
-            <h1>Đáp án câu hỏi</h1>
+            <h1>Danh sách đáp án câu hỏi</h1>
             <p>{filteredAnswers.length} đáp án</p>
           </div>
           <button 

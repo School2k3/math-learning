@@ -355,7 +355,7 @@ const LessonAdmin: React.FC = () => {
       <div className="admin-main">
         <div className="lesson-header">
           <div className="lesson-title">
-            <h1>Bài học</h1>
+            <h1>Danh sách bài học</h1>
             <p>{filteredLessons.length} bài học</p>
           </div>
           <div className="header-actions">

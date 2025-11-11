@@ -31,3 +31,20 @@ export async function uploadVideoFile(file: File): Promise<string> {
   const data = (await response.json()) as { url: string };
   return data.url;
 }
+
+export async function uploadAudioFile(file: File): Promise<string> {
+  const form = new FormData();
+  form.append("audio", file);
+
+  const response = await fetch("/api/upload/audio", {
+    method: "POST",
+    body: form,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to upload audio");
+  }
+
+  const data = (await response.json()) as { url: string };
+  return data.url;
+}

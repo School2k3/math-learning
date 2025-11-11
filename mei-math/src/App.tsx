@@ -30,7 +30,7 @@ function App() {
           <Route path="/theoretical-video" element={<TheoreticalVideo />} />
           <Route path="/pratice" element={<Pratice />} />
           <Route path="/exams" element={<Exams />} />
-          <Route path="/exams/history" element={<ExamsHistory />} />
+          <Route path="/exams-history" element={<ExamsHistory />} />
           <Route path="/exams/review/:resultId" element={<ExamsReview />} />
           <Route path="/dashboard" element={<DashUser />} />
           <Route path="/auth/login" element={<Login />} />

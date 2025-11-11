@@ -308,7 +308,7 @@ const ChapterAdmin: React.FC = () => {
       <div className="admin-main">
         <div className="chapter-header">
           <div className="chapter-title">
-            <h1>Chương học</h1>
+            <h1>Danh sách chương học</h1>
             <p>{filteredChapters.length} chương</p>
           </div>
           <div className="header-actions">

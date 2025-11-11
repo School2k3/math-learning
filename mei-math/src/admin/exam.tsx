@@ -585,7 +585,7 @@ const ExamAdmin: React.FC = () => {
       <div className="admin-main">
         <div className="exam-header">
           <div className="exam-title">
-            <h1>Bài kiểm tra</h1>
+            <h1>Danh sách bài kiểm tra</h1>
             <p>{filteredExams.length} bài kiểm tra</p>
           </div>
           <button 

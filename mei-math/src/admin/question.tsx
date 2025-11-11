@@ -7,7 +7,7 @@ import { fetchAllChapters } from "../api/chapterAPI";
 import { createQuestionWithAnswers } from "../api/questionAPI";
 import { deleteQuestionById } from "../api/questionAPI";
 import { updateQuestionById } from "../api/questionAPI";
-import { uploadImageFile, uploadVideoFile } from "../api/uploadAPI";
+import { uploadImageFile, uploadAudioFile } from "../api/uploadAPI";
 
 interface Answer {
   id: number;
@@ -111,7 +111,7 @@ const QuestionAdmin: React.FC = () => {
 
     try {
       setUploadingAudio(true);
-      const url = await uploadVideoFile(file);
+      const url = await uploadAudioFile(file);
       setNewQuestion({ ...newQuestion, audioUrl: url });
       alert('Upload audio thành công!');
     } catch (error) {
@@ -179,7 +179,7 @@ const QuestionAdmin: React.FC = () => {
 
     try {
       setUploadingEditAudio(true);
-      const url = await uploadVideoFile(file);
+      const url = await uploadAudioFile(file);
       setEditData({ ...editData, audioUrl: url });
       alert('Upload audio thành công!');
     } catch (error) {
@@ -562,7 +562,7 @@ const QuestionAdmin: React.FC = () => {
       <div className="admin-main">
         <div className="question-header">
           <div className="question-title">
-            <h1>Câu hỏi</h1>
+            <h1>Danh sách câu hỏi</h1>
             <p>{filteredQuestions.length} câu hỏi</p>
           </div>
           <div className="header-actions">

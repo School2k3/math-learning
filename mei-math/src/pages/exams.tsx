@@ -415,17 +415,34 @@ const Exams: React.FC = () => {
             }}>
               <h2 style={{ color: "#23bdee", textAlign: "center" }}>Kết quả bài kiểm tra</h2>
               <div style={{ fontSize: "24px", fontWeight: 700, margin: "24px 0" }}>
-                Điểm số của bạn: {Math.round(score / examQuestions.length * 10)}/10
+                Điểm số của bạn: {Math.round(score / examQuestions.length * 100)}/100
               </div>
-              <button
-                style={{
-                  background: "#49bbbd", color: "#fff", fontWeight: 600, fontSize: "18px",
-                  border: "none", borderRadius: "12px", padding: "12px 48px", cursor: "pointer"
-                }}
-                onClick={() => navigate("/study")}
-              >
-                Đóng
-              </button>
+              <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
+                <button
+                  style={{
+                    background: "#4caf50", color: "#fff", fontWeight: 600, fontSize: "18px",
+                    border: "none", borderRadius: "12px", padding: "12px 32px", cursor: "pointer"
+                  }}
+                  onClick={() => navigate("/exams-history", { 
+                    state: { 
+                      examId: exam.id,
+                      grade: exam.grade,
+                      chapterId: chapterId
+                    } 
+                  })}
+                >
+                  Xem lịch sử
+                </button>
+                <button
+                  style={{
+                    background: "#49bbbd", color: "#fff", fontWeight: 600, fontSize: "18px",
+                    border: "none", borderRadius: "12px", padding: "12px 32px", cursor: "pointer"
+                  }}
+                  onClick={() => navigate("/study")}
+                >
+                  Đóng
+                </button>
+              </div>
             </div>
           </div>
         )}
