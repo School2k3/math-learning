@@ -34,6 +34,8 @@ model User {
   examResults       ExamResult[]
   userRewards       UserReward[]
   progressHistory   ProgressHistory[]
+  lessonLikes       LessonLike[]
+  lessonReviews     LessonReview[]
 
   @@map("Users")
 }
@@ -64,6 +66,8 @@ model Lesson {
   questions     Question[]
   progressHistory ProgressHistory[]
   practiceSessions PracticeSession[]
+  lessonLikes   LessonLike[]
+  lessonReviews LessonReview[]
 
   @@map("Lessons")
 }
@@ -255,4 +259,38 @@ model ProgressHistory {
   examResult      ExamResult?       @relation(fields: [examResultId], references: [id])
 
   @@map("ProgressHistory")
+}
+
+// 8. Lesson Reviews & Likes
+model LessonLike {
+  id              Int               @id @default(autoincrement()) @map("like_id")
+  userId          Int               @map("user_id")
+  lessonId        Int               @map("lesson_id")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  
+  // Relations
+  user            User              @relation(fields: [userId], references: [id])
+  lesson          Lesson            @relation(fields: [lessonId], references: [id])
+  
+  // Unique constraint: one user can only like a lesson once
+  @@unique([userId, lessonId])
+  @@map("LessonLikes")
+}
+
+model LessonReview {
+  id              Int               @id @default(autoincrement()) @map("review_id")
+  userId          Int               @map("user_id")
+  lessonId        Int               @map("lesson_id")
+  rating          Int               // 1-5 stars
+  comment         String?           // Optional review text
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  
+  // Relations
+  user            User              @relation(fields: [userId], references: [id])
+  lesson          Lesson            @relation(fields: [lessonId], references: [id])
+  
+  // Unique constraint: one user can only review a lesson once
+  @@unique([userId, lessonId])
+  @@map("LessonReviews")
 }

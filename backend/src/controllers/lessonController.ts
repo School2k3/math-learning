@@ -50,11 +50,28 @@ const lessonController: Controller = {
   getLessonById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
+      const { userId } = req.query;
       
       const lesson = await prisma.lesson.findUnique({
         where: { id: parseInt(id) },
         include: {
           chapter: true,
+          lessonLikes: true,
+          lessonReviews: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  fullName: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+          },
         },
       });
       
@@ -63,7 +80,38 @@ const lessonController: Controller = {
         return;
       }
       
-      sendSuccessResponse(res, { lesson }, 'Lesson retrieved successfully');
+      // Calculate statistics
+      const totalLikes = lesson.lessonLikes.length;
+      const totalReviews = lesson.lessonReviews.length;
+      const averageRating = totalReviews > 0 
+        ? lesson.lessonReviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+        : 0;
+      
+      // Check if current user liked/reviewed
+      let userLiked = false;
+      let userReview = null;
+      
+      if (userId) {
+        userLiked = lesson.lessonLikes.some(like => like.userId === parseInt(userId as string));
+        userReview = lesson.lessonReviews.find(review => review.userId === parseInt(userId as string)) || null;
+      }
+      
+      // Prepare response
+      const lessonWithStats = {
+        ...lesson,
+        lessonLikes: undefined, // Remove raw likes data
+        statistics: {
+          totalLikes,
+          totalReviews,
+          averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+        },
+        userInteraction: {
+          hasLiked: userLiked,
+          userReview: userReview,
+        },
+      };
+      
+      sendSuccessResponse(res, { lesson: lessonWithStats }, 'Lesson retrieved successfully');
     } catch (error) {
       console.error('Error getting lesson:', error);
       sendErrorResponse(res, 'Error retrieving lesson');
