@@ -77,11 +77,16 @@ const ExamsHistory: React.FC = () => {
           <button 
             className="back-btn"
             onClick={() => {
-              const chapterId = examInfo?.chapterId;
-              if (chapterId) {
+              // Ưu tiên quay lại dashboard nếu có grade và chapterId trong state
+              const grade = location.state?.grade;
+              const chapterId = location.state?.chapterId || examInfo?.chapterId;
+              
+              if (grade && chapterId) {
+                navigate("/dashboard", { state: { activeTab: "Bài kiểm tra vui học" } });
+              } else if (chapterId) {
                 navigate(`/study?chapterId=${chapterId}`);
               } else {
-                navigate("/study");
+                navigate("/dashboard");
               }
             }}
           >
@@ -170,7 +175,14 @@ const ExamsHistory: React.FC = () => {
                     <td>
                       <button
                         className="review-btn"
-                        onClick={() => navigate(`/exams/review/${exam.id}`)}
+                        onClick={() => {
+                          // Truyền state để exams-review có thể quay lại đúng context
+                          const grade = location.state?.grade;
+                          const chapterId = location.state?.chapterId || examInfo?.chapterId;
+                          navigate(`/exams/review/${exam.id}`, {
+                            state: { grade, chapterId }
+                          });
+                        }}
                       >
                         Xem chi tiết
                       </button>
