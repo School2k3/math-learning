@@ -7,6 +7,15 @@ import { fetchLessonsByChapter } from "../api/lessonAPI";
 import { fetchPracticeHistoryByUser } from "../api/praticeAPI";
 import { fetchExamsByChapter } from "../api/examAPI";
 import { useNavigate, useLocation } from "react-router-dom";
+import { 
+  getUserStats, 
+  getPracticeStats, 
+  getExamStats, 
+  getQuestionStats,
+  getPracticeMinutes,
+  getExamMinutes
+} from "../api/userStatsAPI";
+
 
 const DashUser: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Đánh giá chung");
@@ -21,6 +30,17 @@ const DashUser: React.FC = () => {
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [exams, setExams] = useState<any[]>([]);
   const [loadingExams, setLoadingExams] = useState(false);
+  
+  // State cho thống kê
+  const [statsData, setStatsData] = useState({
+    questionsAnswered: 0,
+    practiceMinutes: 0,
+    examsCompleted: 0,
+    examMinutes: 0,
+    topicsPracticed: 0,
+    trophies: 0
+  });
+
   const { user } = useAuth(); // Lấy user từ AuthContext
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,35 +64,101 @@ const DashUser: React.FC = () => {
   const stats = [
     {
       icon: "📝",
-      value: 0,
+      value: statsData.questionsAnswered,
       label: "Câu hỏi đã trả lời",
       color: "#49BBBD"
     },
     {
       icon: "⏱️", 
-      value: 0,
+      value: statsData.practiceMinutes,
       label: "Số phút đã luyện tập",
       color: "#FF6B6B"
     },
     {
       icon: "📊",
-      value: 0,
+      value: statsData.examsCompleted,
       label: "Số bài kiểm tra đã làm",
       color: "#4ECDC4"
     },
     {
       icon: "⏰",
-      value: 0,
+      value: statsData.examMinutes,
       label: "Số phút đã làm kiểm tra",
       color: "#FFE66D"
     },
     {
       icon: "⭐",
-      value: 0,
+      value: statsData.topicsPracticed,
       label: "Chủ điểm đã thực hành",
       color: "#A8E6CF"
+    },
+    {
+      icon: "🏆",
+      value: statsData.trophies,
+      label: "Cúp vàng",
+      color: "#FFD700"
     }
   ];
+
+  // Load stats data khi component mount
+  useEffect(() => {
+    const loadStatsData = async () => {
+      if (!user?.id) {
+        console.warn("⚠️ [loadStatsData] No user ID available");
+        return;
+      }
+
+      console.log("📊 [loadStatsData] Starting to load stats for userId:", user.id);
+
+      try {
+        // Gọi tất cả các API thống kê song song
+        console.log("🔄 [loadStatsData] Calling all stats APIs in parallel...");
+        const [
+          userStatsRes,
+          practiceStatsRes,
+          examStatsRes,
+          questionStatsRes,
+          practiceMinutesRes,
+          examMinutesRes
+        ] = await Promise.all([
+          getUserStats(user.id),
+          getPracticeStats(user.id),
+          getExamStats(user.id),
+          getQuestionStats(user.id),
+          getPracticeMinutes(user.id),
+          getExamMinutes(user.id)
+        ]);
+
+        console.log("📦 [loadStatsData] All API responses received:", {
+          userStats: userStatsRes,
+          practiceStats: practiceStatsRes,
+          examStats: examStatsRes,
+          questionStats: questionStatsRes,
+          practiceMinutes: practiceMinutesRes,
+          examMinutes: examMinutesRes
+        });
+
+        // Cập nhật state với dữ liệu từ API
+        const newStatsData = {
+          questionsAnswered: questionStatsRes.data?.totalAnswered || 0,
+          practiceMinutes: practiceMinutesRes.data?.totalMinutes || 0,
+          examsCompleted: examStatsRes.data?.completedExams || 0,
+          examMinutes: examMinutesRes.data?.totalMinutes || 0,
+          topicsPracticed: practiceStatsRes.data?.completedSessions || 0,
+          trophies: userStatsRes.data?.trophies || 0
+        };
+
+        console.log("✅ [loadStatsData] Updating state with:", newStatsData);
+        setStatsData(newStatsData);
+
+        console.log("🎉 [loadStatsData] Stats loaded successfully!");
+      } catch (error) {
+        console.error("❌ [loadStatsData] Error loading stats:", error);
+      }
+    };
+
+    loadStatsData();
+  }, [user?.id]);
 
   // Load chapters và lessons khi component mount
   useEffect(() => {
