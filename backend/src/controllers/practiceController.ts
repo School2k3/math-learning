@@ -207,7 +207,7 @@ const practiceController: Controller = {
       // Calculate the final score
       const correctAnswers = practiceSession.practiceAnswers.filter(answer => answer.isCorrect).length;
       const totalQuestions = practiceSession.totalQuestions;
-      const finalScore = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+      const finalScore = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100 * 100) / 100 : 0;
       
       // Update the session with the final score
       await prisma.practiceSession.update({

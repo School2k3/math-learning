@@ -566,7 +566,7 @@ const examController: Controller = {
       // Calculate score
       const totalQuestions = examResult.exam.examQuestions.length;
       const correctAnswers = examResult.examAnswers.filter(answer => answer.isCorrect).length;
-      const score = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+      const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100 * 100) / 100 : 0;
       
       // Update exam result with final score and finish time
       const updatedExamResult = await prisma.examResult.update({
