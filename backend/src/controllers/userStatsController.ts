@@ -7,12 +7,27 @@ const userStatsController: Controller = {
   getUserStatistics: async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
+      const { date } = req.query; // Optional date filter (YYYY-MM-DD)
+      
+      // Build date filter if provided
+      let dateFilter: any = {};
+      if (date) {
+        const targetDate = new Date(date as string);
+        const nextDay = new Date(targetDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        dateFilter = {
+          gte: targetDate,
+          lt: nextDay,
+        };
+      }
       
       // 1. Get total answered questions (from practice sessions)
       const practiceAnswers = await prisma.practiceAnswer.findMany({
         where: {
           practiceSession: {
             userId: parseInt(userId),
+            ...(date ? { startedAt: dateFilter } : {}),
           },
         },
         distinct: ['questionId'], // Count unique questions only
@@ -26,6 +41,7 @@ const userStatsController: Controller = {
           userId: parseInt(userId),
           finishedAt: {
             not: null, // Only count finished exams
+            ...(date ? dateFilter : {}),
           },
         },
       });
@@ -36,6 +52,7 @@ const userStatsController: Controller = {
           userId: parseInt(userId),
           finishedAt: {
             not: null, // Only count finished sessions
+            ...(date ? dateFilter : {}),
           },
         },
       });
@@ -46,6 +63,7 @@ const userStatsController: Controller = {
           userId: parseInt(userId),
           finishedAt: {
             not: null,
+            ...(date ? dateFilter : {}),
           },
         },
         select: {
@@ -66,6 +84,7 @@ const userStatsController: Controller = {
       const totalPointsEarned = await prisma.practiceSession.aggregate({
         where: {
           userId: parseInt(userId),
+          ...(date ? { finishedAt: dateFilter } : {}),
         },
         _sum: {
           score: true,
@@ -106,10 +125,25 @@ const userStatsController: Controller = {
   getPracticeStatistics: async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
+      const { date } = req.query; // Optional date filter (YYYY-MM-DD)
+      
+      // Build date filter if provided
+      let dateFilter: any = {};
+      if (date) {
+        const targetDate = new Date(date as string);
+        const nextDay = new Date(targetDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        dateFilter = {
+          gte: targetDate,
+          lt: nextDay,
+        };
+      }
       
       const practiceSessions = await prisma.practiceSession.findMany({
         where: {
           userId: parseInt(userId),
+          ...(date ? { startedAt: dateFilter } : {}),
         },
         include: {
           lesson: {
@@ -152,10 +186,25 @@ const userStatsController: Controller = {
   getExamStatistics: async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
+      const { date } = req.query; // Optional date filter (YYYY-MM-DD)
+      
+      // Build date filter if provided
+      let dateFilter: any = {};
+      if (date) {
+        const targetDate = new Date(date as string);
+        const nextDay = new Date(targetDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        dateFilter = {
+          gte: targetDate,
+          lt: nextDay,
+        };
+      }
       
       const examResults = await prisma.examResult.findMany({
         where: {
           userId: parseInt(userId),
+          ...(date ? { startedAt: dateFilter } : {}),
         },
         include: {
           exam: {
@@ -209,12 +258,27 @@ const userStatsController: Controller = {
   getQuestionsStatistics: async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
+      const { date } = req.query; // Optional date filter (YYYY-MM-DD)
+      
+      // Build date filter if provided
+      let dateFilter: any = {};
+      if (date) {
+        const targetDate = new Date(date as string);
+        const nextDay = new Date(targetDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        dateFilter = {
+          gte: targetDate,
+          lt: nextDay,
+        };
+      }
       
       // Get all practice answers
       const practiceAnswers = await prisma.practiceAnswer.findMany({
         where: {
           practiceSession: {
             userId: parseInt(userId),
+            ...(date ? { startedAt: dateFilter } : {}),
           },
         },
         include: {
@@ -261,6 +325,20 @@ const userStatsController: Controller = {
   getPracticeMinutes: async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
+      const { date } = req.query; // Optional date filter (YYYY-MM-DD)
+      
+      // Build date filter if provided
+      let dateFilter: any = {};
+      if (date) {
+        const targetDate = new Date(date as string);
+        const nextDay = new Date(targetDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        dateFilter = {
+          gte: targetDate,
+          lt: nextDay,
+        };
+      }
       
       // Get all completed practice sessions
       const practiceSessions = await prisma.practiceSession.findMany({
@@ -268,6 +346,7 @@ const userStatsController: Controller = {
           userId: parseInt(userId),
           finishedAt: {
             not: null,
+            ...(date ? dateFilter : {}),
           },
         },
         select: {
@@ -311,6 +390,20 @@ const userStatsController: Controller = {
   getExamMinutes: async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
+      const { date } = req.query; // Optional date filter (YYYY-MM-DD)
+      
+      // Build date filter if provided
+      let dateFilter: any = {};
+      if (date) {
+        const targetDate = new Date(date as string);
+        const nextDay = new Date(targetDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        dateFilter = {
+          gte: targetDate,
+          lt: nextDay,
+        };
+      }
       
       // Get all completed exams
       const examResults = await prisma.examResult.findMany({
@@ -318,6 +411,7 @@ const userStatsController: Controller = {
           userId: parseInt(userId),
           finishedAt: {
             not: null,
+            ...(date ? dateFilter : {}),
           },
         },
         select: {

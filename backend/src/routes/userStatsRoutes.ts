@@ -23,6 +23,13 @@ const router = express.Router();
  *         schema:
  *           type: integer
  *         description: User ID
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2025-11-15
+ *         description: Optional date filter (YYYY-MM-DD) to get stats for a specific day
  *     responses:
  *       200:
  *         description: Statistics retrieved successfully
@@ -74,6 +81,13 @@ router.get('/:userId', userStatsController.getUserStatistics);
  *         schema:
  *           type: integer
  *         description: User ID
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2025-11-15
+ *         description: Optional date filter (YYYY-MM-DD) to get stats for a specific day
  *     responses:
  *       200:
  *         description: Practice statistics retrieved successfully
@@ -113,6 +127,13 @@ router.get('/:userId/practice', userStatsController.getPracticeStatistics);
  *         schema:
  *           type: integer
  *         description: User ID
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2025-11-15
+ *         description: Optional date filter (YYYY-MM-DD) to get stats for a specific day
  *     responses:
  *       200:
  *         description: Exam statistics retrieved successfully
@@ -158,6 +179,13 @@ router.get('/:userId/exams', userStatsController.getExamStatistics);
  *         schema:
  *           type: integer
  *         description: User ID
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2025-11-15
+ *         description: Optional date filter (YYYY-MM-DD) to get stats for a specific day
  *     responses:
  *       200:
  *         description: Questions statistics retrieved successfully
@@ -202,6 +230,13 @@ router.get('/:userId/questions', userStatsController.getQuestionsStatistics);
  *         schema:
  *           type: integer
  *         description: User ID
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2025-11-15
+ *         description: Optional date filter (YYYY-MM-DD) to get stats for a specific day
  *     responses:
  *       200:
  *         description: Practice minutes retrieved successfully
@@ -244,6 +279,13 @@ router.get('/:userId/practice-minutes', userStatsController.getPracticeMinutes);
  *         schema:
  *           type: integer
  *         description: User ID
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2025-11-15
+ *         description: Optional date filter (YYYY-MM-DD) to get stats for a specific day
  *     responses:
  *       200:
  *         description: Exam minutes retrieved successfully
