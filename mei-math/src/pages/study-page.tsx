@@ -193,16 +193,19 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
               <div className="study-content-progress">
                 <div>
                   <span>
-                    0/
+                    {selectedChapterId
+                      ? Object.values(lessonProgress).filter(p => p.completed).length
+                      : 0}
+                    /
                     {selectedChapterId
                       ? lessons.length
                       : 0}
                     
                   </span>
-                  <div>Chủ điểm</div>
+                  <div>Bài học</div>
                 </div>
                 <div>
-                  <span>0/3</span>
+                  <span>0/{selectedChapterId ? exams.length : 0}</span>
                   <div>Bài kiểm tra</div>
                 </div>
               </div>
@@ -480,7 +483,11 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                         textDecoration: "underline",
                       }}
                       onClick={() => navigate("/exams-history", { 
-                        state: { examId: exam.id } 
+                        state: { 
+                          examId: exam.id,
+                          grade: Number(selectedClass.replace("Lớp ", "")),
+                          chapterId: selectedChapterId
+                        } 
                       })}
                     >
                       Lịch sử các lần làm bài

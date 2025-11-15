@@ -46,7 +46,7 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
             Vào học
           </NavLink>
           <NavLink
-            to="/no"
+            to="/dashboard"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             Đánh giá

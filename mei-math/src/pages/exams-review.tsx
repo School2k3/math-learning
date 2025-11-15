@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { fetchExamResultById } from "../api/examAPI";
 import "../css/exams-review.css";
 
@@ -9,6 +9,7 @@ const ExamsReview: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { resultId } = useParams<{ resultId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const loadExamDetail = async () => {
@@ -82,9 +83,16 @@ const ExamsReview: React.FC = () => {
         <div className="review-header">
           <button 
             className="back-btn"
-            onClick={() => navigate("/exams-history", { 
-              state: { examId: examDetail.examId } 
-            })}
+            onClick={() => {
+              // Lấy thông tin từ location.state hoặc examDetail
+              const grade = location.state?.grade || examDetail?.grade;
+              const chapterId = location.state?.chapterId || examDetail?.chapterId;
+              const examId = examDetail?.examId;
+
+              navigate("/exams-history", { 
+                state: { examId, grade, chapterId } 
+              });
+            }}
           >
             ← Quay lại danh sách
           </button>
