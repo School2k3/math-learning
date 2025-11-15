@@ -135,6 +135,26 @@ const Pratice: React.FC = () => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [sessionCompleted, setSessionCompleted] = useState(false); // Thêm state này
+  const [elapsedTime, setElapsedTime] = useState(0); // Thời gian đã trôi qua (giây)
+
+  // Timer tăng dần
+  useEffect(() => {
+    if (loading || isFinished) return; // Không đếm khi đang load hoặc đã hoàn thành
+    
+    const interval = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [loading, isFinished]);
+
+  // Format thời gian thành MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handlePlayAudio = async () => {
     try {
       setIsPlayingAudio(true);
@@ -405,6 +425,8 @@ const Pratice: React.FC = () => {
             </div>
               <div className="question-header-row">
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  
+
                   <span
                     style={{
                       fontWeight: 500,
@@ -457,10 +479,34 @@ const Pratice: React.FC = () => {
                   >
                     {isPlayingAudio ? "⏸️" : "🔊"}
                   </button>
+                  {/* Đồng hồ tính giờ */}
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      color: "white",
+                      padding: "8px 16px",
+                      borderRadius: "20px",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      width:"98.15px",
+                      boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
+                      marginLeft:"100px"
+
+                    }}
+                  >
+                    ⏱️ {formatTime(elapsedTime)}
+                  </div>
+                  
                 </div>
+                
+
                 
                 {/* Thanh điểm nằm bên phải */}
                 <div className="score-bar-inline">
+                  
                   <ScoreBar 
                     score={score} 
                     correctCount={correctCount} 
