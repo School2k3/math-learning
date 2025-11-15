@@ -42,21 +42,53 @@ const LessonAdmin: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLesson, setNewLesson] = useState<Partial<Lesson>>({});
 
+  // Multiple lessons state
+  const [lessonQuantity, setLessonQuantity] = useState(1);
+  const [multipleLessons, setMultipleLessons] = useState<Array<Partial<Lesson>>>([{ title: '', videoUrl: '', imageUrl: '' }]);
+
   // Upload states
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
   const [uploadingEditVideo, setUploadingEditVideo] = useState(false);
 
+  // Preview modal state
+  const [previewMedia, setPreviewMedia] = useState<{type: 'image' | 'video', url: string} | null>(null);
+
+  // Initialize multipleLessons array when quantity changes
+  useEffect(() => {
+    const newLessons = Array(lessonQuantity).fill(null).map(() => ({
+      title: '',
+      videoUrl: '',
+      imageUrl: ''
+    }));
+    setMultipleLessons(newLessons);
+  }, [lessonQuantity]);
+
+  // Helper functions for updating multiple lessons
+  const updateLessonField = (index: number, field: keyof Lesson, value: any) => {
+    setMultipleLessons(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
   // Upload handlers for add mode
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, lessonIndex?: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       setUploadingImage(true);
       const url = await uploadImageFile(file);
-      setNewLesson({ ...newLesson, imageUrl: url });
+      
+      if (lessonIndex !== undefined) {
+        updateLessonField(lessonIndex, 'imageUrl', url);
+      } else {
+        setNewLesson({ ...newLesson, imageUrl: url });
+      }
+      
       alert('Upload ảnh thành công!');
     } catch (error) {
       alert('Upload ảnh thất bại!');
@@ -65,14 +97,20 @@ const LessonAdmin: React.FC = () => {
     }
   };
 
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>, lessonIndex?: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       setUploadingVideo(true);
       const url = await uploadVideoFile(file);
-      setNewLesson({ ...newLesson, videoUrl: url });
+      
+      if (lessonIndex !== undefined) {
+        updateLessonField(lessonIndex, 'videoUrl', url);
+      } else {
+        setNewLesson({ ...newLesson, videoUrl: url });
+      }
+      
       alert('Upload video thành công!');
     } catch (error) {
       alert('Upload video thất bại!');
@@ -157,6 +195,20 @@ const LessonAdmin: React.FC = () => {
     loadData();
   }, [filterChapter, filterGrade]);
 
+  // Đọc URL params khi component mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const chapterId = params.get('chapterId');
+    const grade = params.get('grade');
+    
+    if (chapterId) {
+      setFilterChapter(chapterId);
+    }
+    if (grade) {
+      setFilterGrade(grade);
+    }
+  }, []);
+
   // Không cần filter trên client nữa vì đã filter qua API
   const filteredLessons = lessons;
 
@@ -193,6 +245,77 @@ const LessonAdmin: React.FC = () => {
       }
     } catch (error) {
       alert("Lỗi khi thêm bài học: " + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Thêm nhiều bài học cùng lúc
+  const handleCreateMultiple = async () => {
+    // Lấy chapterId chung từ DOM
+    const commonChapterId = (document.getElementById('common-chapterId') as HTMLSelectElement)?.value;
+
+    if (!commonChapterId) {
+      alert("Vui lòng chọn Chương!");
+      return;
+    }
+
+    // Kiểm tra từng bài học
+    for (let i = 0; i < multipleLessons.length; i++) {
+      const lesson = multipleLessons[i];
+      if (!lesson.title?.trim()) {
+        alert(`Bài học ${i + 1}: Vui lòng nhập tên bài học!`);
+        return;
+      }
+    }
+
+    if (!window.confirm(`Bạn có chắc muốn tạo ${lessonQuantity} bài học?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let successCount = 0;
+
+      for (let i = 0; i < multipleLessons.length; i++) {
+        const lesson = multipleLessons[i];
+        const lessonData = {
+          chapterId: Number(commonChapterId),
+          title: lesson.title!,
+          videoUrl: lesson.videoUrl || undefined,
+          imageUrl: lesson.imageUrl || undefined,
+        };
+
+        console.log(`📤 Đang tạo bài học ${i + 1}:`, lessonData);
+
+        try {
+          const res = await createLesson(lessonData);
+          if (res.success) {
+            successCount++;
+            console.log(`✅ Tạo thành công bài học ${i + 1}`);
+          } else {
+            console.error(`❌ Lỗi tạo bài học ${i + 1}:`, res.message);
+          }
+        } catch (error) {
+          console.error(`❌ Lỗi tạo bài học ${i + 1}:`, error);
+        }
+      }
+
+      if (successCount === lessonQuantity) {
+        alert(`✅ Đã tạo thành công ${successCount} bài học!`);
+      } else {
+        alert(`⚠️ Tạo được ${successCount}/${lessonQuantity} bài học.`);
+      }
+
+      // Reset form
+      setShowAddForm(false);
+      setLessonQuantity(1);
+      
+      // Reload lessons
+      loadData();
+    } catch (err) {
+      alert("Lỗi khi thêm bài học!");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -495,98 +618,6 @@ const LessonAdmin: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {/* Form thêm mới */}
-              {showAddForm && (
-                <tr className="add-row">
-                  <td>-</td>
-                  <td>
-                    <input
-                      type="text"
-                      value={newLesson.title || ""}
-                      onChange={(e) =>
-                        setNewLesson({ ...newLesson, title: e.target.value })
-                      }
-                      placeholder="Nhập tên bài học"
-                      className="input-field"
-                    />
-                  </td>
-                  <td>
-                    <select
-                      value={newLesson.chapterId || ""}
-                      onChange={(e) =>
-                        setNewLesson({
-                          ...newLesson,
-                          chapterId: Number(e.target.value),
-                        })
-                      }
-                      className="select-field"
-                    >
-                      <option value="">Chọn chương</option>
-                      {chapters
-                        .filter(
-                          (chapter) =>
-                            filterGrade === "all" ||
-                            chapter.grade === Number(filterGrade)
-                        )
-                        .map((chapter) => (
-                          <option key={chapter.id} value={chapter.id}>
-                            {getChapterTitle(chapter.id)}
-                          </option>
-                        ))}
-                    </select>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <input
-                        type="text"
-                        value={newLesson.videoUrl || ""}
-                        onChange={(e) =>
-                          setNewLesson({ ...newLesson, videoUrl: e.target.value })
-                        }
-                        placeholder="URL hoặc upload video"
-                        className="input-field"
-                      />
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <input type="file" accept="video/*" onChange={handleVideoUpload} style={{ display: 'none' }} id="new-video-upload" />
-                        <label htmlFor="new-video-upload" style={{ padding: '4px 8px', background: '#28a745', color: 'white', borderRadius: '4px', cursor: uploadingVideo ? 'not-allowed' : 'pointer', fontSize: '12px' }}>
-                          {uploadingVideo ? '⏳' : '🎥 Upload'}
-                        </label>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <input
-                        type="text"
-                        value={newLesson.imageUrl || ""}
-                        onChange={(e) =>
-                          setNewLesson({ ...newLesson, imageUrl: e.target.value })
-                        }
-                        placeholder="URL hoặc upload ảnh"
-                        className="input-field"
-                      />
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} id="new-image-upload" />
-                        <label htmlFor="new-image-upload" style={{ padding: '4px 8px', background: '#007bff', color: 'white', borderRadius: '4px', cursor: uploadingImage ? 'not-allowed' : 'pointer', fontSize: '12px' }}>
-                          {uploadingImage ? '⏳' : '📤 Upload'}
-                        </label>
-                        {newLesson.imageUrl && <img src={newLesson.imageUrl} alt="Preview" style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }} />}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="btn-save" onClick={handleAdd}>
-                        💾 Lưu
-                      </button>
-                      <button className="btn-cancel" onClick={handleCancel}>
-                        ❌ Hủy
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-
               {/* Danh sách bài học */}
               {filteredLessons.map((lesson, index) => (
                 <tr key={lesson.id}>
@@ -669,7 +700,13 @@ const LessonAdmin: React.FC = () => {
                     ) : (
                       <div className="media-cell">
                         {lesson.videoUrl ? (
-                          <span className="media-available">✅ Có video</span>
+                          <span 
+                            className="media-available" 
+                            style={{cursor: 'pointer'}}
+                            onClick={() => setPreviewMedia({type: 'video', url: lesson.videoUrl!})}
+                          >
+                            🎥 Xem video
+                          </span>
                         ) : (
                           <span className="media-null">❌ Chưa có</span>
                         )}
@@ -723,7 +760,13 @@ const LessonAdmin: React.FC = () => {
                     ) : (
                       <div className="media-cell">
                         {lesson.imageUrl ? (
-                          <span className="media-available">✅ Có hình</span>
+                          <span 
+                            className="media-available" 
+                            style={{cursor: 'pointer'}}
+                            onClick={() => setPreviewMedia({type: 'image', url: lesson.imageUrl!})}
+                          >
+                            🖼️ Xem ảnh
+                          </span>
                         ) : (
                           <span className="media-null">❌ Chưa có</span>
                         )}
@@ -742,6 +785,26 @@ const LessonAdmin: React.FC = () => {
                       </div>
                     ) : (
                       <div className="action-buttons">
+                        <button
+                          className="btn-manage"
+                          onClick={() => {
+                            const chapter = chapters.find(c => c.id === lesson.chapterId);
+                            navigate(`/admin/questions?lessonId=${lesson.id}&grade=${chapter?.grade || ''}`);
+                          }}
+                          title="Xem câu hỏi của bài học này"
+                          style={{
+                            background: '#ff9800',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            marginRight: '6px'
+                          }}
+                        >
+                          ❓
+                        </button>
                         <button
                           className="btn-edit"
                           onClick={() => handleEdit(lesson)}
@@ -762,6 +825,174 @@ const LessonAdmin: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Modal thêm bài học */}
+        {showAddForm && (
+          <div className="modal-overlay" onClick={() => setShowAddForm(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>➕ Thêm bài học mới</h2>
+                <button className="modal-close" onClick={() => setShowAddForm(false)}>×</button>
+              </div>
+
+              <div className="modal-body">
+                {/* Phần số lượng và chương chung */}
+                <div style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '24px', border: '2px solid #28a745'}}>
+                  <h3 style={{margin: '0 0 16px 0', fontSize: '18px', fontWeight: 600, color: '#28a745'}}>📋 Thông tin chung</h3>
+                  
+                  <div className="form-group">
+                    <label>Số lượng bài học:</label>
+                    <div className="quantity-input">
+                      <button type="button" onClick={() => setLessonQuantity(Math.max(1, lessonQuantity - 1))}>−</button>
+                      <input
+                        type="number"
+                        value={lessonQuantity}
+                        onChange={(e) => setLessonQuantity(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))}
+                        min="1"
+                        max="10"
+                      />
+                      <button type="button" onClick={() => setLessonQuantity(Math.min(10, lessonQuantity + 1))}>+</button>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Chương <span className="required">*</span></label>
+                    <select id="common-chapterId" defaultValue={filterChapter !== 'all' ? filterChapter : ''}>
+                      <option value="">Chọn chương</option>
+                      {chapters
+                        .filter((chapter) => filterGrade === "all" || chapter.grade === Number(filterGrade))
+                        .map((chapter) => (
+                          <option key={chapter.id} value={chapter.id}>
+                            {getChapterTitle(chapter.id)}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Danh sách bài học - mỗi bài có form riêng */}
+                <div style={{maxHeight: '400px', overflowY: 'auto', paddingRight: '10px'}}>
+                  {multipleLessons.map((lesson, lIndex) => (
+                    <div key={lIndex} style={{background: 'white', border: '2px solid #dee2e6', borderRadius: '8px', padding: '20px', marginBottom: '16px'}}>
+                      <h3 style={{margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600, color: '#495057'}}>📚 Bài học {lIndex + 1}</h3>
+                      
+                      <div className="form-group">
+                        <label>Tên bài học <span className="required">*</span></label>
+                        <input
+                          type="text"
+                          value={lesson.title || ''}
+                          onChange={(e) => updateLessonField(lIndex, 'title', e.target.value)}
+                          placeholder="Nhập tên bài học..."
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Video bài học (tùy chọn)</label>
+                        <div className={`upload-zone ${uploadingVideo ? 'uploading' : ''}`}>
+                          <input
+                            type="file"
+                            id={`lesson-video-${lIndex}`}
+                            accept="video/*"
+                            onChange={(e) => handleVideoUpload(e, lIndex)}
+                            disabled={uploadingVideo}
+                          />
+                          <label htmlFor={`lesson-video-${lIndex}`}>
+                            <div className="upload-icon">🎥</div>
+                            <span>{uploadingVideo ? 'Đang tải lên...' : 'Click để tải video lên'}</span>
+                          </label>
+                          {lesson.videoUrl && (
+                            <div className="upload-preview">
+                              <video controls src={lesson.videoUrl} style={{width: '100%', maxHeight: '150px'}} />
+                              <button 
+                                type="button" 
+                                className="remove-upload"
+                                onClick={() => updateLessonField(lIndex, 'videoUrl', '')}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          value={lesson.videoUrl || ''}
+                          onChange={(e) => updateLessonField(lIndex, 'videoUrl', e.target.value)}
+                          placeholder="Hoặc nhập URL video..."
+                          style={{marginTop: '8px'}}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Hình ảnh bài học (tùy chọn)</label>
+                        <div className={`upload-zone ${uploadingImage ? 'uploading' : ''}`}>
+                          <input
+                            type="file"
+                            id={`lesson-image-${lIndex}`}
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, lIndex)}
+                            disabled={uploadingImage}
+                          />
+                          <label htmlFor={`lesson-image-${lIndex}`}>
+                            <div className="upload-icon">📷</div>
+                            <span>{uploadingImage ? 'Đang tải lên...' : 'Click để tải ảnh lên'}</span>
+                          </label>
+                          {lesson.imageUrl && (
+                            <div className="upload-preview">
+                              <img src={lesson.imageUrl} alt="Lesson preview" />
+                              <button 
+                                type="button" 
+                                className="remove-upload"
+                                onClick={() => updateLessonField(lIndex, 'imageUrl', '')}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          value={lesson.imageUrl || ''}
+                          onChange={(e) => updateLessonField(lIndex, 'imageUrl', e.target.value)}
+                          placeholder="Hoặc nhập URL hình ảnh..."
+                          style={{marginTop: '8px'}}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn-cancel" onClick={handleCancel}>Hủy</button>
+                <button 
+                  className="btn-save" 
+                  onClick={handleCreateMultiple}
+                >
+                  Tạo {lessonQuantity} bài học
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal xem preview media */}
+        {previewMedia && (
+          <div className="modal-overlay" onClick={() => setPreviewMedia(null)}>
+            <div className="modal-content preview-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>{previewMedia.type === 'image' ? '🖼️ Xem hình ảnh' : '🎥 Xem video'}</h2>
+                <button className="modal-close" onClick={() => setPreviewMedia(null)}>×</button>
+              </div>
+              <div className="modal-body">
+                {previewMedia.type === 'image' ? (
+                  <img src={previewMedia.url} alt="Preview" style={{width: '100%', borderRadius: '8px'}} />
+                ) : (
+                  <video controls src={previewMedia.url} style={{width: '100%', borderRadius: '8px'}} />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

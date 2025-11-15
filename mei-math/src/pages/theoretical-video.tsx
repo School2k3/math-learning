@@ -3,6 +3,7 @@ import Header from "../components/header";
 import "../css/theoretical-video.css";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchAllChapters } from "../api/chapterAPI";
+import { trackWatchVideo } from "../components/GoogleAnalytics";
     
 
 const TheoreticalVideo: React.FC = () => {
@@ -13,6 +14,13 @@ const TheoreticalVideo: React.FC = () => {
   const title = searchParams.get("title") || "";
   const lessonId = searchParams.get("lessonId"); // Lấy lessonId từ URL
   const chapterId = searchParams.get("chapterId"); // Thêm chapterId từ URL
+
+  // Track khi xem video
+  useEffect(() => {
+    if (title && lessonId) {
+      trackWatchVideo(title, Number(lessonId));
+    }
+  }, [title, lessonId]);
 
   // Fetch chapter title khi component mount
   useEffect(() => {

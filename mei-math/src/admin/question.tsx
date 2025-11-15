@@ -54,11 +54,22 @@ const QuestionAdmin: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<Question>>({});
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showAnswerForm, setShowAnswerForm] = useState(false);
   const [newQuestion, setNewQuestion] = useState<Partial<Question>>({});
   const [newAnswers, setNewAnswers] = useState<
     { answerText: string; isCorrect: boolean }[]
   >([]);
+  const [questionQuantity, setQuestionQuantity] = useState(1);
+  
+  // State cho multiple questions - mỗi câu có form riêng
+  const [multipleQuestions, setMultipleQuestions] = useState<{
+    questionText: string;
+    imageUrl: string;
+    audioUrl: string;
+    explanationText: string;
+    explanationImg: string;
+    answers: { answerText: string; isCorrect: boolean }[];
+  }[]>([]);
+
   const [filterType, setFilterType] = useState<string>("all");
   const [filterGrade, setFilterGrade] = useState("all");
   const [filterChapter, setFilterChapter] = useState("all");
@@ -76,8 +87,11 @@ const QuestionAdmin: React.FC = () => {
   const [uploadingEditAudio, setUploadingEditAudio] = useState(false);
   const [uploadingEditExplanationImg, setUploadingEditExplanationImg] = useState(false);
 
+  // Preview modal state
+  const [previewMedia, setPreviewMedia] = useState<{type: 'image' | 'audio', url: string} | null>(null);
+
   // Hàm upload ảnh câu hỏi
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, questionIndex?: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -89,7 +103,14 @@ const QuestionAdmin: React.FC = () => {
     try {
       setUploadingImage(true);
       const url = await uploadImageFile(file);
-      setNewQuestion({ ...newQuestion, imageUrl: url });
+      
+      // Nếu có questionIndex, update vào multipleQuestions
+      if (questionIndex !== undefined) {
+        updateQuestionField(questionIndex, 'imageUrl', url);
+      } else {
+        setNewQuestion({ ...newQuestion, imageUrl: url });
+      }
+      
       alert('Upload ảnh thành công!');
     } catch (error) {
       console.error('Upload error:', error);
@@ -100,7 +121,7 @@ const QuestionAdmin: React.FC = () => {
   };
 
   // Hàm upload video/audio
-  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>, questionIndex?: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -112,7 +133,14 @@ const QuestionAdmin: React.FC = () => {
     try {
       setUploadingAudio(true);
       const url = await uploadAudioFile(file);
-      setNewQuestion({ ...newQuestion, audioUrl: url });
+      
+      // Nếu có questionIndex, update vào multipleQuestions
+      if (questionIndex !== undefined) {
+        updateQuestionField(questionIndex, 'audioUrl', url);
+      } else {
+        setNewQuestion({ ...newQuestion, audioUrl: url });
+      }
+      
       alert('Upload audio thành công!');
     } catch (error) {
       console.error('Upload error:', error);
@@ -123,7 +151,7 @@ const QuestionAdmin: React.FC = () => {
   };
 
   // Hàm upload ảnh giải thích
-  const handleExplanationImgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleExplanationImgUpload = async (e: React.ChangeEvent<HTMLInputElement>, questionIndex?: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -135,7 +163,14 @@ const QuestionAdmin: React.FC = () => {
     try {
       setUploadingExplanationImg(true);
       const url = await uploadImageFile(file);
-      setNewQuestion({ ...newQuestion, explanationImg: url });
+      
+      // Nếu có questionIndex, update vào multipleQuestions
+      if (questionIndex !== undefined) {
+        updateQuestionField(questionIndex, 'explanationImg', url);
+      } else {
+        setNewQuestion({ ...newQuestion, explanationImg: url });
+      }
+      
       alert('Upload ảnh giải thích thành công!');
     } catch (error) {
       console.error('Upload error:', error);
@@ -214,8 +249,40 @@ const QuestionAdmin: React.FC = () => {
 
   // Lấy tên bài học theo ID
   const getLessonTitle = (lessonId: number) => {
-    const lesson = lessons.find((l) => l.lesson_id === lessonId);
+    const lesson = lessons.find((l) => l.id === lessonId);
     return lesson ? lesson.title : `Bài ${lessonId}`;
+  };
+
+  // Khởi tạo array câu hỏi khi thay đổi số lượng
+  useEffect(() => {
+    const newArray = Array.from({ length: questionQuantity }, () => ({
+      questionText: '',
+      imageUrl: 'https://res.cloudinary.com/dqbluifmd/image/upload/v1759301901/Screenshot_2025-10-01_110452_z3pszz.png',
+      audioUrl: 'https://res.cloudinary.com/dv3gofhee/video/upload/v1759488935/math-audio/grade2/lesson01/1_vslq5t.wav',
+      explanationText: '',
+      explanationImg: 'https://dummyimage.com/600x400/cccccc/000000&text=No+Image',
+      answers: [
+        { answerText: '', isCorrect: false },
+        { answerText: '', isCorrect: false },
+        { answerText: '', isCorrect: false },
+        { answerText: '', isCorrect: false },
+      ],
+    }));
+    setMultipleQuestions(newArray);
+  }, [questionQuantity]);
+
+  // Cập nhật field của câu hỏi theo index
+  const updateQuestionField = (index: number, field: string, value: any) => {
+    const updated = [...multipleQuestions];
+    (updated[index] as any)[field] = value;
+    setMultipleQuestions(updated);
+  };
+
+  // Cập nhật đáp án
+  const updateAnswerField = (qIndex: number, aIndex: number, field: string, value: any) => {
+    const updated = [...multipleQuestions];
+    (updated[qIndex].answers[aIndex] as any)[field] = value;
+    setMultipleQuestions(updated);
   };
 
   // Lọc câu hỏi theo Lớp -> Chương -> Bài học
@@ -229,68 +296,6 @@ const QuestionAdmin: React.FC = () => {
       return false;
     return true;
   });
-
-  // Bước 1: Lưu thông tin câu hỏi, chuyển sang nhập đáp án
-  const handleAdd = () => {
-    if (
-      !newQuestion.questionText ||
-      !newQuestion.lessonId ||
-      !newQuestion.type ||
-      !newQuestion.answerType ||
-      !newQuestion.grade
-    ) {
-      alert("Vui lòng điền đầy đủ thông tin bắt buộc!");
-      return;
-    }
-    setShowAddForm(false);
-    setShowAnswerForm(true);
-  };
-
-  // Bước 2: Gọi API tạo câu hỏi kèm đáp án
-  const handleCreateQuestion = async () => {
-    if (newAnswers.length === 0 || newAnswers.some((a) => !a.answerText)) {
-      alert("Vui lòng nhập đầy đủ đáp án!");
-      return;
-    }
-    // Kiểm tra chỉ có 1 đáp án đúng
-    const correctCount = newAnswers.filter((a) => a.isCorrect).length;
-    if (correctCount !== 1) {
-      alert("Phải có đúng 1 đáp án đúng!");
-      return;
-    }
-    try {
-      await createQuestionWithAnswers({
-        questionText: newQuestion.questionText || "",
-        imageUrl:
-          newQuestion.imageUrl ||
-          "https://res.cloudinary.com/dqbluifmd/image/upload/v1759301901/Screenshot_2025-10-01_110452_z3pszz.png",
-        audioUrl:
-          newQuestion.audioUrl ||
-          "https://res.cloudinary.com/dv3gofhee/video/upload/v1759488935/math-audio/grade2/lesson01/1_vslq5t.wav",
-        explanationText: newQuestion.explanationText?.trim()
-          ? newQuestion.explanationText
-          : "Giải thích mặc định",
-        explanationImg: newQuestion.explanationImg?.trim()
-          ? newQuestion.explanationImg
-          : "https://dummyimage.com/600x400/cccccc/000000&text=No+Image",
-        grade: Number(newQuestion.grade),
-        type: newQuestion.type || "practice",
-        answerType: newQuestion.answerType || "choice",
-        lessonId: Number(newQuestion.lessonId),
-        answers: newAnswers.map((a) => ({
-          answerText: a.answerText,
-          isCorrect: !!a.isCorrect,
-        })),
-      });
-      alert("Thêm câu hỏi thành công!");
-      setShowAnswerForm(false);
-      setNewQuestion({});
-      setNewAnswers([]);
-      // TODO: reload lại danh sách câu hỏi
-    } catch (err) {
-      alert("Lỗi khi thêm câu hỏi!");
-    }
-  };
 
   // Xóa câu hỏi
   const handleDelete = async (id: number) => {
@@ -361,6 +366,94 @@ const QuestionAdmin: React.FC = () => {
     setNewQuestion({});
   };
 
+  // Tạo nhiều câu hỏi cùng lúc
+  const handleCreateMultiple = async () => {
+    // Lấy thông tin chung từ form
+    const commonGrade = (document.getElementById('common-grade') as HTMLSelectElement)?.value;
+    const commonType = (document.getElementById('common-type') as HTMLSelectElement)?.value;
+    const commonAnswerType = (document.getElementById('common-answerType') as HTMLSelectElement)?.value;
+    const commonLessonId = (document.getElementById('common-lessonId') as HTMLSelectElement)?.value;
+
+    if (!commonGrade || !commonType || !commonAnswerType || !commonLessonId) {
+      alert("Vui lòng chọn đầy đủ: Lớp, Loại câu hỏi, Kiểu đáp án và Bài học!");
+      return;
+    }
+
+    // Kiểm tra từng câu hỏi
+    for (let i = 0; i < multipleQuestions.length; i++) {
+      const q = multipleQuestions[i];
+      if (!q.questionText?.trim()) {
+        alert(`Câu hỏi ${i + 1}: Vui lòng nhập nội dung câu hỏi!`);
+        return;
+      }
+      
+      const validAnswers = q.answers.filter(a => a.answerText?.trim());
+      if (validAnswers.length === 0) {
+        alert(`Câu hỏi ${i + 1}: Vui lòng nhập ít nhất 1 đáp án!`);
+        return;
+      }
+
+      const correctCount = validAnswers.filter(a => a.isCorrect).length;
+      if (correctCount !== 1) {
+        alert(`Câu hỏi ${i + 1}: Phải có đúng 1 đáp án đúng!`);
+        return;
+      }
+    }
+
+    if (!window.confirm(`Bạn có chắc muốn tạo ${questionQuantity} câu hỏi?`)) {
+      return;
+    }
+
+    try {
+      let successCount = 0;
+      
+      for (let i = 0; i < multipleQuestions.length; i++) {
+        const q = multipleQuestions[i];
+        const questionData = {
+          questionText: q.questionText,
+          imageUrl: q.imageUrl || undefined,
+          audioUrl: q.audioUrl || undefined,
+          explanationText: q.explanationText || "Giải thích mặc định",
+          explanationImg: q.explanationImg || undefined,
+          grade: Number(commonGrade),
+          type: commonType as "practice" | "exam",
+          answerType: commonAnswerType as "choice" | "input" | "drag",
+          lessonId: Number(commonLessonId),
+          answers: q.answers.filter(a => a.answerText?.trim()).map(a => ({
+            answerText: a.answerText,
+            isCorrect: a.isCorrect
+          }))
+        };
+
+        console.log(`📤 Đang gửi câu hỏi ${i + 1}:`, questionData);
+
+        try {
+          await createQuestionWithAnswers(questionData);
+          successCount++;
+          console.log(`✅ Tạo thành công câu hỏi ${i + 1}`);
+        } catch (error) {
+          console.error(`❌ Lỗi tạo câu hỏi ${i + 1}:`, error);
+        }
+      }
+
+      if (successCount === questionQuantity) {
+        alert(`✅ Đã tạo thành công ${successCount} câu hỏi!`);
+      } else {
+        alert(`⚠️ Tạo được ${successCount}/${questionQuantity} câu hỏi.`);
+      }
+
+      // Reset form
+      setShowAddForm(false);
+      setQuestionQuantity(1);
+      
+      // Reload questions
+      window.location.reload();
+    } catch (err) {
+      alert("Lỗi khi thêm câu hỏi!");
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     const fetchAll = async () => {
       try {
@@ -390,17 +483,17 @@ const QuestionAdmin: React.FC = () => {
 
         const lessonRes = await fetchAllLessons();
         const allLessonsList =
-          lessonRes.data?.lessons || lessonRes.lessons || [];
+          (lessonRes as any).data?.lessons || lessonRes.lessons || [];
         setAllLessons(allLessonsList);
 
         let lessonsForFilter = allLessonsList;
         if (filterGrade !== "all") {
           const gradeNum = Number(filterGrade);
           const chapterIds = allChaptersList
-            .filter((c) => c.grade === gradeNum)
-            .map((c) => c.id);
-          lessonsForFilter = allLessonsList.filter((l) =>
-            chapterIds.includes(l.chapter_id)
+            .filter((c: any) => c.grade === gradeNum)
+            .map((c: any) => c.id);
+          lessonsForFilter = allLessonsList.filter((l: any) =>
+            chapterIds.includes(l.chapterId)
           );
         }
         setLessons(lessonsForFilter);
@@ -413,34 +506,50 @@ const QuestionAdmin: React.FC = () => {
     loadDataForFilter();
   }, [filterGrade]);
 
-  useEffect(() => {
-    const loadQuestions = async () => {
-      // Nếu filter là "all", lấy lần lượt từng giá trị
-      const grades =
-        filterGrade === "all" ? [1, 2, 3, 4, 5] : [Number(filterGrade)];
-      const types = filterType === "all" ? ["practice", "exam"] : [filterType];
-      const answerTypes =
-        filterAnswerType === "all"
-          ? ["choice", "input", "drag"]
-          : [filterAnswerType];
+  // Hàm load câu hỏi
+  const loadQuestions = async () => {
+    // Nếu filter là "all", lấy lần lượt từng giá trị
+    const grades =
+      filterGrade === "all" ? [1, 2, 3, 4, 5] : [Number(filterGrade)];
+    const types = filterType === "all" ? ["practice", "exam"] : [filterType];
+    const answerTypes =
+      filterAnswerType === "all"
+        ? ["choice", "input", "drag"]
+        : [filterAnswerType];
 
-      let allQuestions: Question[] = [];
-      for (const grade of grades) {
-        for (const type of types) {
-          for (const answerType of answerTypes) {
-            const res = await fetchQuestionsByGradeTypeAnswerType(
-              grade,
-              type,
-              answerType
-            );
-            allQuestions = allQuestions.concat(res.data?.questions || []);
-          }
+    let allQuestions: Question[] = [];
+    for (const grade of grades) {
+      for (const type of types) {
+        for (const answerType of answerTypes) {
+          const res = await fetchQuestionsByGradeTypeAnswerType(
+            grade,
+            type,
+            answerType
+          );
+          allQuestions = allQuestions.concat(res.data?.questions || []);
         }
       }
-      setQuestions(allQuestions);
-    };
+    }
+    setQuestions(allQuestions);
+  };
+
+  useEffect(() => {
     loadQuestions();
   }, [filterGrade, filterType, filterAnswerType]);
+
+  // Đọc URL params khi component mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const lessonId = params.get('lessonId');
+    const grade = params.get('grade');
+    
+    if (lessonId) {
+      setFilterLesson(lessonId);
+    }
+    if (grade) {
+      setFilterGrade(grade);
+    }
+  }, []);
 
   useEffect(() => {
     if (newQuestion.grade) {
@@ -703,382 +812,10 @@ const QuestionAdmin: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {/* Form thêm mới */}
-              {showAddForm && (
-                <tr className="add-row">
-                  <td>-</td>
-                  <td>
-                    <textarea
-                      value={newQuestion.questionText || ""}
-                      onChange={(e) =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          questionText: e.target.value,
-                        })
-                      }
-                      placeholder="Nhập nội dung câu hỏi"
-                      className="textarea-field"
-                      rows={2}
-                    />
-                  </td>
-                  <td>
-                    <select
-                      value={newQuestion.type || ""}
-                      onChange={(e) =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          type: e.target.value as "practice" | "exam",
-                        })
-                      }
-                      className="select-field"
-                    >
-                      <option value="">Chọn loại</option>
-                      <option value="practice">Thực hành</option>
-                      <option value="exam">Kiểm tra</option>
-                    </select>
-                  </td>
-                  <td>
-                    <select
-                      value={newQuestion.grade || ""}
-                      onChange={(e) =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          grade: Number(e.target.value),
-                        })
-                      }
-                      className="select-field"
-                    >
-                      <option value="">Chọn lớp</option>
-                      <option value="1">Lớp 1</option>
-                      <option value="2">Lớp 2</option>
-                      <option value="3">Lớp 3</option>
-                      <option value="4">Lớp 4</option>
-                      <option value="5">Lớp 5</option>
-                    </select>
-                  </td>
-                  <td>
-                    <select
-                      value={newQuestion.lessonId || ""}
-                      onChange={(e) =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          lessonId: Number(e.target.value),
-                        })
-                      }
-                      className="select-field"
-                    >
-                      <option value="">Chọn bài học</option>
-                      {addFormLessons.map((lesson) => (
-                        <option key={lesson.id} value={lesson.id}>
-                          {lesson.title}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <input
-                        type="url"
-                        value={newQuestion.imageUrl || ""}
-                        onChange={(e) =>
-                          setNewQuestion({
-                            ...newQuestion,
-                            imageUrl: e.target.value,
-                          })
-                        }
-                        placeholder="Nhập URL hoặc upload ảnh"
-                        className="input-field"
-                      />
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          style={{ display: 'none' }}
-                          id="image-upload"
-                        />
-                        <label
-                          htmlFor="image-upload"
-                          style={{
-                            padding: '6px 12px',
-                            background: '#007bff',
-                            color: 'white',
-                            borderRadius: '4px',
-                            cursor: uploadingImage ? 'not-allowed' : 'pointer',
-                            fontSize: '13px',
-                            opacity: uploadingImage ? 0.6 : 1,
-                          }}
-                        >
-                          {uploadingImage ? '⏳ Đang upload...' : '📤 Upload ảnh'}
-                        </label>
-                        {newQuestion.imageUrl && (
-                          <img 
-                            src={newQuestion.imageUrl} 
-                            alt="Preview" 
-                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <input
-                        type="url"
-                        value={newQuestion.audioUrl || ""}
-                        onChange={(e) =>
-                          setNewQuestion({
-                            ...newQuestion,
-                            audioUrl: e.target.value,
-                          })
-                        }
-                        placeholder="Nhập URL hoặc upload audio/video"
-                        className="input-field"
-                      />
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input
-                          type="file"
-                          accept="audio/*,video/*"
-                          onChange={handleAudioUpload}
-                          style={{ display: 'none' }}
-                          id="audio-upload"
-                        />
-                        <label
-                          htmlFor="audio-upload"
-                          style={{
-                            padding: '6px 12px',
-                            background: '#28a745',
-                            color: 'white',
-                            borderRadius: '4px',
-                            cursor: uploadingAudio ? 'not-allowed' : 'pointer',
-                            fontSize: '13px',
-                            opacity: uploadingAudio ? 0.6 : 1,
-                          }}
-                        >
-                          {uploadingAudio ? '⏳ Đang upload...' : '🎵 Upload audio'}
-                        </label>
-                        {newQuestion.audioUrl && (
-                          <span style={{ fontSize: '12px', color: '#28a745' }}>✓ Đã có file</span>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <select
-                      value={newQuestion.answerType || ""}
-                      onChange={(e) =>
-                        setNewQuestion({
-                          ...newQuestion,
-                          answerType: e.target.value as
-                            | "choice"
-                            | "input"
-                            | "drag",
-                        })
-                      }
-                      className="select-field"
-                    >
-                      <option value="">Chọn kiểu</option>
-                      <option value="choice">Trắc nghiệm</option>
-                      {/* <option value="input">Nhập liệu</option>
-                      <option value="drag">Kéo thả</option> */}
-                    </select>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <input
-                        type="text"
-                        value={newQuestion.explanationText || ""}
-                        onChange={(e) =>
-                          setNewQuestion({
-                            ...newQuestion,
-                            explanationText: e.target.value,
-                          })
-                        }
-                        placeholder="Nhập text giải thích"
-                        className="input-field"
-                      />
-                      <input
-                        type="url"
-                        value={newQuestion.explanationImg || ""}
-                        onChange={(e) =>
-                          setNewQuestion({
-                            ...newQuestion,
-                            explanationImg: e.target.value,
-                          })
-                        }
-                        placeholder="URL ảnh giải thích hoặc upload"
-                        className="input-field"
-                      />
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleExplanationImgUpload}
-                          style={{ display: 'none' }}
-                          id="explanation-img-upload"
-                        />
-                        <label
-                          htmlFor="explanation-img-upload"
-                          style={{
-                            padding: '6px 12px',
-                            background: '#6c757d',
-                            color: 'white',
-                            borderRadius: '4px',
-                            cursor: uploadingExplanationImg ? 'not-allowed' : 'pointer',
-                            fontSize: '13px',
-                            opacity: uploadingExplanationImg ? 0.6 : 1,
-                          }}
-                        >
-                          {uploadingExplanationImg ? '⏳ Uploading...' : '🖼️ Upload ảnh GT'}
-                        </label>
-                        {newQuestion.explanationImg && (
-                          <img 
-                            src={newQuestion.explanationImg} 
-                            alt="Explanation Preview" 
-                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="btn-save" onClick={handleAdd}>
-                        Lưu
-                      </button>
-                      <button className="btn-cancel" onClick={handleCancel}>
-                        ❌
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-
-              {/* Khung nhập đáp án */}
-              {showAnswerForm && (
-                <tr>
-                  <td colSpan={11}>
-                    <div className="answer-form-modal">
-                      <h3>Nhập đáp án cho câu hỏi</h3>
-                      
-                      {/* Hiển thị thông tin câu hỏi vừa nhập */}
-                      <div style={{ 
-                        background: '#f8f9fa', 
-                        padding: '16px', 
-                        borderRadius: '8px', 
-                        marginBottom: '20px',
-                        border: '2px solid #007bff'
-                      }}>
-                        <h4 style={{ margin: '0 0 12px 0', color: '#007bff' }}>📝 Thông tin câu hỏi:</h4>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                          <div>
-                            <strong>Câu hỏi:</strong> {newQuestion.questionText}
-                          </div>
-                          <div>
-                            <strong>Lớp:</strong> Lớp {newQuestion.grade}
-                          </div>
-                          <div>
-                            <strong>Bài học:</strong> {allLessons.find(l => l.id === newQuestion.lessonId)?.title || 'N/A'}
-                          </div>
-                          <div>
-                            <strong>Loại:</strong> {newQuestion.type === 'practice' ? 'Luyện tập' : 'Kiểm tra'}
-                          </div>
-                          <div>
-                            <strong>Kiểu đáp án:</strong> {
-                              newQuestion.answerType === 'choice' ? 'Trắc nghiệm' :
-                              newQuestion.answerType === 'input' ? 'Nhập liệu' : 'Kéo thả'
-                            }
-                          </div>
-                          {newQuestion.imageUrl && (
-                            <div>
-                              <strong>Hình ảnh:</strong>{' '}
-                              <img 
-                                src={newQuestion.imageUrl} 
-                                alt="Preview" 
-                                style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px', verticalAlign: 'middle' }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <h4 style={{ marginTop: '16px', marginBottom: '12px' }}>Danh sách đáp án:</h4>
-                      {newAnswers.map((ans, idx) => (
-                        <div
-                          key={idx}
-                          style={{ display: "flex", gap: 8, marginBottom: 8 }}
-                        >
-                          <input
-                            type="text"
-                            value={ans.answerText}
-                            onChange={(e) => {
-                              const arr = [...newAnswers];
-                              arr[idx].answerText = e.target.value;
-                              setNewAnswers(arr);
-                            }}
-                            placeholder={`Đáp án ${idx + 1}`}
-                          />
-                          <select
-                            value={ans.isCorrect ? "true" : "false"}
-                            onChange={(e) => {
-                              const arr = [...newAnswers];
-                              arr[idx].isCorrect = e.target.value === "true";
-                              setNewAnswers(arr);
-                            }}
-                          >
-                            <option value="false">Sai</option>
-                            <option value="true">Đúng</option>
-                          </select>
-                          <button
-                            onClick={() =>
-                              setNewAnswers(
-                                newAnswers.filter((_, i) => i !== idx)
-                              )
-                            }
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        onClick={() =>
-                          setNewAnswers([
-                            ...newAnswers,
-                            { answerText: "", isCorrect: false },
-                          ])
-                        }
-                      >
-                        + Thêm đáp án
-                      </button>
-                      <div style={{ marginTop: 16 }}>
-                        <button
-                          className="btn-save"
-                          onClick={handleCreateQuestion}
-                        >
-                          OK
-                        </button>
-                        <button
-                          className="btn-cancel"
-                          onClick={() => {
-                            setShowAnswerForm(false);
-                            setNewQuestion({});
-                            setNewAnswers([]);
-                          }}
-                        >
-                          Hủy
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-
               {/* Danh sách câu hỏi */}
               {filteredQuestions.map((question, index) => {
                 const lessonTitle =
-                  question.lesson?.title ||
-                  lessons.find((l) => l.lesson_id === question.lessonId)
-                    ?.title ||
+                  lessons.find((l) => l.id === question.lessonId)?.title ||
                   `Bài ${question.lessonId}`;
 
                 const isEditing = editingId === question.id;
@@ -1172,8 +909,8 @@ const QuestionAdmin: React.FC = () => {
                         >
                           {lessons.map((lesson) => (
                             <option
-                              key={lesson.lesson_id}
-                              value={lesson.lesson_id}
+                              key={lesson.id}
+                              value={lesson.id}
                             >
                               {lesson.title}
                             </option>
@@ -1232,7 +969,13 @@ const QuestionAdmin: React.FC = () => {
                       ) : (
                         <div className="media-cell">
                           {question.imageUrl ? (
-                            <span className="media-available">✅</span>
+                            <span 
+                              className="media-available" 
+                              style={{cursor: 'pointer'}}
+                              onClick={() => setPreviewMedia({type: 'image', url: question.imageUrl!})}
+                            >
+                              🖼️ Xem
+                            </span>
                           ) : (
                             <span className="media-null">❌</span>
                           )}
@@ -1281,7 +1024,13 @@ const QuestionAdmin: React.FC = () => {
                       ) : (
                         <div className="media-cell">
                           {question.audioUrl ? (
-                            <span className="media-available">✅</span>
+                            <span 
+                              className="media-available" 
+                              style={{cursor: 'pointer'}}
+                              onClick={() => setPreviewMedia({type: 'audio', url: question.audioUrl!})}
+                            >
+                              🎵 Nghe
+                            </span>
                           ) : (
                             <span className="media-null">❌</span>
                           )}
@@ -1384,6 +1133,290 @@ const QuestionAdmin: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Modal thêm câu hỏi */}
+        {showAddForm && (
+          <div className="modal-overlay" onClick={() => setShowAddForm(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>➕ Thêm câu hỏi mới</h2>
+                <button className="modal-close" onClick={() => setShowAddForm(false)}>×</button>
+              </div>
+
+              <div className="modal-body">
+                {/* Phần thông tin chung */}
+                <div style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '24px', border: '2px solid #007bff'}}>
+                  <h3 style={{margin: '0 0 16px 0', fontSize: '18px', fontWeight: 600, color: '#007bff'}}>📋 Thông tin chung (áp dụng cho tất cả câu hỏi)</h3>
+                  <div className="modal-form-grid">
+                    <div className="form-group">
+                      <label>Số lượng câu hỏi:</label>
+                      <div className="quantity-input">
+                        <button type="button" onClick={() => setQuestionQuantity(Math.max(1, questionQuantity - 1))}>−</button>
+                        <input
+                          type="number"
+                          value={questionQuantity}
+                          onChange={(e) => setQuestionQuantity(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                          min="1"
+                          max="20"
+                        />
+                        <button type="button" onClick={() => setQuestionQuantity(Math.min(20, questionQuantity + 1))}>+</button>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Loại câu hỏi <span className="required">*</span></label>
+                      <select id="common-type" defaultValue="practice">
+                        <option value="practice">Thực hành</option>
+                        <option value="exam">Kiểm tra</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Lớp <span className="required">*</span></label>
+                      <select id="common-grade" defaultValue={filterGrade !== 'all' ? filterGrade : ''}>
+                        <option value="">Chọn lớp</option>
+                        <option value="1">Lớp 1</option>
+                        <option value="2">Lớp 2</option>
+                        <option value="3">Lớp 3</option>
+                        <option value="4">Lớp 4</option>
+                        <option value="5">Lớp 5</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Kiểu câu hỏi <span className="required">*</span></label>
+                      <select id="common-answerType" defaultValue="choice">
+                        <option value="choice">Trắc nghiệm</option>
+                        <option value="input">Nhập liệu</option>
+                        <option value="drag">Kéo thả</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Bài học <span className="required">*</span></label>
+                      <select id="common-lessonId" defaultValue={filterLesson !== 'all' ? filterLesson : ''}>
+                        <option value="">Chọn bài học</option>
+                        {lessons.map((lesson) => (
+                          <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Danh sách câu hỏi - mỗi câu có form riêng */}
+                <div style={{maxHeight: '400px', overflowY: 'auto', paddingRight: '10px'}}>
+                  {multipleQuestions.map((q, qIndex) => (
+                    <div key={qIndex} style={{background: 'white', border: '2px solid #dee2e6', borderRadius: '8px', padding: '20px', marginBottom: '16px'}}>
+                      <h3 style={{margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600, color: '#495057'}}>📝 Câu hỏi {qIndex + 1}</h3>
+                      
+                      <div className="form-group">
+                        <label>Nội dung câu hỏi <span className="required">*</span></label>
+                        <textarea
+                          value={q.questionText}
+                          onChange={(e) => updateQuestionField(qIndex, 'questionText', e.target.value)}
+                          placeholder="Nhập nội dung câu hỏi..."
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="modal-form-grid">
+                        {/* Upload hình ảnh câu hỏi */}
+                        <div className="form-group">
+                          <label>Hình ảnh câu hỏi (tùy chọn)</label>
+                          <div className={`upload-zone ${uploadingImage ? 'uploading' : ''}`}>
+                            <input
+                              type="file"
+                              id={`question-image-${qIndex}`}
+                              accept="image/*"
+                              onChange={(e) => handleImageUpload(e, qIndex)}
+                              disabled={uploadingImage}
+                            />
+                            <label htmlFor={`question-image-${qIndex}`}>
+                              <div className="upload-icon">📷</div>
+                              <span>{uploadingImage ? 'Đang tải lên...' : 'Click để tải ảnh lên'}</span>
+                            </label>
+                            {q.imageUrl && (
+                              <div className="upload-preview">
+                                <img src={q.imageUrl} alt="Question preview" />
+                                <button 
+                                  type="button" 
+                                  className="remove-upload"
+                                  onClick={() => updateQuestionField(qIndex, 'imageUrl', '')}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            value={q.imageUrl}
+                            onChange={(e) => updateQuestionField(qIndex, 'imageUrl', e.target.value)}
+                            placeholder="Hoặc nhập URL hình ảnh..."
+                            style={{marginTop: '8px'}}
+                          />
+                        </div>
+
+                        {/* Upload audio câu hỏi */}
+                        <div className="form-group">
+                          <label>Audio câu hỏi (tùy chọn)</label>
+                          <div className={`upload-zone ${uploadingAudio ? 'uploading' : ''}`}>
+                            <input
+                              type="file"
+                              id={`question-audio-${qIndex}`}
+                              accept="audio/*"
+                              onChange={(e) => handleAudioUpload(e, qIndex)}
+                              disabled={uploadingAudio}
+                            />
+                            <label htmlFor={`question-audio-${qIndex}`}>
+                              <div className="upload-icon">🎵</div>
+                              <span>{uploadingAudio ? 'Đang tải lên...' : 'Click để tải audio lên'}</span>
+                            </label>
+                            {q.audioUrl && (
+                              <div className="upload-preview">
+                                <audio controls src={q.audioUrl} />
+                                <button 
+                                  type="button" 
+                                  className="remove-upload"
+                                  onClick={() => updateQuestionField(qIndex, 'audioUrl', '')}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <input
+                            type="text"
+                            value={q.audioUrl}
+                            onChange={(e) => updateQuestionField(qIndex, 'audioUrl', e.target.value)}
+                            placeholder="Hoặc nhập URL audio..."
+                            style={{marginTop: '8px'}}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Giải thích (tùy chọn)</label>
+                        <textarea
+                          value={q.explanationText}
+                          onChange={(e) => updateQuestionField(qIndex, 'explanationText', e.target.value)}
+                          placeholder="Lời giải thích..."
+                          rows={2}
+                        />
+                      </div>
+
+                      {/* Upload hình ảnh giải thích */}
+                      <div className="form-group">
+                        <label>Hình ảnh giải thích (tùy chọn)</label>
+                        <div className={`upload-zone ${uploadingExplanationImg ? 'uploading' : ''}`}>
+                          <input
+                            type="file"
+                            id={`explanation-image-${qIndex}`}
+                            accept="image/*"
+                            onChange={(e) => handleExplanationImgUpload(e, qIndex)}
+                            disabled={uploadingExplanationImg}
+                          />
+                          <label htmlFor={`explanation-image-${qIndex}`}>
+                            <div className="upload-icon">🖼️</div>
+                            <span>{uploadingExplanationImg ? 'Đang tải lên...' : 'Click để tải ảnh giải thích'}</span>
+                          </label>
+                          {q.explanationImg && (
+                            <div className="upload-preview">
+                              <img src={q.explanationImg} alt="Explanation preview" />
+                              <button 
+                                type="button" 
+                                className="remove-upload"
+                                onClick={() => updateQuestionField(qIndex, 'explanationImg', '')}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Đáp án */}
+                      <div style={{marginTop: '16px'}}>
+                        <h4 style={{margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600, color: '#6c757d'}}>✅ Đáp án</h4>
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                          {q.answers.map((ans, aIndex) => (
+                            <div key={aIndex} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                              <input
+                                type="text"
+                                value={ans.answerText}
+                                onChange={(e) => updateAnswerField(qIndex, aIndex, 'answerText', e.target.value)}
+                                placeholder={`Đáp án ${aIndex + 1}`}
+                                style={{flex: 1}}
+                              />
+                              <label style={{display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', minWidth: '80px'}}>
+                                <input
+                                  type="checkbox"
+                                  checked={ans.isCorrect}
+                                  onChange={(e) => updateAnswerField(qIndex, aIndex, 'isCorrect', e.target.checked)}
+                                />
+                                <span>Đúng</span>
+                              </label>
+                              {q.answers.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newAnswers = q.answers.filter((_, i) => i !== aIndex);
+                                    updateQuestionField(qIndex, 'answers', newAnswers);
+                                  }}
+                                  style={{padding: '4px 8px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'}}
+                                >
+                                  🗑️
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          className="add-answer-btn"
+                          onClick={() => {
+                            const newAnswers = [...q.answers, { answerText: '', isCorrect: false }];
+                            updateQuestionField(qIndex, 'answers', newAnswers);
+                          }}
+                          style={{marginTop: '8px', width: '100%'}}
+                        >
+                          ➕ Thêm đáp án
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn-cancel" onClick={() => setShowAddForm(false)}>Hủy</button>
+                <button className="btn-save" onClick={handleCreateMultiple}>
+                  Tạo {questionQuantity} câu hỏi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal xem preview media */}
+        {previewMedia && (
+          <div className="modal-overlay" onClick={() => setPreviewMedia(null)}>
+            <div className="modal-content preview-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>{previewMedia.type === 'image' ? '🖼️ Xem hình ảnh' : '🎵 Nghe audio'}</h2>
+                <button className="modal-close" onClick={() => setPreviewMedia(null)}>×</button>
+              </div>
+              <div className="modal-body">
+                {previewMedia.type === 'image' ? (
+                  <img src={previewMedia.url} alt="Preview" style={{width: '100%', borderRadius: '8px'}} />
+                ) : (
+                  <audio controls src={previewMedia.url} style={{width: '100%'}} autoPlay />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

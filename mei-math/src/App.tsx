@@ -12,6 +12,7 @@ import Login from "./auth/login";
 import Register from "./auth/register";
 import OTP from "./auth/otp"; 
 import { AuthProvider } from "./contexts/AuthContext";
+import GoogleAnalytics from "./components/GoogleAnalytics";
 import './App.css';
 import HomeAdmin from "./admin/home-admin";
 import ChapterAdmin from "./admin/chapter";
@@ -25,6 +26,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <GoogleAnalytics />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/study" element={<StudyPage />} />

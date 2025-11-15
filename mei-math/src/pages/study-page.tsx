@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import ProgressCircle from "../components/ProgressCircle";
+import ChatBotButton from "../components/ChatBot/ChatBotButton";
+import { trackChangeClassOrSemester } from "../components/GoogleAnalytics";
 import "../css/study-page.css";
 import { useNavigate, useSearchParams } from "react-router-dom"; // Thêm useSearchParams
 import { fetchChapters } from "../api/chapterAPI";
@@ -135,7 +137,13 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
               <button
                 key={sem}
                 className={selectedSemester === sem ? "active" : ""}
-                onClick={() => setSelectedSemester(sem)}
+                onClick={() => {
+                  setSelectedSemester(sem);
+                  // Track khi thay đổi học kỳ
+                  const grade = Number(selectedClass.replace("Lớp ", ""));
+                  const semester = sem === "Học kỳ 1" ? 1 : 2;
+                  trackChangeClassOrSemester(grade, semester);
+                }}
               >
                 {sem}
               </button>
@@ -174,7 +182,13 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
           <div className="study-content-selects">
             <select
               value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
+              onChange={(e) => {
+                setSelectedClass(e.target.value);
+                // Track khi thay đổi lớp
+                const grade = Number(e.target.value.replace("Lớp ", ""));
+                const semester = selectedSemester === "Học kỳ 1" ? 1 : 2;
+                trackChangeClassOrSemester(grade, semester);
+              }}
             >
               {classOptions.map((cls) => (
                 <option key={cls}>{cls}</option>
@@ -499,6 +513,9 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
           </div>
         </div>
       </div>
+      
+      {/* ChatBot Button - chỉ hiển thị ở trang study-page */}
+      <ChatBotButton />
     </div>
   );
 };

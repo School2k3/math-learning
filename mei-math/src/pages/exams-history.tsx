@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import { useNavigate, useLocation } from "react-router-dom";
 import { fetchExamResultsByExamId } from "../api/examAPI";
+import { trackViewExamHistory } from "../components/GoogleAnalytics";
 import "../css/exams-history.css";
 
 const ExamsHistory: React.FC = () => {
@@ -13,6 +14,9 @@ const ExamsHistory: React.FC = () => {
   const location = useLocation();
 
   useEffect(() => {
+    // Track khi vào trang exam history
+    trackViewExamHistory();
+    
     const loadHistory = async () => {
       // Lấy examId từ location.state
       const examId = location.state?.examId;

@@ -10,6 +10,7 @@ import {
 } from "../api/praticeAPI";
 import { fetchAllChapters } from "../api/chapterAPI";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { trackStartPractice, trackCompletePractice } from "../components/GoogleAnalytics";
 
 // Component ScoreBar
 const ScoreBar: React.FC<{ 
@@ -60,6 +61,13 @@ const Pratice: React.FC = () => {
   const lessonId = Number(searchParams.get("lessonId"));
   const chapterId = Number(searchParams.get("chapterId")); // Lấy từ URL
   const practiceId = Number(searchParams.get("practiceSessionId"));
+
+  // Track khi bắt đầu làm bài tập
+  useEffect(() => {
+    if (lessonTitle && lessonId) {
+      trackStartPractice(lessonTitle, lessonId);
+    }
+  }, [lessonTitle, lessonId]);
 
   useEffect(() => {
     if (lessonId) {
@@ -263,6 +271,9 @@ const Pratice: React.FC = () => {
           try {
             await completePracticeSession(practiceId);
             setSessionCompleted(true); // Đánh dấu đã complete
+            
+            // Track hoàn thành bài tập với điểm số
+            trackCompletePractice(lessonTitle, newScore, 10); // 10 câu = 100 điểm
           } catch (error) {
             console.error("Error completing practice session:", error);
           }

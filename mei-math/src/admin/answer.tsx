@@ -254,141 +254,157 @@ const AnswerAdmin: React.FC = () => {
       </div>
       {/* Main Content */}
       <div className="admin-main">
-        <div className="question-header">
-          <div className="question-title">
-            <h1>Danh sách đáp án câu hỏi</h1>
-            <p>{filteredAnswers.length} đáp án</p>
+        <div className="answer-content-wrapper">
+          <div className="answer-header">
+            <div className="answer-title">
+              <h1>📝 Danh sách đáp án câu hỏi</h1>
+              <p>{filteredAnswers.length} đáp án</p>
+            </div>
+            <div className="header-actions">
+              <button 
+                className="btn-add" 
+                onClick={() => {
+                  setNewAnswer({
+                    questionId: filterQuestion !== "all" ? Number(filterQuestion) : undefined,
+                    answerText: "",
+                    isCorrect: false,
+                  });
+                  setShowAddForm(true);
+                }}
+              >
+                + Thêm mới đáp án
+              </button>
+            </div>
           </div>
-          <button 
-            className="btn-add" 
-            onClick={() => {
-              // Pre-fill với câu hỏi đã chọn từ filter
-              setNewAnswer({
-                questionId: filterQuestion !== "all" ? Number(filterQuestion) : undefined,
-                answerText: "",
-                isCorrect: false,
-              });
-              setShowAddForm(true);
-            }}
-          >
-            + Thêm mới đáp án
-          </button>
-        </div>
-        {/* Thanh lọc */}
-        <div className="question-filters">
-          <div className="filter-group">
-            <label>Lớp:</label>
-            <select value={filterGrade} onChange={e => setFilterGrade(e.target.value)}>
-              <option value="all">Tất cả</option>
-              {[1,2,3,4,5].map(g => (
-                <option key={g} value={g}>Lớp {g}</option>
-              ))}
-            </select>
-          </div>
-          <div className="filter-group">
-            <label>Chương:</label>
-            <select value={filterChapter} onChange={e => setFilterChapter(e.target.value)}>
-              <option value="all">Tất cả</option>
-              {chapters
-                .filter(ch => filterGrade === "all" || ch.grade === Number(filterGrade))
-                .map(ch => (
-                  <option key={ch.id} value={ch.id}>{ch.title}</option>
+
+          {/* Thanh lọc */}
+          <div className="filter-section">
+            <div className="filter-group">
+              <label>Lớp:</label>
+              <select value={filterGrade} onChange={e => setFilterGrade(e.target.value)}>
+                <option value="all">Tất cả</option>
+                {[1,2,3,4,5].map(g => (
+                  <option key={g} value={g}>Lớp {g}</option>
                 ))}
-            </select>
-          </div>
-          <div className="filter-group">
-            <label>Bài học:</label>
-            <select value={filterLesson} onChange={e => setFilterLesson(e.target.value)}>
-              <option value="all">Tất cả</option>
-              {lessons
-                .filter(l => filterChapter === "all" || l.chapterId === Number(filterChapter))
-                .map(l => (
-                  <option key={l.id} value={l.id}>{l.title}</option>
+              </select>
+            </div>
+            <div className="filter-group">
+              <label>Chương:</label>
+              <select value={filterChapter} onChange={e => setFilterChapter(e.target.value)}>
+                <option value="all">Tất cả</option>
+                {chapters
+                  .filter(ch => filterGrade === "all" || ch.grade === Number(filterGrade))
+                  .map(ch => (
+                    <option key={ch.id} value={ch.id}>{ch.title}</option>
+                  ))}
+              </select>
+            </div>
+            <div className="filter-group">
+              <label>Bài học:</label>
+              <select value={filterLesson} onChange={e => setFilterLesson(e.target.value)}>
+                <option value="all">Tất cả</option>
+                {lessons
+                  .filter(l => filterChapter === "all" || l.chapterId === Number(filterChapter))
+                  .map(l => (
+                    <option key={l.id} value={l.id}>{l.title}</option>
+                  ))}
+              </select>
+            </div>
+            <div className="filter-group">
+              <label>Câu hỏi:</label>
+              <select value={filterQuestion} onChange={e => setFilterQuestion(e.target.value)}>
+                <option value="all">Tất cả</option>
+                {filteredQuestions.map(q => (
+                  <option key={q.id} value={q.id}>{q.questionText.substring(0, 50)}...</option>
                 ))}
-            </select>
+              </select>
+            </div>
           </div>
-          <div className="filter-group">
-            <label>Câu hỏi:</label>
-            <select value={filterQuestion} onChange={e => setFilterQuestion(e.target.value)}>
-              <option value="all">Tất cả</option>
-              {filteredQuestions.map(q => (
-                <option key={q.id} value={q.id}>{q.questionText}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        {/* ...table... */}
-        <div className="question-table-container">
-          <table className="question-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Câu hỏi</th>
-                <th>Đáp án</th>
-                <th>Đúng/Sai</th>
-                <th>Chức năng</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Form thêm mới (nếu có) */}
-              {showAddForm && (
+
+          {/* Table */}
+          <div className="answer-table-container">
+            <table className="answer-table">
+              <thead>
                 <tr>
-                  <td colSpan={5}>
-                    {/* ...form thêm mới đáp án của bạn ở đây... */}
-                  </td>
+                  <th>#</th>
+                  <th>Câu hỏi</th>
+                  <th>Đáp án</th>
+                  <th>Đúng/Sai</th>
+                  <th>Chức năng</th>
                 </tr>
-              )}
-              {/* Danh sách đáp án */}
-              {filteredAnswers.map((answer, index) => {
-                const question = questions.find(q => q.id === answer.questionId);
-                const isEditing = editingId === answer.id;
-                return (
-                  <tr key={answer.id}>
-                    <td>{index + 1}</td>
-                    <td>{question?.questionText || `ID ${answer.questionId}`}</td>
-                    <td>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editData.answerText || ""}
-                          onChange={e =>
-                            setEditData({ ...editData, answerText: e.target.value })
-                          }
-                        />
-                      ) : (
-                        answer.answerText
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <select
-                          value={editData.isCorrect ? "true" : "false"}
-                          onChange={e =>
-                            setEditData({ ...editData, isCorrect: e.target.value === "true" })
-                          }
-                        >
-                          <option value="false">Sai</option>
-                          <option value="true">Đúng</option>
-                        </select>
-                      ) : (
-                        answer.isCorrect ? "Đúng" : "Sai"
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <>
-                          <button onClick={handleSave}>Lưu</button>
-                          <button onClick={handleCancel}>Hủy</button>
-                        </>
-                      ) : (
-                        <button onClick={() => handleEdit(answer)}>Sửa</button>
-                      )}
+              </thead>
+              <tbody>
+                {filteredAnswers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="empty-state">
+                      <h3>Không có đáp án nào</h3>
+                      <p>Hãy thêm đáp án mới hoặc thay đổi bộ lọc</p>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ) : (
+                  filteredAnswers.map((answer, index) => {
+                    const question = questions.find(q => q.id === answer.questionId);
+                    const isEditing = editingId === answer.id;
+                    return (
+                      <tr key={answer.id}>
+                        <td>{index + 1}</td>
+                        <td className="question-cell">
+                          {question?.questionText || `Câu hỏi ID ${answer.questionId}`}
+                        </td>
+                        <td className="answer-text-cell">
+                          {isEditing ? (
+                            <textarea
+                              className="textarea-field"
+                              value={editData.answerText || ""}
+                              onChange={e =>
+                                setEditData({ ...editData, answerText: e.target.value })
+                              }
+                              rows={2}
+                            />
+                          ) : (
+                            answer.answerText
+                          )}
+                        </td>
+                        <td>
+                          {isEditing ? (
+                            <select
+                              className="select-field"
+                              value={editData.isCorrect ? "true" : "false"}
+                              onChange={e =>
+                                setEditData({ ...editData, isCorrect: e.target.value === "true" })
+                              }
+                            >
+                              <option value="false">Sai</option>
+                              <option value="true">Đúng</option>
+                            </select>
+                          ) : (
+                            <span className={`status-badge ${answer.isCorrect ? 'status-correct' : 'status-incorrect'}`}>
+                              {answer.isCorrect ? '✅ Đúng' : '❌ Sai'}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            {isEditing ? (
+                              <>
+                                <button className="btn-save" onClick={handleSave}>💾 Lưu</button>
+                                <button className="btn-cancel" onClick={handleCancel}>❌ Hủy</button>
+                              </>
+                            ) : (
+                              <>
+                                <button className="btn-edit" onClick={() => handleEdit(answer)}>✏️</button>
+                                <button className="btn-delete" onClick={() => handleDelete(answer.id)}>🗑️</button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

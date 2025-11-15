@@ -619,6 +619,23 @@ const ChapterAdmin: React.FC = () => {
                     ) : (
                       <div className="action-buttons">
                         <button
+                          className="btn-manage"
+                          onClick={() => navigate(`/admin/lessons?chapterId=${chapter.id}&grade=${chapter.grade}`)}
+                          title="Xem bài học của chương này"
+                          style={{
+                            background: '#2196F3',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            marginRight: '6px'
+                          }}
+                        >
+                          📚
+                        </button>
+                        <button
                           className="btn-edit"
                           onClick={() => handleEdit(chapter)}
                         >

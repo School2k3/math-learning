@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import { saveExamAnswer, finishExam } from "../api/examAPI";
+import { trackStartExam, trackCompleteExam } from "../components/GoogleAnalytics";
 import "../css/exams.css";
 
 type Status = "not_answered" | "current" | "review" | "answered";
@@ -33,6 +34,11 @@ const Exams: React.FC = () => {
     console.log("Exam Result ID:", examResultId);
     console.log("Exam Questions:", examQuestions);
     console.log("Duration:", durationMinutes);
+    
+    // Track khi bắt đầu làm bài kiểm tra
+    if (examTitle && exam?.id) {
+      trackStartExam(examTitle, exam.id);
+    }
   }, []);
 
   useEffect(() => {
@@ -173,6 +179,9 @@ const Exams: React.FC = () => {
         if (result.score !== undefined) {
           setScore(result.correctAnswers || correct);
         }
+        
+        // Track hoàn thành bài kiểm tra
+        trackCompleteExam(examTitle, result.correctAnswers || correct, examQuestions.length);
       } catch (error) {
         console.error("❌ Finish exam ERROR:", error);
       }

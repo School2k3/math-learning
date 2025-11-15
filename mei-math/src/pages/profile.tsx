@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import { getUserInfo } from "../api/loginAPI";
 import { useNavigate } from "react-router-dom";
+import { trackViewProfile } from "../components/GoogleAnalytics";
 import "../css/profile.css";
 
 const Profile: React.FC = () => {
@@ -10,6 +11,9 @@ const Profile: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Track khi vào trang profile
+    trackViewProfile();
+    
     const loadUserInfo = async () => {
       try {
         const result = await getUserInfo();

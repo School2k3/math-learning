@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { loginAPI } from "../api/loginAPI";
 import type { LoginRequest } from "../api/loginAPI"; // Thử import type
 import { useAuth } from "../contexts/AuthContext";
+import { trackLogin } from "../components/GoogleAnalytics";
 import "../css/login.css";
 
 const Login: React.FC = () => {
@@ -58,6 +59,9 @@ const Login: React.FC = () => {
 
       if (result.success && result.data) {
         login(result.data.user, result.data.accessToken, result.data.refreshToken);
+
+        // Track login event
+        trackLogin(result.data.user.role === "admin" ? "Admin Login" : "Student Login");
 
         // Kiểm tra role từ API response để điều hướng
         if (result.data.user.role === "admin") {

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { registerAPI,  } from "../api/registerAPI";
 import type { RegisterResponse } from "../api/registerAPI";
+import { trackRegister } from "../components/GoogleAnalytics";
 
 
 
@@ -190,6 +191,9 @@ const Register: React.FC = () => {
       const result = await registerAPI(registerData);
 
       if (result.success) {
+        // Track register event
+        trackRegister("Email Registration");
+        
         navigate("/auth/otp", {
           state: { 
             email: formData.email,
