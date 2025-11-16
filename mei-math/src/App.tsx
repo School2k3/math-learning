@@ -8,6 +8,8 @@ import ExamsHistory from "./pages/exams-history";
 import ExamsReview from "./pages/exams-review";
 import DashUser from "./pages/dash-user";
 import Profile from "./pages/profile";
+import News from "./pages/news";
+import NewsDetail from "./pages/news-detail";
 import Login from "./auth/login";
 import Register from "./auth/register";
 import OTP from "./auth/otp"; 
@@ -37,6 +39,8 @@ function App() {
           <Route path="/exams/review/:resultId" element={<ExamsReview />} />
           <Route path="/dashboard" element={<DashUser />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/news/:articleSlug" element={<NewsDetail />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/otp" element={<OTP />} /> {/* Thêm route này */}

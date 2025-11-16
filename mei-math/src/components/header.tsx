@@ -52,7 +52,7 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
             Đánh giá
           </NavLink>
           <NavLink
-            to="/no"
+            to="/news"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             Tin tức
