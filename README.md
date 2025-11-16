@@ -1,202 +1,183 @@
-# Math Learning Project
+# Math Learning API
 
-This project consists of a backend API built with TypeScript, Node.js, Express, and PostgreSQL with Prisma ORM.
+This is the backend for a math learning application that uses TypeScript, Node.js, Express, and PostgreSQL with Prisma ORM.
 
-## Setup Options
+## Technologies
 
-### Option 1: Local Docker Setup (Development)
+- **TypeScript** - Strongly typed programming language
+- **Node.js** - JavaScript runtime
+- **Express** - Web application framework
+- **PostgreSQL** - Relational database
+- **Prisma** - Next-generation ORM
+- **ESM Modules** - Modern JavaScript module system
+- **Swagger** - API documentation
 
-### Prerequisites
-- Docker Desktop installed and running
-- Node.js and npm installed
+## Setup
 
-### Getting Started
-
-1. Start the PostgreSQL database container:
-   ```
-   docker-compose up -d
-   ```
-
-2. Wait a few seconds for the database to initialize, then set up the database schema:
-   ```
-   cd backend
-   npm run db:migrate
+1. Install dependencies:
+   ```bash
+   npm install
    ```
 
-3. Start the backend development server:
-   ```
-   cd backend
-   npm run dev
+2. Set up your environment variables:
+   
+   Copy the example environment file to create your own:
+   ```bash
+   cp .env.example .env
    ```
    
-   Or for production build:
+   Then edit the `.env` file with your specific configuration:
    ```
-   cd backend
+   DATABASE_URL="postgresql://username:password@localhost:5432/math-learning"
+   JWT_SECRET="your_secure_random_secret_key"
+   ```
+   
+   Generate a secure random JWT secret with:
+   ```bash
+   npm run generate:jwt-secret
+   ```
+   
+   ⚠️ **Important**: Make sure to set a secure `JWT_SECRET` for production environments.
+
+3. Database setup - choose one method:
+   
+   **Using migrations** (recommended for production):
+   ```bash
+   npm run db:migrate
+   ```
+   
+   **Direct schema push** (faster for development):
+   ```bash
+   npm run db:push
+   # or
+   npm run prisma:push
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+5. For production deployment:
+   ```bash
    npm run build
    npm start
    ```
 
-### Option 2: Supabase (Shared Database - Recommended for Teams)
+## Scripts
 
-**Why Supabase?**
-- Share database with teammates
-- Cloud-based, accessible from anywhere
-- Free tier available
-- Easy to deploy to production
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server with hot reload |
+| `npm run build` | Build production-ready JavaScript |
+| `npm start` | Run production server from compiled code |
+| `npm run db:migrate` | Run database migrations |
+| `npm run db:push` | Push schema changes without migrations |
+| `npm run prisma:generate` | Generate Prisma client |
+| `npm run prisma:studio` | Open Prisma Studio UI |
+| `npm run test` | Run tests |
 
-**Quick Setup:**
+## TypeScript Development
 
-1. **Create Supabase account** at https://supabase.com
-2. **Create a new project** 
-3. **Get DATABASE_URL** from Settings → Database
-4. **Configure your environment:**
-   ```bash
-   cd backend
-   # Create .env file with DATABASE_URL
-   echo 'DATABASE_URL="your-supabase-connection-string"' > .env
-   echo 'JWT_SECRET="your-secret-key"' >> .env
-   ```
-5. **Run setup script:**
-   ```bash
-   # Windows
-   .\scripts\setup-supabase.ps1
+This project uses TypeScript with ESM (ECMAScript Modules). Some important notes:
+
+1. **Import extensions**: Always include `.js` extension in imports even for TypeScript files:
+   ```typescript
+   // Correct
+   import { router } from './routes/index.js';
    
-   # Mac/Linux
-   ./scripts/setup-supabase.sh
+   // Incorrect - will cause "Cannot find module" errors
+   import { router } from './routes/index';
    ```
 
-**Detailed Guide:** See `backend/MIGRATE_TO_SUPABASE.md` and `SHARED_DATABASE_GUIDE.md`
+2. **Type definitions**: Store custom type definitions in the `src/types` directory.
 
-**Sharing Database with Teammates:**
-- Invite teammates to your Supabase project (Settings → Team members)
-- Share `DATABASE_URL` (or use individual access tokens)
-- Both can now work on the same database!
+3. **Build process**: The TypeScript compiler will output files to the `dist` directory.
 
-
-### Accessing the Database
-
-You can connect to the PostgreSQL database using HeidiSQL with these credentials:
-- Host: localhost
-- Port: 5432
-- User: postgres
-- Password: postgres
-- Database: math-learning
+4. **nodemon configuration**: The development server uses nodemon with `ts-node` for hot reloading.
 
 ## Project Structure
 
-- `backend/` - Express.js API with Prisma ORM
-  - `controllers/` - Request handlers
-    - `chapterController.js` - Chapter related operations
-    - `lessonController.js` - Lesson related operations
-    - `questionController.js` - Question related operations
-    - `answerController.js` - Answer related operations
-  - `routes/` - API endpoints
-    - `chapterRoutes.js` - Chapter endpoints
-    - `lessonRoutes.js` - Lesson endpoints
-    - `questionRoutes.js` - Question endpoints
-    - `answerRoutes.js` - Answer endpoints
-  - `prisma/` - Database schema and client
-    - `schema.prisma` - Database models and relationships
-- Frontend (to be added)
-
-## Development
-
-### Backend Commands
-
-```bash
-# Build the TypeScript code
-npm run build
-
-# Start production server
-npm start
-
-# Start development server with hot reload
-npm run dev
-
-# Run Prisma migrations (creates migration history)
-npm run db:migrate
-
-# Push schema changes without migrations (preserves data)
-npm run db:push
-
-# Generate Prisma client
-npm run db:generate
-
-# Open Prisma Studio (database UI)
-npm run db:studio
-
-# Alternative commands (aliases)
-npm run prisma:generate  # Generate Prisma client
-npm run prisma:push     # Push schema changes without running generate
+```
+backend/
+├── src/                   # TypeScript source files
+│   ├── config/            # Configuration files (Swagger, etc.)
+│   ├── controllers/       # Request handlers
+│   ├── routes/            # API routes
+│   ├── types/             # TypeScript type definitions
+│   └── index.ts           # Entry point
+├── prisma/                # Prisma ORM files
+│   ├── schema.prisma      # Database schema
+│   └── migrations/        # Database migrations
+├── dist/                  # Compiled JavaScript output
+├── package.json           # Project dependencies and scripts
+└── tsconfig.json          # TypeScript configuration
 ```
 
-### Docker Commands
+## API Endpoints
 
-```bash
-# Start containers
-docker-compose up -d
+### Chapters
 
-# Stop containers
-docker-compose down
+- **GET /api/chapters** - Get all chapters
+- **GET /api/chapters/:id** - Get chapter by ID
+- **POST /api/chapters** - Create a new chapter
+- **PUT /api/chapters/:id** - Update a chapter
+- **DELETE /api/chapters/:id** - Delete a chapter
 
-# View container logs
-docker-compose logs
+### Lessons
 
-# Remove containers and volumes
-docker-compose down -v
-```
+- **GET /api/lessons** - Get all lessons
+- **GET /api/lessons/:id** - Get lesson by ID
+- **GET /api/chapters/:chapterId/lessons** - Get lessons by chapter ID
+- **POST /api/lessons** - Create a new lesson
+- **PUT /api/lessons/:id** - Update a lesson
+- **DELETE /api/lessons/:id** - Delete a lesson
 
-## API Documentation
+### Questions
 
-API documentation is available at `/api-docs` when the server is running. Below are some of the key endpoints:
+- **GET /api/questions** - Get all questions
+- **GET /api/questions/:id** - Get question by ID
+- **GET /api/lessons/:lessonId/questions** - Get questions by lesson ID
+- **POST /api/questions** - Create a new question
+- **PUT /api/questions/:id** - Update a question
+- **DELETE /api/questions/:id** - Delete a question
 
-### Question Endpoints
+### Answers
 
-```
-GET /api/questions - Get all questions (with optional filtering)
-GET /api/questions/:id - Get a specific question by ID
-GET /api/questions/grade/:grade - Get questions by grade level
-GET /api/questions/topic/:topic - Get questions by topic
-```
+- **GET /api/answers** - Get all answers
+- **GET /api/answers/:id** - Get answer by ID
+- **GET /api/questions/:questionId/answers** - Get answers by question ID
+- **POST /api/answers** - Create a new answer
+- **PUT /api/answers/:id** - Update an answer
+- **DELETE /api/answers/:id** - Delete an answer
 
-### Answer Endpoints
+## API Endpoints
 
-```
-GET /api/answers/question/:questionId - Get all answers for a specific question
-GET /api/answers/:id - Get a specific answer by ID
-GET /api/answers/correct/:questionId - Get all correct answers for a question
-```
+### User Routes
+- `POST /api/users/register` - Register a new user
+- `POST /api/users/login` - Login an existing user
+- `GET /api/users/profile` - Get user profile information
 
-### Data Models
+### Course Routes
+- `GET /api/courses` - Get all courses (with optional filtering)
+- `GET /api/courses/:id` - Get a specific course
+- `POST /api/courses` - Create a new course
+- `PUT /api/courses/:id` - Update a course
+- `DELETE /api/courses/:id` - Delete a course
+- `GET /api/courses/:courseId/problems` - Get all problems for a course
 
-The database includes the following key models:
+### Problem Routes
+- `GET /api/problems/:id` - Get a specific problem
+- `POST /api/problems/attempt` - Submit an answer attempt
+- `GET /api/problems/user/:userId/attempts` - Get all attempts by a user
 
-- **Chapter & Lesson**: Educational content structure
-- **Question & Answer**: Question content with multiple answer options
-- **Explanation**: Detailed explanations for questions (linked to questions)
-- **Practice & Exam**: Assessment systems for students
-- **User & Progress Tracking**: User management and learning progress
+## Database Schema
 
-### Database Schema
+The database includes the following models:
+- User
+- Course
+- Problem
+- Enrollment
+- Attempt
 
-The database schema includes several related models:
-
-```
-User ───┬─── PracticeSession ───┬─── PracticeAnswer
-        │                       │
-        ├─── ExamResult ────────┴─── ExamAnswer
-        │
-        └─── ProgressHistory
-        
-Chapter ── Lesson
-
-Question ─┬─ Answer
-          │
-          └─ Explanation
-          
-Exam ──── ExamQuestion
-
-Reward ── UserReward
-```
-
-This schema allows for a comprehensive educational platform with lessons, practice exercises, and formal examinations.
+See the `prisma/schema.prisma` file for detailed schema information.
