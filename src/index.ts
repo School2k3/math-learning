@@ -16,6 +16,7 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import rewardRoutes from './routes/rewardRoutes.js';
 import lessonReviewRoutes from './routes/lessonReviewRoutes.js';
 import userStatsRoutes from './routes/userStatsRoutes.js';
+import adminStatsRoutes from './routes/adminStatsRoutes.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -43,6 +44,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/rewards', rewardRoutes);
 app.use('/api/lesson-reviews', lessonReviewRoutes);
 app.use('/api/user-stats', userStatsRoutes);
+app.use('/api/admin-stats', adminStatsRoutes);
 
 // Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, { 
