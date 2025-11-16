@@ -214,7 +214,7 @@ const Pratice: React.FC = () => {
 
         await audio.play();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       setIsPlayingAudio(false);
       console.error("Lỗi khi phát audio:", error);
     }

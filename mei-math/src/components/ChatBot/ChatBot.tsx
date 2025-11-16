@@ -73,7 +73,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ visible, onClose }) => {
       setUserInput("");
       
       // Track non-math question
-      trackChatBotMessage("non-math-question");
+      trackChatBotMessage("bot");
       return;
     }
 

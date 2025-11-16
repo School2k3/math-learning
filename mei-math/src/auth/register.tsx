@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 
 import { registerAPI,  } from "../api/registerAPI";
-import type { RegisterResponse } from "../api/registerAPI";
+import type { RegisterResponse, RegisterRequest } from "../api/registerAPI";
 import { trackRegister } from "../components/GoogleAnalytics";
 
 

@@ -10,7 +10,7 @@ import { fetchLessonsByChapter } from "../api/lessonAPI";
 import { fetchExamsByChapter, fetchExamResultsByExamId, fetchActiveExamByUser } from "../api/examAPI";
 import { startExam } from "../api/examAPI"; 
 import { fetchExamById } from "../api/examAPI"; 
-import { getLessonProgress, createOrUpdatePracticeSession, fetchPracticeHistoryByUser } from "../api/praticeAPI"; // Import API progress
+import { createOrUpdatePracticeSession, fetchPracticeHistoryByUser } from "../api/praticeAPI"; // Import API progress
 import { useAuth } from "../contexts/AuthContext"; // Import useAuth
 
 const classOptions = ["Lớp 1","Lớp 2","Lớp 3", "Lớp 4", "Lớp 5"];
@@ -87,7 +87,7 @@ const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({
 
         // Nếu có chapterId trên URL và tồn tại trong danh sách thì chọn, nếu không thì chọn đầu tiên
         if (chapters.length > 0) {
-          if (urlChapterId && chapters.some((ch: any) => ch.id === urlChapterId)) {
+          if (urlChapterId && chapters.some((ch: { id: number }) => ch.id === urlChapterId)) {
             setSelectedChapterId(urlChapterId);
             console.log("✅ Selected chapter from URL:", urlChapterId);
           } else {
@@ -120,7 +120,7 @@ const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({
                 (s: any) => s.lessonId === lesson.id
               );
               // Lấy session mới nhất (hoặc điểm cao nhất)
-              const latestSession = sessions.sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt))[0];
+              const latestSession = sessions.sort((a: any, b: any) => new Date(b.finishedAt).getTime() - new Date(a.finishedAt).getTime())[0];
               const score = latestSession ? latestSession.score : 0;
               // Completed if the session has finishedAt (which means they reached 100 points)
               const completed = latestSession ? latestSession.finishedAt !== null : false;
