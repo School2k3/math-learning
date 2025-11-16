@@ -52,7 +52,7 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
             Đánh giá
           </NavLink>
           <NavLink
-            to="/no"
+            to="/news"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             Tin tức
@@ -71,7 +71,7 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
               onClick={() => setShowDropdown(!showDropdown)}
             >
               <img
-                src={user.avatar || "/public/defaut_avatar.jpg"}
+                src={user.avatarUrl || "/public/defaut_avatar.jpg"}
                 alt="User Avatar"
                 className="header__avatar"
               />

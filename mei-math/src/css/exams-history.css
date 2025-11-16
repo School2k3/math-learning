@@ -217,6 +217,37 @@
   box-shadow: 0 3px 8px rgba(73, 187, 189, 0.3);
 }
 
+/* Nút "Làm tiếp" cho bài đang làm dở */
+.continue-btn {
+  background: #ff9800;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: pulse 2s infinite;
+}
+
+.continue-btn:hover {
+  background: #f57c00;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(255, 152, 0, 0.4);
+  animation: none;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .history-header {

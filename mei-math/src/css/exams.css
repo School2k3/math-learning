@@ -10,6 +10,8 @@
 .exams-main-left {
   flex: 3; /* Tăng chiều rộng phần bên trái */
   min-width: 0;
+  min-width: 864px;
+  min-height: 593px;
 }
 .exams-main-right {
   flex: 1; /* Giảm chiều rộng phần bên phải */
@@ -32,6 +34,7 @@
   font-weight: 600;
   margin-bottom: 18px;
   color: #252641;
+  min-width: 224px;
 }
 .exams-question img {
   margin-top: 8px;
@@ -39,12 +42,14 @@
   max-height: 140px;
   width: 100%;
   height: auto;
+  
   display: block;
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 1px 4px #0001;
   margin-left: auto;
   margin-right: auto;
+  min-height: 140px;
 }
 .exams-options {
   display: flex;

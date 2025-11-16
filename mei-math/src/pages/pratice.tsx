@@ -61,6 +61,8 @@ const Pratice: React.FC = () => {
   const lessonId = Number(searchParams.get("lessonId"));
   const chapterId = Number(searchParams.get("chapterId")); // Lấy từ URL
   const practiceId = Number(searchParams.get("practiceSessionId"));
+  const gradeId = searchParams.get("gradeId"); // Lấy gradeId từ URL
+  const semester = searchParams.get("semester"); // Lấy semester từ URL
 
   // Track khi bắt đầu làm bài tập
   useEffect(() => {
@@ -145,6 +147,27 @@ const Pratice: React.FC = () => {
   const [sessionCompleted, setSessionCompleted] = useState(false); // Thêm state này
   const [elapsedTime, setElapsedTime] = useState(0); // Thời gian đã trôi qua (giây)
 
+  // Xử lý khi user đóng tab hoặc reload trang
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Chỉ complete khi user đóng tab/reload, KHÔNG phải khi navigate
+      if (practiceId && !sessionCompleted && !isFinished) {
+        // Sử dụng sendBeacon để gửi request ngay cả khi trang đang đóng
+        const data = JSON.stringify({ practiceSessionId: practiceId });
+        navigator.sendBeacon(`/api/practice/complete/${practiceId}`, data);
+        console.log("Session completed on page close/reload with score:", score);
+      }
+    };
+
+    // Chỉ lắng nghe beforeunload (đóng tab, reload)
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Cleanup: chỉ remove listener, KHÔNG complete session
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [practiceId, sessionCompleted, isFinished, score]);
+
   // Timer tăng dần
   useEffect(() => {
     if (loading || isFinished) return; // Không đếm khi đang load hoặc đã hoàn thành
@@ -191,7 +214,7 @@ const Pratice: React.FC = () => {
 
         await audio.play();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       setIsPlayingAudio(false);
       console.error("Lỗi khi phát audio:", error);
     }
@@ -413,7 +436,12 @@ const Pratice: React.FC = () => {
                   className="pratice-chapter-link"
                   onClick={() => {
                     if (chapterId) {
-                      navigate(`/study?chapterId=${chapterId}`);
+                      // Truyền đầy đủ gradeId, semester và chapterId để quay về đúng trang
+                      const params = new URLSearchParams();
+                      params.append("chapterId", chapterId.toString());
+                      if (gradeId) params.append("gradeId", gradeId);
+                      if (semester) params.append("semester", semester);
+                      navigate(`/study?${params.toString()}`);
                     } else {
                       navigate("/study");
                     }

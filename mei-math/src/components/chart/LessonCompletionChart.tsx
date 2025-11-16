@@ -2,6 +2,7 @@ import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
 interface CompletionData {
+  [key: string]: any;
   name: string;
   value: number;
   color: string;
