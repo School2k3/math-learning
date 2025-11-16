@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/header";
-import { saveExamAnswer, finishExam } from "../api/examAPI";
+import { saveExamAnswer, finishExam, fetchExamProgress } from "../api/examAPI";
 import { trackStartExam, trackCompleteExam } from "../components/GoogleAnalytics";
 import "../css/exams.css";
 
@@ -19,6 +19,8 @@ const Exams: React.FC = () => {
   const chapterId = location.state?.chapterId; // Sửa lại, không lấy từ searchParams
   const chapterTitle = location.state?.chapterTitle || ""; // Truyền từ study-page khi navigate
   const examResultId = location.state?.examResult?.id; // Lấy resultId từ startExam
+  const gradeId = location.state?.gradeId; // Lấy gradeId từ state
+  const semester = location.state?.semester; // Lấy semester từ state
 
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(examQuestions.length).fill(null));
@@ -27,6 +29,13 @@ const Exams: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [showReview, setShowReview] = useState(false);
+  const [examFinished, setExamFinished] = useState(false); // Track nếu đã finish
+
+  // KHÔNG tự động finish exam khi user thoát
+  // Chỉ finish khi:
+  // 1. User bấm nút "Nộp bài" (handleSubmitExam)
+  // 2. Hết thời gian (useEffect với secondsLeft === 0)
+  // User có thể quay lại làm tiếp nếu còn thời gian
 
   // Log để debug
   useEffect(() => {
@@ -39,6 +48,85 @@ const Exams: React.FC = () => {
     if (examTitle && exam?.id) {
       trackStartExam(examTitle, exam.id);
     }
+  }, []);
+
+  // Load lại answers khi resume exam (có examResult với userAnswers)
+  useEffect(() => {
+    const loadSavedAnswers = async () => {
+      const examResult = location.state?.examResult;
+      console.log("🔍 DEBUG examResult:", examResult);
+      console.log("🔍 DEBUG examQuestions:", examQuestions);
+      
+      if (!examResult?.id) {
+        console.log("⚠️ No examResult ID found");
+        return;
+      }
+
+      try {
+        // Fetch progress để lấy userAnswers (cho exam đang active)
+        const progressData = await fetchExamProgress(examResult.id);
+        console.log("📥 Fetched exam progress:", progressData);
+        
+        // API trả về: progressData.examResult.examAnswers
+        const examResultData = progressData.examResult || progressData;
+        const savedUserAnswers = examResultData.examAnswers || examResultData.userAnswers || [];
+        
+        if (savedUserAnswers.length > 0) {
+          console.log("📥 Loading saved answers:", savedUserAnswers);
+          
+          // Map examAnswers vào state
+          const savedAnswers = Array(examQuestions.length).fill(null);
+          const savedFlags = Array(examQuestions.length).fill(false);
+          
+          savedUserAnswers.forEach((userAnswer: any) => {
+            console.log("Processing answer:", userAnswer);
+            
+            const questionIndex = examQuestions.findIndex(
+              (eq: any) => eq.question.id === userAnswer.questionId
+            );
+            
+            console.log(`Question ${userAnswer.questionId} found at index:`, questionIndex);
+            
+            if (questionIndex !== -1) {
+              // Tìm index của answer trong danh sách answers
+              const answerIndex = examQuestions[questionIndex].question.answers.findIndex(
+                (ans: any) => ans.id === userAnswer.chosenAnswerId
+              );
+              
+              console.log(`Answer ${userAnswer.chosenAnswerId} found at index:`, answerIndex);
+              
+              if (answerIndex !== -1) {
+                savedAnswers[questionIndex] = answerIndex;
+                savedFlags[questionIndex] = userAnswer.isFlagged || false;
+              }
+            }
+          });
+          
+          setAnswers(savedAnswers);
+          setReviewFlags(savedFlags);
+          console.log("✅ Loaded answers:", savedAnswers);
+          console.log("✅ Loaded flags:", savedFlags);
+        } else {
+          console.log("⚠️ No saved answers found in progress data");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching exam progress:", error);
+      }
+      
+      // Tính lại thời gian còn lại nếu đang resume
+      if (examResult?.startedAt && !examResult.finishedAt) {
+        const startTime = new Date(examResult.startedAt).getTime();
+        const now = Date.now();
+        const elapsedSeconds = Math.floor((now - startTime) / 1000);
+        const totalSeconds = durationMinutes * 60;
+        const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+        
+        setSecondsLeft(remainingSeconds);
+        console.log(`⏱️ Resume: Elapsed ${elapsedSeconds}s, Remaining ${remainingSeconds}s`);
+      }
+    };
+
+    loadSavedAnswers();
   }, []);
 
   useEffect(() => {
@@ -169,6 +257,7 @@ const Exams: React.FC = () => {
         console.log("  - Result ID:", examResultId);
         
         const result = await finishExam(examResultId);
+        setExamFinished(true); // Đánh dấu đã finish
         
         console.log("✅ Finish exam SUCCESS:", result);
         console.log("  - Final score from API:", result.score);
@@ -224,7 +313,14 @@ const Exams: React.FC = () => {
                     padding: "2px 6px",
                     borderRadius: "6px",
                   }}
-                  onClick={() => navigate(`/study?chapterId=${chapterId}`)}
+                  onClick={() => {
+                    // Truyền đầy đủ gradeId, semester và chapterId để quay về đúng trang
+                    const params = new URLSearchParams();
+                    if (chapterId) params.append("chapterId", chapterId.toString());
+                    if (gradeId) params.append("gradeId", gradeId.toString());
+                    if (semester) params.append("semester", semester.toString());
+                    navigate(`/study?${params.toString()}`);
+                  }}
                   onMouseOver={e => {
                     e.currentTarget.style.background = "#e0f7fa";
                     e.currentTarget.style.color = "#23bdee";
@@ -443,7 +539,14 @@ const Exams: React.FC = () => {
                     background: "#49bbbd", color: "#fff", fontWeight: 600, fontSize: "18px",
                     border: "none", borderRadius: "12px", padding: "12px 32px", cursor: "pointer"
                   }}
-                  onClick={() => navigate("/study")}
+                  onClick={() => {
+                    // Quay về đúng trang study với gradeId, semester và chapterId
+                    const params = new URLSearchParams();
+                    if (chapterId) params.append("chapterId", chapterId.toString());
+                    if (gradeId) params.append("gradeId", gradeId.toString());
+                    if (semester) params.append("semester", semester.toString());
+                    navigate(`/study?${params.toString()}`);
+                  }}
                 >
                   Đóng
                 </button>

@@ -7,7 +7,7 @@ import "../css/study-page.css";
 import { useNavigate, useSearchParams } from "react-router-dom"; // Thêm useSearchParams
 import { fetchChapters } from "../api/chapterAPI";
 import { fetchLessonsByChapter } from "../api/lessonAPI";
-import { fetchExamsByChapter } from "../api/examAPI";
+import { fetchExamsByChapter, fetchExamResultsByExamId, fetchActiveExamByUser } from "../api/examAPI";
 import { startExam } from "../api/examAPI"; 
 import { fetchExamById } from "../api/examAPI"; 
 import { getLessonProgress, createOrUpdatePracticeSession, fetchPracticeHistoryByUser } from "../api/praticeAPI"; // Import API progress
@@ -17,39 +17,82 @@ const classOptions = ["Lớp 1","Lớp 2","Lớp 3", "Lớp 4", "Lớp 5"];
 const semesterOptions = ["Học kỳ 1", "Học kỳ 2"];
 
 const StudyPage: React.FC = () => {
-  const [selectedClass, setSelectedClass] = useState("Lớp 1");
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth(); // Lấy user từ AuthContext
+  
+  // Khởi tạo selectedClass dựa trên lớp của user (nếu có), nếu không thì mặc định Lớp 1
+  const [selectedClass, setSelectedClass] = useState(() => {
+    return user?.grade ? `Lớp ${user.grade}` : "Lớp 1";
+  });
   const [selectedSemester, setSelectedSemester] = useState("Học kỳ 1");
   const [topics, setTopics] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); // Thêm dòng này
-  const { user } = useAuth(); // Lấy user từ AuthContext
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
 const [lessons, setLessons] = useState<any[]>([]);
 const [loadingLessons, setLoadingLessons] = useState(false);
-const [exams, setExams] = useState<any[]>([]);
+  const [exams, setExams] = useState<any[]>([]);
 const [loadingExams, setLoadingExams] = useState(false);
 const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: number, completed: boolean}}>({});
+const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({});
 
+  // Cập nhật selectedClass khi user thay đổi (ví dụ: sau khi login)
   useEffect(() => {
-    const grade = Number(selectedClass.replace("Lớp ", ""));
-    const volume = selectedSemester === "Học kỳ 1" ? 1 : 2;
-    setLoading(true);
+    if (user?.grade) {
+      setSelectedClass(`Lớp ${user.grade}`);
+    }
+  }, [user?.grade]);
 
-    // Lấy chapterId từ URL nếu có
+  // Kiểm tra xem lớp đang chọn có phù hợp với lớp của học sinh không
+  const selectedGrade = Number(selectedClass.replace("Lớp ", ""));
+  const userGrade = user?.grade;
+  // Chỉ khóa khi user đã đăng nhập VÀ lớp không khớp
+  const isGradeLocked = userGrade ? selectedGrade !== userGrade : false;  useEffect(() => {
+    // Lấy gradeId và semester từ URL nếu có (khi quay về từ pratice/exams)
+    const urlGradeId = searchParams.get("gradeId");
+    const urlSemester = searchParams.get("semester");
     const urlChapterId = Number(searchParams.get("chapterId"));
-
-    fetchChapters(grade, volume)
+    
+    // Xác định grade và volume: ưu tiên từ URL, nếu không thì dùng state hiện tại
+    let gradeToUse = Number(selectedClass.replace("Lớp ", ""));
+    let volumeToUse = selectedSemester === "Học kỳ 1" ? 1 : 2;
+    
+    // Nếu có params từ URL (từ pratice/exams quay về), update state và dùng giá trị đó
+    if (urlGradeId) {
+      gradeToUse = Number(urlGradeId);
+      setSelectedClass(`Lớp ${urlGradeId}`);
+    }
+    if (urlSemester) {
+      volumeToUse = Number(urlSemester);
+      setSelectedSemester(urlSemester === "1" ? "Học kỳ 1" : "Học kỳ 2");
+    }
+    
+    console.log("📚 Study Page - Fetching chapters:", { 
+      gradeToUse, 
+      volumeToUse, 
+      urlGradeId, 
+      urlSemester, 
+      urlChapterId,
+      selectedClass,
+      selectedSemester 
+    });
+    
+    // Fetch chapters với grade và volume đã xác định
+    setLoading(true);
+    fetchChapters(gradeToUse, volumeToUse)
       .then((data) => {
         const chapters = data.chapters ?? [];
+        console.log("📚 Chapters fetched:", chapters.length, "chapters for grade", gradeToUse, "volume", volumeToUse);
         setTopics(chapters);
 
         // Nếu có chapterId trên URL và tồn tại trong danh sách thì chọn, nếu không thì chọn đầu tiên
         if (chapters.length > 0) {
-          if (urlChapterId && chapters.some(ch => ch.id === urlChapterId)) {
+          if (urlChapterId && chapters.some((ch: any) => ch.id === urlChapterId)) {
             setSelectedChapterId(urlChapterId);
+            console.log("✅ Selected chapter from URL:", urlChapterId);
           } else {
             setSelectedChapterId(chapters[0].id);
+            console.log("✅ Selected first chapter:", chapters[0].id);
           }
         }
       })
@@ -111,20 +154,57 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
     if (selectedChapterId) {
       setLoadingExams(true);
       fetchExamsByChapter(selectedChapterId)
-        .then((data) => {
+        .then(async (data) => {
           console.log("Exams API Response:", data); // Debug để xem structure
           // Response trực tiếp có exams array
-          setExams(data.exams ?? []);
+          const examsData = data.exams ?? [];
+          setExams(examsData);
+          
+          // Fetch exam results để kiểm tra exam nào đã hoàn thành
+          const userId = user?.id || 1;
+          try {
+            // Tạo map để đánh dấu exam nào đã hoàn thành
+            const completionMap: {[key: number]: boolean} = {};
+            
+            // Kiểm tra từng exam xem user đã làm chưa
+            const checkPromises = examsData.map(async (exam: any) => {
+              try {
+                const resultsData = await fetchExamResultsByExamId(exam.id, {
+                  includeFinished: true,
+                  includeActive: false
+                });
+                
+                // Kiểm tra xem có kết quả nào của user này không
+                const userResults = resultsData.examResults?.filter(
+                  (result: any) => result.userId === userId && result.finishedAt !== null
+                );
+                
+                completionMap[exam.id] = userResults && userResults.length > 0;
+              } catch (error) {
+                console.error(`Error checking exam ${exam.id}:`, error);
+                completionMap[exam.id] = false;
+              }
+            });
+            
+            await Promise.all(checkPromises);
+            console.log("Exam Completion Map:", completionMap);
+            setExamCompletion(completionMap);
+          } catch (error) {
+            console.error("Error fetching exam completion:", error);
+            setExamCompletion({});
+          }
         })
         .catch((error) => {
           console.error("Error fetching exams:", error);
           setExams([]);
+          setExamCompletion({});
         })
         .finally(() => setLoadingExams(false));
     } else {
       setExams([]);
+      setExamCompletion({});
     }
-  }, [selectedChapterId]);
+  }, [selectedChapterId, user]);
 
   return (
     <div>
@@ -139,6 +219,8 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                 className={selectedSemester === sem ? "active" : ""}
                 onClick={() => {
                   setSelectedSemester(sem);
+                  // Xóa URL params khi user chọn thủ công
+                  navigate("/study", { replace: true });
                   // Track khi thay đổi học kỳ
                   const grade = Number(selectedClass.replace("Lớp ", ""));
                   const semester = sem === "Học kỳ 1" ? 1 : 2;
@@ -157,7 +239,11 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                 <div
                   key={topic.id}
                   className={`study-topic-item${selectedChapterId === topic.id ? " active" : ""}`}
-                  onClick={() => setSelectedChapterId(topic.id)}
+                  onClick={() => {
+                    setSelectedChapterId(topic.id);
+                    // Xóa URL params khi user chọn chương thủ công
+                    navigate("/study", { replace: true });
+                  }}
                   style={{ cursor: "pointer" }}
                 >
                   <span className="study-topic-icon">
@@ -184,6 +270,8 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
               value={selectedClass}
               onChange={(e) => {
                 setSelectedClass(e.target.value);
+                // Xóa URL params khi user chọn thủ công
+                navigate("/study", { replace: true });
                 // Track khi thay đổi lớp
                 const grade = Number(e.target.value.replace("Lớp ", ""));
                 const semester = selectedSemester === "Học kỳ 1" ? 1 : 2;
@@ -219,7 +307,13 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                   <div>Bài học</div>
                 </div>
                 <div>
-                  <span>0/{selectedChapterId ? exams.length : 0}</span>
+                  <span>
+                    {selectedChapterId
+                      ? Object.values(examCompletion).filter(completed => completed).length
+                      : 0}
+                    /
+                    {selectedChapterId ? exams.length : 0}
+                  </span>
                   <div>Bài kiểm tra</div>
                 </div>
               </div>
@@ -237,7 +331,50 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                   {lessons
                     .slice(rowIdx * 2, rowIdx * 2 + 2)
                     .map((lesson) => (
-                      <div className="study-card" key={lesson.id}>
+                      <div 
+                        className="study-card" 
+                        key={lesson.id}
+                        style={{
+                          position: "relative",
+                          opacity: isGradeLocked ? 0.5 : 1,
+                          pointerEvents: isGradeLocked ? "none" : "auto"
+                        }}
+                      >
+                        {/* Overlay khóa nếu không phù hợp lớp */}
+                        {isGradeLocked && (
+                          <div style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "rgba(255, 255, 255, 0.9)",
+                            borderRadius: "12px",
+                            zIndex: 10,
+                            padding: "20px",
+                            textAlign: "center"
+                          }}>
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ marginBottom: "12px" }}>
+                              <path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11Z" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <div style={{ 
+                              fontWeight: "bold", 
+                              fontSize: "16px", 
+                              color: "#FF6B6B",
+                              marginBottom: "4px"
+                            }}>
+                              Lớp học không phù hợp
+                            </div>
+                            <div style={{ fontSize: "14px", color: "#666" }}>
+                              Nội dung dành cho lớp {selectedGrade}
+                            </div>
+                          </div>
+                        )}
                         <div className="study-card-img">
                           <img src={lesson.imageUrl || "/mei-is.png"} alt="card" />
                           <div className="study-card-label">Mei-Math</div>
@@ -255,8 +392,10 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                               style={{ color: "#23BDEE", cursor: "pointer" }}
                               onClick={() => {
                                 console.log("lesson.title:", lesson.title);
+                                const grade = Number(selectedClass.replace("Lớp ", ""));
+                                const semester = selectedSemester === "Học kỳ 1" ? 1 : 2;
                                 navigate(
-                                  `/theoretical-video?videoUrl=${encodeURIComponent(lesson.videoUrl || "")}&title=${encodeURIComponent(lesson.title || "")}&lessonId=${lesson.id}&chapterId=${selectedChapterId}`
+                                  `/theoretical-video?videoUrl=${encodeURIComponent(lesson.videoUrl || "")}&title=${encodeURIComponent(lesson.title || "")}&lessonId=${lesson.id}&chapterId=${selectedChapterId}&gradeId=${grade}&semester=${semester}`
                                 );
                               }}
                             >                   
@@ -299,8 +438,10 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                                   }
 
                                   // Navigate to practice; the practice page will verify session status on mount
+                                  const grade = Number(selectedClass.replace("Lớp ", ""));
+                                  const semester = selectedSemester === "Học kỳ 1" ? 1 : 2;
                                   navigate(
-                                    `/pratice?lessonId=${lesson.id}&title=${encodeURIComponent(lesson.title)}&chapterId=${selectedChapterId}&practiceSessionId=${practiceSessionId}`
+                                    `/pratice?lessonId=${lesson.id}&title=${encodeURIComponent(lesson.title)}&chapterId=${selectedChapterId}&practiceSessionId=${practiceSessionId}&gradeId=${grade}&semester=${semester}`
                                   );
                                 } catch (error) {
                                   console.error("createOrUpdatePracticeSession error:", error);
@@ -423,7 +564,50 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                 <div>Không có bài kiểm tra nào.</div>
               ) : (
                 exams.map((exam: any) => (
-                  <div className="study-card" key={exam.id}>
+                  <div 
+                    className="study-card" 
+                    key={exam.id}
+                    style={{
+                      position: "relative",
+                      opacity: isGradeLocked ? 0.5 : 1,
+                      pointerEvents: isGradeLocked ? "none" : "auto"
+                    }}
+                  >
+                    {/* Overlay khóa nếu không phù hợp lớp */}
+                    {isGradeLocked && (
+                      <div style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(255, 255, 255, 0.9)",
+                        borderRadius: "12px",
+                        zIndex: 10,
+                        padding: "20px",
+                        textAlign: "center"
+                      }}>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ marginBottom: "12px" }}>
+                          <path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11Z" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <div style={{ 
+                          fontWeight: "bold", 
+                          fontSize: "16px", 
+                          color: "#FF6B6B",
+                          marginBottom: "4px"
+                        }}>
+                          Lớp học không phù hợp
+                        </div>
+                        <div style={{ fontSize: "14px", color: "#666" }}>
+                          Nội dung dành cho lớp {selectedGrade}
+                        </div>
+                      </div>
+                    )}
                     <div className="study-card-img">
                       <img src="/public/mei-is.png" alt="card" />
                       <div className="study-card-label">UX/UI</div>
@@ -469,15 +653,42 @@ const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: 
                       onClick={async () => {
                         try {
                           const userId = user?.id || 1;
-                          const res = await startExam(exam.id, userId);
+                          
+                          // Kiểm tra xem có exam result đang active không
+                          let examResultToUse;
+                          try {
+                            const activeExam = await fetchActiveExamByUser(userId);
+                            
+                            // Nếu có active exam và đúng exam này → Resume
+                            if (activeExam && activeExam.examId === exam.id) {
+                              examResultToUse = activeExam;
+                              console.log("Resuming active exam:", activeExam);
+                            } else {
+                              // Có active exam nhưng là exam khác hoặc không có → Tạo mới
+                              const res = await startExam(exam.id, userId);
+                              examResultToUse = res.examResult;
+                              console.log("Started new exam:", res.examResult);
+                            }
+                          } catch (err) {
+                            // Không có active exam → Tạo mới
+                            const res = await startExam(exam.id, userId);
+                            examResultToUse = res.examResult;
+                            console.log("No active exam, started new:", res.examResult);
+                          }
+                          
                           const examDetail = await fetchExamById(exam.id);
-                          // Truyền thêm chapterId và chapterTitle qua state
+                          const grade = Number(selectedClass.replace("Lớp ", ""));
+                          const semester = selectedSemester === "Học kỳ 1" ? 1 : 2;
+                          
+                          // Truyền thêm chapterId, chapterTitle, gradeId và semester qua state
                           navigate("/exams", {
                             state: {
                               exam: examDetail.exam,
-                              examResult: res.examResult,
+                              examResult: examResultToUse,
                               chapterId: selectedChapterId,
                               chapterTitle: topics.find((t) => t.id === selectedChapterId)?.title || "",
+                              gradeId: grade,
+                              semester: semester,
                             },
                           });
                         } catch (e) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import { useNavigate, useLocation } from "react-router-dom";
-import { fetchExamResultsByExamId } from "../api/examAPI";
+import { fetchExamResultsByExamId, fetchExamById } from "../api/examAPI";
 import { trackViewExamHistory } from "../components/GoogleAnalytics";
 import "../css/exams-history.css";
 
@@ -150,7 +150,7 @@ const ExamsHistory: React.FC = () => {
                   <th>Thời gian</th>
                   <th>Số điểm</th>
                   <th>Kết quả</th>
-                  <th>Xem lại</th>
+                  <th>Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -177,19 +177,52 @@ const ExamsHistory: React.FC = () => {
                       </span>
                     </td>
                     <td>
-                      <button
-                        className="review-btn"
-                        onClick={() => {
-                          // Truyền state để exams-review có thể quay lại đúng context
-                          const grade = location.state?.grade;
-                          const chapterId = location.state?.chapterId || examInfo?.chapterId;
-                          navigate(`/exams/review/${exam.id}`, {
-                            state: { grade, chapterId }
-                          });
-                        }}
-                      >
-                        Xem chi tiết
-                      </button>
+                      {!exam.finishedAt ? (
+                        // Bài đang làm dở → Nút "Làm tiếp"
+                        <button
+                          className="continue-btn"
+                          onClick={async () => {
+                            try {
+                              // Lấy thông tin exam
+                              const examDetail = await fetchExamById(exam.examId);
+                              const grade = location.state?.grade || examInfo?.grade;
+                              const semester = location.state?.semester || examInfo?.semester;
+                              const chapterId = location.state?.chapterId || examInfo?.chapterId;
+                              
+                              // Navigate với examResult hiện tại để resume
+                              navigate("/exams", {
+                                state: {
+                                  exam: examDetail.exam,
+                                  examResult: exam, // Resume session hiện tại
+                                  chapterId: chapterId,
+                                  chapterTitle: location.state?.chapterTitle || "",
+                                  gradeId: grade,
+                                  semester: semester,
+                                },
+                              });
+                            } catch (error) {
+                              console.error("Error resuming exam:", error);
+                              alert("Không thể tiếp tục bài kiểm tra!");
+                            }
+                          }}
+                        >
+                          Làm tiếp →
+                        </button>
+                      ) : (
+                        // Bài đã hoàn thành → Nút "Xem chi tiết"
+                        <button
+                          className="review-btn"
+                          onClick={() => {
+                            const grade = location.state?.grade;
+                            const chapterId = location.state?.chapterId || examInfo?.chapterId;
+                            navigate(`/exams/review/${exam.id}`, {
+                              state: { grade, chapterId }
+                            });
+                          }}
+                        >
+                          Xem chi tiết
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

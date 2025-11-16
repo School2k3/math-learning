@@ -4,16 +4,21 @@ import "../css/theoretical-video.css";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchAllChapters } from "../api/chapterAPI";
 import { trackWatchVideo } from "../components/GoogleAnalytics";
+import { createOrUpdatePracticeSession } from "../api/praticeAPI";
+import { useAuth } from "../contexts/AuthContext";
     
 
 const TheoreticalVideo: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth(); // Thêm useAuth
   const [chapterTitle, setChapterTitle] = useState(""); // Thêm state cho chapter title
   const videoUrl = searchParams.get("videoUrl") || "/videos/ToanLop3_Dayso.mp4";
   const title = searchParams.get("title") || "";
   const lessonId = searchParams.get("lessonId"); // Lấy lessonId từ URL
   const chapterId = searchParams.get("chapterId"); // Thêm chapterId từ URL
+  const gradeId = searchParams.get("gradeId"); // Lấy gradeId từ URL
+  const semester = searchParams.get("semester"); // Lấy semester từ URL
 
   // Track khi xem video
   useEffect(() => {
@@ -56,7 +61,14 @@ const TheoreticalVideo: React.FC = () => {
                 padding: "2px 6px",
                 borderRadius: "6px",
               }}
-              onClick={() => navigate(`/study?chapterId=${chapterId}`)}
+              onClick={() => {
+                // Truyền đầy đủ gradeId, semester và chapterId để quay về đúng trang
+                const params = new URLSearchParams();
+                if (chapterId) params.append("chapterId", chapterId);
+                if (gradeId) params.append("gradeId", gradeId);
+                if (semester) params.append("semester", semester);
+                navigate(`/study?${params.toString()}`);
+              }}
               onMouseOver={e => {
                 e.currentTarget.style.background = "#e0f7fa";
                 e.currentTarget.style.color = "#23bdee";
@@ -102,8 +114,37 @@ const TheoreticalVideo: React.FC = () => {
               </span>
             </div>
           </div>
-          <div className="video-info-right" onClick={() => navigate(`/pratice?lessonId=${lessonId}`)}>
-            <button className="video-action-btn">Thực hành ngay</button>
+          <div className="video-info-right">
+            <button 
+              className="video-action-btn"
+              onClick={async () => {
+                if (!lessonId) {
+                  alert("Không tìm thấy thông tin bài học!");
+                  return;
+                }
+                try {
+                  const userId = user?.id || 1;
+                  const result = await createOrUpdatePracticeSession(userId, Number(lessonId));
+                  console.log("createOrUpdatePracticeSession result:", result);
+                  const practiceSessionId = result.practiceSession?.id ?? result.data?.practiceSession?.id;
+
+                  if (!practiceSessionId) {
+                    console.error("No practiceSession id returned from API", result);
+                    throw new Error("Failed to create practice session ID");
+                  }
+
+                  // Navigate to practice với đầy đủ params như study-page
+                  navigate(
+                    `/pratice?lessonId=${lessonId}&title=${encodeURIComponent(title)}&chapterId=${chapterId}&practiceSessionId=${practiceSessionId}&gradeId=${gradeId}&semester=${semester}`
+                  );
+                } catch (error) {
+                  console.error("createOrUpdatePracticeSession error:", error);
+                  alert("Không thể tạo phiên thực hành!");
+                }
+              }}
+            >
+              Thực hành ngay
+            </button>
           </div>
         </div>
       </div>
