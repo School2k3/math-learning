@@ -149,7 +149,7 @@ const Pratice: React.FC = () => {
 
   // Xử lý khi user đóng tab hoặc reload trang
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (_e: BeforeUnloadEvent) => {
       // Chỉ complete khi user đóng tab/reload, KHÔNG phải khi navigate
       if (practiceId && !sessionCompleted && !isFinished) {
         // Sử dụng sendBeacon để gửi request ngay cả khi trang đang đóng
@@ -260,10 +260,12 @@ const Pratice: React.FC = () => {
       try {
         const res = await savePracticeAnswer(practiceId, currentQuestion.id, answerId);
         console.log("savePracticeAnswer result:", res);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error saving practice answer:", error);
         // Nếu lỗi 400, có thể session đã complete
-        if (error.message.includes("400") || error.message.includes("Không thể lưu câu trả lời")) {
+        const err = error as {message?: string};
+        const errorMessage = err?.message || '';
+        if (errorMessage.includes("400") || errorMessage.includes("Không thể lưu câu trả lời")) {
           console.warn("Session may already be completed");
           setSessionCompleted(true);
           alert("Phiên luyện tập đã kết thúc. Vui lòng tạo phiên mới.");

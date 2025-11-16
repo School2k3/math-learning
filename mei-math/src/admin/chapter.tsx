@@ -3,7 +3,6 @@ import "../css/admin-css/chapter.css";
 import { Link, useNavigate } from "react-router-dom";
 import {
   fetchAllChapters,
-  fetchChaptersByGrade,
   createChapter,
   updateChapter,
   deleteChapter,

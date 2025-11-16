@@ -26,6 +26,7 @@ const DashUser: React.FC = () => {
   const [practiceHistory, setPracticeHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [lessonsMap, setLessonsMap] = useState<{[key: number]: any}>({});
+  const [_lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: number, completed: boolean}}>({});
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [exams, setExams] = useState<any[]>([]);
   const [loadingExams, setLoadingExams] = useState(false);

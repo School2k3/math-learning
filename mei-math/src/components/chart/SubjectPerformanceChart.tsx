@@ -16,7 +16,14 @@ const data: SubjectData[] = [
   { subject: "Thống kê", avgScore: 7.9, completion: 75 },
 ];
 
-const SubjectPerformanceChart: React.FC = () => {
+interface SubjectPerformanceChartProps {
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+const SubjectPerformanceChart: React.FC<SubjectPerformanceChartProps> = ({ dateRange: _dateRange }) => {
   return (
     <div className="chart-container">
       <h3 className="chart-title">Hiệu suất theo chủ đề</h3>

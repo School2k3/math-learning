@@ -14,7 +14,14 @@ const data: CompletionData[] = [
   { name: "Chưa bắt đầu", value: 6.2, color: "#F44336" },
 ];
 
-const LessonCompletionChart: React.FC = () => {
+interface LessonCompletionChartProps {
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+const LessonCompletionChart: React.FC<LessonCompletionChartProps> = ({ dateRange: _dateRange }) => {
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;

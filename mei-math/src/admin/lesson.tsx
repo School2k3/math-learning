@@ -220,36 +220,6 @@ const LessonAdmin: React.FC = () => {
       : `Chương ${chapterId}`;
   };
 
-  // Thêm bài học mới (tạm thời vô hiệu hóa - chỉ có API GET)
-  const handleAdd = async () => {
-    if (!newLesson.title || !newLesson.chapterId) {
-      alert("Vui lòng nhập đầy đủ tên bài học và chọn chương!");
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await createLesson({
-        chapterId: Number(newLesson.chapterId),
-        title: newLesson.title,
-        videoUrl: newLesson.videoUrl,
-        imageUrl: newLesson.imageUrl,
-      });
-      if (res.success) {
-        alert("Thêm bài học thành công!");
-        setShowAddForm(false);
-        setNewLesson({});
-        // Reload lại danh sách bài học
-        loadData();
-      } else {
-        alert("Thêm bài học thất bại: " + res.message);
-      }
-    } catch (error) {
-      alert("Lỗi khi thêm bài học: " + (error as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Thêm nhiều bài học cùng lúc
   const handleCreateMultiple = async () => {
     // Lấy chapterId chung từ DOM

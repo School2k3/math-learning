@@ -16,7 +16,14 @@ const data: ScoreData[] = [
   { month: "T6", avgScore: 8.3, examsCompleted: 334 },
 ];
 
-const ScoreTrendChart: React.FC = () => {
+interface ScoreTrendChartProps {
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+const ScoreTrendChart: React.FC<ScoreTrendChartProps> = ({ dateRange: _dateRange }) => {
   return (
     <div className="chart-container">
       <h3 className="chart-title">Xu hướng điểm số theo tháng</h3>

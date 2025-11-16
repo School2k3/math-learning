@@ -50,14 +50,11 @@ const QuestionAdmin: React.FC = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [allLessons, setAllLessons] = useState<Lesson[]>([]);
-  const [addFormLessons, setAddFormLessons] = useState<Lesson[]>([]);
+  const [_addFormLessons, setAddFormLessons] = useState<Lesson[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<Question>>({});
   const [showAddForm, setShowAddForm] = useState(false);
   const [newQuestion, setNewQuestion] = useState<Partial<Question>>({});
-  const [newAnswers, setNewAnswers] = useState<
-    { answerText: string; isCorrect: boolean }[]
-  >([]);
   const [questionQuantity, setQuestionQuantity] = useState(1);
   
   // State cho multiple questions - mỗi câu có form riêng
@@ -74,7 +71,7 @@ const QuestionAdmin: React.FC = () => {
   const [filterGrade, setFilterGrade] = useState("all");
   const [filterChapter, setFilterChapter] = useState("all");
   const [filterLesson, setFilterLesson] = useState("all");
-  const [filterAnswerType, setFilterAnswerType] = useState<string>("all");
+  const [filterAnswerType, _setFilterAnswerType] = useState<string>("all");
   const navigate = useNavigate();
 
   // Upload states
@@ -85,7 +82,6 @@ const QuestionAdmin: React.FC = () => {
   // Upload states for edit mode
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
   const [uploadingEditAudio, setUploadingEditAudio] = useState(false);
-  const [uploadingEditExplanationImg, setUploadingEditExplanationImg] = useState(false);
 
   // Preview modal state
   const [previewMedia, setPreviewMedia] = useState<{type: 'image' | 'audio', url: string} | null>(null);
@@ -223,34 +219,6 @@ const QuestionAdmin: React.FC = () => {
     } finally {
       setUploadingEditAudio(false);
     }
-  };
-
-  const handleEditExplanationImgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      alert('Vui lòng chọn file ảnh!');
-      return;
-    }
-
-    try {
-      setUploadingEditExplanationImg(true);
-      const url = await uploadImageFile(file);
-      setEditData({ ...editData, explanationImg: url });
-      alert('Upload ảnh giải thích thành công!');
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('Upload ảnh giải thích thất bại!');
-    } finally {
-      setUploadingEditExplanationImg(false);
-    }
-  };
-
-  // Lấy tên bài học theo ID
-  const getLessonTitle = (lessonId: number) => {
-    const lesson = lessons.find((l) => l.id === lessonId);
-    return lesson ? lesson.title : `Bài ${lessonId}`;
   };
 
   // Khởi tạo array câu hỏi khi thay đổi số lượng

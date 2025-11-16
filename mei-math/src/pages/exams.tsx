@@ -29,7 +29,6 @@ const Exams: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [showReview, setShowReview] = useState(false);
-  const [examFinished, setExamFinished] = useState(false); // Track nếu đã finish
 
   // KHÔNG tự động finish exam khi user thoát
   // Chỉ finish khi:
@@ -257,7 +256,6 @@ const Exams: React.FC = () => {
         console.log("  - Result ID:", examResultId);
         
         const result = await finishExam(examResultId);
-        setExamFinished(true); // Đánh dấu đã finish
         
         console.log("✅ Finish exam SUCCESS:", result);
         console.log("  - Final score from API:", result.score);

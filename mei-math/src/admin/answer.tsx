@@ -13,6 +13,13 @@ interface Answer {
   isCorrect: boolean;
 }
 
+interface Question {
+  id: number;
+  questionText: string;
+  lessonId: number;
+  grade: number;
+}
+
 const AnswerAdmin: React.FC = () => {
   const [searchParams] = useSearchParams();
   const questionIdParam = searchParams.get("questionId");
@@ -21,8 +28,6 @@ const AnswerAdmin: React.FC = () => {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<Answer>>({});
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newAnswer, setNewAnswer] = useState<Partial<Answer>>({});
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filterGrade, setFilterGrade] = useState("all");
   const [filterChapter, setFilterChapter] = useState("all");
@@ -62,10 +67,10 @@ const AnswerAdmin: React.FC = () => {
 
         const allAnswers: Answer[] = [];
         await Promise.all(
-          questionsList.map(async (q) => {
+          questionsList.map(async (q: Question) => {
             const res = await fetchAnswersByQuestionId(q.id);
             if (res.data && res.data.answers) {
-              allAnswers.push(...res.data.answers.map(a => ({
+              allAnswers.push(...res.data.answers.map((a: any) => ({
                 ...a,
                 questionText: q.questionText // Gắn thêm questionText vào answer
               })));
@@ -77,26 +82,6 @@ const AnswerAdmin: React.FC = () => {
     };
     fetchAnswers();
   }, [questionId]);
-
-  // Thêm đáp án mới
-  const handleAdd = () => {
-    if (!newAnswer.answerText) {
-      alert("Vui lòng nhập đáp án!");
-      return;
-    }
-    const newId = Math.max(0, ...answers.map(a => a.id)) + 1;
-    setAnswers([
-      ...answers,
-      {
-        id: newId,
-        questionId,
-        answerText: newAnswer.answerText,
-        isCorrect: !!newAnswer.isCorrect,
-      } as Answer,
-    ]);
-    setNewAnswer({});
-    setShowAddForm(false);
-  };
 
   // Xóa đáp án
   const handleDelete = (id: number) => {
@@ -139,14 +124,6 @@ const AnswerAdmin: React.FC = () => {
   const handleCancel = () => {
     setEditingId(null);
     setEditData({});
-    setShowAddForm(false);
-    setNewAnswer({});
-  };
-
-  // Giả sử bạn truyền questions qua props hoặc lấy từ context
-  const getQuestionText = (questionId: number) => {
-    const q = questions.find(q => q.id === questionId);
-    return q ? q.questionText : `ID ${questionId}`;
   };
 
   // Lấy danh sách câu hỏi
@@ -164,7 +141,7 @@ const AnswerAdmin: React.FC = () => {
       const chapRes = await fetchAllChapters();
       setChapters(chapRes.data?.chapters || chapRes.chapters || []);
       const lessonRes = await fetchAllLessons();
-      setLessons(lessonRes.data?.lessons || lessonRes.lessons || []);
+      setLessons(lessonRes.lessons || []);
     };
     loadData();
   }, []);
@@ -259,21 +236,6 @@ const AnswerAdmin: React.FC = () => {
             <div className="answer-title">
               <h1>📝 Danh sách đáp án câu hỏi</h1>
               <p>{filteredAnswers.length} đáp án</p>
-            </div>
-            <div className="header-actions">
-              <button 
-                className="btn-add" 
-                onClick={() => {
-                  setNewAnswer({
-                    questionId: filterQuestion !== "all" ? Number(filterQuestion) : undefined,
-                    answerText: "",
-                    isCorrect: false,
-                  });
-                  setShowAddForm(true);
-                }}
-              >
-                + Thêm mới đáp án
-              </button>
             </div>
           </div>
 

@@ -18,7 +18,14 @@ const data: ActivityData[] = [
   { day: "T7", activeUsers: 278, newRegistrations: 22, lessonsCompleted: 345 },
 ];
 
-const WeeklyActivityChart: React.FC = () => {
+interface WeeklyActivityChartProps {
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ dateRange: _dateRange }) => {
   return (
     <div className="chart-container">
       <h3 className="chart-title">Hoạt động hàng tuần</h3>
