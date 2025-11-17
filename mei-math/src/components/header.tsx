@@ -20,7 +20,7 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
       <div className="header__container">
         <img
           style={{ width: "100px", height: "100px", marginLeft: "20px" }}
-          src="/public/logo-Photoroom.png"
+          src="/logo-Photoroom.png"
           alt="MEI Logo"
           className="header__logo"
         />

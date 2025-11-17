@@ -3,7 +3,6 @@ import Header from "../components/header";
 import "../css/pratice.css";
 import { 
   fetchPracticeQuestionsByLesson, 
-  fetchQuestionAudio,
   completePracticeSession,
   savePracticeAnswer, // Nhập hàm lưu đáp án
   checkPracticeSessionStatus // Thêm import này
@@ -188,31 +187,52 @@ const Pratice: React.FC = () => {
 
   const handlePlayAudio = async () => {
     try {
-      setIsPlayingAudio(true);
       const currentQuestion = questions[current];
-      if (!currentQuestion?.id) return;
+      if (!currentQuestion) {
+        console.error("Không có câu hỏi hiện tại");
+        return;
+      }
 
-      const audioData = await fetchQuestionAudio(currentQuestion.id);
-      if (audioData.audioUrl) {
-        // Dừng audio cũ nếu đang phát
-        if (audioElement) {
-          audioElement.pause();
-          audioElement.currentTime = 0;
-        }
+      // Lấy audioUrl trực tiếp từ câu hỏi
+      const audioUrl = currentQuestion.audioUrl;
+      
+      if (!audioUrl) {
+        console.warn("Câu hỏi này không có audio");
+        alert("Câu hỏi này không có âm thanh");
+        return;
+      }
 
-        const audio = new Audio(audioData.audioUrl);
-        setAudioElement(audio);
-        
-        audio.onended = () => {
-          setIsPlayingAudio(false);
-        };
-        
-        audio.onerror = () => {
-          setIsPlayingAudio(false);
-          console.error("Không thể phát audio");
-        };
+      console.log("Đang phát audio:", audioUrl);
+      setIsPlayingAudio(true);
 
+      // Dừng audio cũ nếu đang phát
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+
+      const audio = new Audio(audioUrl);
+      setAudioElement(audio);
+      
+      audio.onended = () => {
+        console.log("Audio đã phát xong");
+        setIsPlayingAudio(false);
+      };
+      
+      audio.onerror = (e) => {
+        console.error("Lỗi khi phát audio:", e);
+        console.error("Audio URL:", audioUrl);
+        setIsPlayingAudio(false);
+        alert("Không thể phát âm thanh. Vui lòng kiểm tra kết nối mạng.");
+      };
+
+      try {
         await audio.play();
+        console.log("Audio đang phát...");
+      } catch (playError) {
+        console.error("Không thể phát audio:", playError);
+        setIsPlayingAudio(false);
+        alert("Không thể phát âm thanh. Trình duyệt có thể đã chặn tự động phát.");
       }
     } catch (error: unknown) {
       setIsPlayingAudio(false);
@@ -289,6 +309,14 @@ const Pratice: React.FC = () => {
       setSelected(null);
       setShowIncorrect(false);
       
+      // Reset audio state khi chuyển câu
+      setIsPlayingAudio(false);
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+      setAudioElement(null);
+      
       // Kết thúc game khi đạt 100 điểm
       if (newScore >= 100) {
         // Gọi API complete session nếu có practiceId
@@ -322,6 +350,14 @@ const Pratice: React.FC = () => {
   const handleNext = () => {
     setShowIncorrect(false);
     setSelected(null);
+    // Reset audio state
+    setIsPlayingAudio(false);
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+    }
+    setAudioElement(null);
+    
     if (current < questions.length - 1) {
       setCurrent(current + 1);
     } else {
@@ -693,13 +729,22 @@ const Pratice: React.FC = () => {
                     name={`question-${current}`}
                     checked={selected === idx}
                     onChange={() => setSelected(idx)}
+                    disabled={showIncorrect}
                   />
                   <span className="pratice-option-text">{ans.answerText}</span>
                 </label>
               ))}
             </div>
             <div className="pratice-action-row">
-              <button className="pratice-submit-btn" onClick={handleSubmit}>
+              <button 
+                className="pratice-submit-btn" 
+                onClick={handleSubmit}
+                disabled={showIncorrect || selected === null}
+                style={{
+                  opacity: showIncorrect || selected === null ? 0.5 : 1,
+                  cursor: showIncorrect || selected === null ? 'not-allowed' : 'pointer'
+                }}
+              >
                 Trả lời
               </button>
             </div>

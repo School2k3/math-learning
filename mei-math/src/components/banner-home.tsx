@@ -122,7 +122,7 @@ const BannerHome: React.FC = () => {
         </div>
       </div>
       <img
-        src="/public/banner-home-img.png"
+        src="/banner-home-img.png"
         alt="Banner Girl"
         className="banner-home__img"
       />

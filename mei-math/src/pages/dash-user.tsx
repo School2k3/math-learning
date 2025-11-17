@@ -321,6 +321,17 @@ const DashUser: React.FC = () => {
         try {
           const result = await fetchPracticeHistoryByUser(user.id);
           console.log("✅ Practice history loaded:", result);
+          console.log("📊 Sample practice data:", result.practiceHistory?.[0]);
+          if (result.practiceHistory?.[0]) {
+            const sample = result.practiceHistory[0];
+            console.log("🕐 Time data:", {
+              startedAt: sample.startedAt,
+              finishedAt: sample.finishedAt,
+              createdAt: sample.createdAt,
+              updatedAt: sample.updatedAt,
+              calculated: formatDuration(sample.startedAt || sample.createdAt, sample.finishedAt || sample.updatedAt)
+            });
+          }
           setPracticeHistory(result.practiceHistory || []);
         } catch (error) {
           console.error("❌ Error loading practice history:", error);
@@ -345,13 +356,44 @@ const DashUser: React.FC = () => {
     });
   };
 
-  const formatDuration = (startDate: string, endDate: string) => {
-    if (!endDate) return "Đang luyện tập";
+  const formatDuration = (startDate: string, endDate: string | null) => {
+    if (!endDate) {
+      // Nếu không có endDate, kiểm tra xem có phải session cũ không
+      if (!startDate) return "N/A";
+      
+      const start = new Date(startDate);
+      const now = new Date();
+      const diffMs = now.getTime() - start.getTime();
+      
+      // Nếu session cũ hơn 1 ngày, có thể dữ liệu bị thiếu
+      if (diffMs > 24 * 60 * 60 * 1000) {
+        return "N/A";
+      }
+      
+      return "Đang luyện tập";
+    }
+    
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffMs = end.getTime() - start.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    return `${diffMins} phút`;
+    
+    // Nếu thời gian âm hoặc quá lớn (> 24h), có thể dữ liệu sai
+    if (diffMs < 0 || diffMs > 24 * 60 * 60 * 1000) {
+      return "N/A";
+    }
+    
+    const diffSecs = Math.floor(diffMs / 1000);
+    const hours = Math.floor(diffSecs / 3600);
+    const mins = Math.floor((diffSecs % 3600) / 60);
+    const secs = diffSecs % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    } else if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
   };
 
   const handleLessonClick = (lessonId: number) => {
@@ -422,9 +464,12 @@ const DashUser: React.FC = () => {
                       <td className="practice-title">
                         {lessonsMap[practice.lessonId]?.title || practice.lessonTitle || `Bài học #${practice.lessonId}`}
                       </td>
-                      <td>{formatDate(practice.startedAt)}</td>
+                      <td>{formatDate(practice.startedAt || practice.createdAt)}</td>
                       <td>
-                        {formatDuration(practice.startedAt, practice.finishedAt)}
+                        {formatDuration(
+                          practice.startedAt || practice.createdAt, 
+                          practice.finishedAt || practice.updatedAt
+                        )}
                       </td>
                       <td className="score">
                         <span className={`score-badge ${practice.score >= 80 ? 'high' : practice.score >= 50 ? 'medium' : 'low'}`}>
