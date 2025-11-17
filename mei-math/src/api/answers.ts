@@ -1,5 +1,7 @@
+import { buildApiUrl } from "../config/api";
+
 export async function fetchAnswersByQuestionId(questionId: number) {
-  const response = await fetch(`/api/answers/question/${questionId}`);
+  const response = await fetch(buildApiUrl(`/api/answers/question/${questionId}`));
   if (!response.ok) {
     throw new Error("Failed to fetch answers");
   }

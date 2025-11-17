@@ -1,15 +1,16 @@
+import { buildApiUrl } from "../config/api";
+
 // API cho thống kê người dùng
 
 // Lấy tổng quan thống kê
 export const getUserStats = async (userId: number) => {
   try {
     console.log("🔵 [getUserStats] Calling API for userId:", userId);
-    const response = await fetch(`/api/user-stats/${userId}`, {
+    const response = await fetch(buildApiUrl(`/api/user-stats/${userId}`), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
     });
 
     console.log("🔵 [getUserStats] Response status:", response.status);
@@ -33,13 +34,15 @@ export const getUserStats = async (userId: number) => {
 export const getPracticeStats = async (userId: number) => {
   try {
     console.log("🟢 [getPracticeStats] Calling API for userId:", userId);
-    const response = await fetch(`/api/user-stats/${userId}/practice`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
+    const response = await fetch(
+      buildApiUrl(`/api/user-stats/${userId}/practice`),
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     console.log("🟢 [getPracticeStats] Response status:", response.status);
 
@@ -66,13 +69,15 @@ export const getPracticeStats = async (userId: number) => {
 export const getExamStats = async (userId: number) => {
   try {
     console.log("🟡 [getExamStats] Calling API for userId:", userId);
-    const response = await fetch(`/api/user-stats/${userId}/exams`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
+    const response = await fetch(
+      buildApiUrl(`/api/user-stats/${userId}/exams`),
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     console.log("🟡 [getExamStats] Response status:", response.status);
 
@@ -95,13 +100,15 @@ export const getExamStats = async (userId: number) => {
 export const getQuestionStats = async (userId: number) => {
   try {
     console.log("🟣 [getQuestionStats] Calling API for userId:", userId);
-    const response = await fetch(`/api/user-stats/${userId}/questions`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
+    const response = await fetch(
+      buildApiUrl(`/api/user-stats/${userId}/questions`),
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     console.log("🟣 [getQuestionStats] Response status:", response.status);
 
@@ -128,13 +135,15 @@ export const getQuestionStats = async (userId: number) => {
 export const getPracticeMinutes = async (userId: number) => {
   try {
     console.log("⏱️ [getPracticeMinutes] Calling API for userId:", userId);
-    const response = await fetch(`/api/user-stats/${userId}/practice-minutes`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
+    const response = await fetch(
+      buildApiUrl(`/api/user-stats/${userId}/practice-minutes`),
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     console.log("⏱️ [getPracticeMinutes] Response status:", response.status);
 
@@ -161,13 +170,15 @@ export const getPracticeMinutes = async (userId: number) => {
 export const getExamMinutes = async (userId: number) => {
   try {
     console.log("⏰ [getExamMinutes] Calling API for userId:", userId);
-    const response = await fetch(`/api/user-stats/${userId}/exam-minutes`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
+    const response = await fetch(
+      buildApiUrl(`/api/user-stats/${userId}/exam-minutes`),
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     console.log("⏰ [getExamMinutes] Response status:", response.status);
 

@@ -1,6 +1,8 @@
+import { buildApiUrl } from "../config/api";
+
 export async function fetchQuestionsByLesson(lessonId: number) {
   const url = `/api/questions/lesson/${lessonId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch questions");
   }
@@ -11,7 +13,7 @@ export async function fetchQuestionsByLesson(lessonId: number) {
 
 export async function fetchPracticeQuestionsByLesson(lessonId: number) {
   const url = `/api/questions/lesson/${lessonId}/practice`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch practice questions");
   }
@@ -20,7 +22,7 @@ export async function fetchPracticeQuestionsByLesson(lessonId: number) {
 
 export async function fetchQuestionAudio(questionId: number) {
   const url = `/api/questions/${questionId}/audio`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch question audio");
   }
@@ -117,7 +119,7 @@ export async function completePracticeSession(practiceId: number) {
 
 // API để lấy progress của user cho lesson
 export async function getLessonProgress(lessonId: number) {
-  const response = await fetch(`/api/practice/progress/lesson/${lessonId}`);
+  const response = await fetch(buildApiUrl(`/api/practice/progress/lesson/${lessonId}`));
 
   if (!response.ok) {
     return { progress: 0, completed: false };
@@ -129,7 +131,7 @@ export async function getLessonProgress(lessonId: number) {
 // Lấy điểm và thông tin phiên luyện tập
 export async function fetchPracticeSessionScore(practiceId: number) {
   const url = `/api/practice/session/${practiceId}/score`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch practice session score");
   }
@@ -139,7 +141,7 @@ export async function fetchPracticeSessionScore(practiceId: number) {
 // Lấy lịch sử luyện tập của user
 export async function fetchPracticeHistoryByUser(userId: number) {
   const url = `/api/practice/history/${userId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch practice history");
   }
@@ -148,7 +150,7 @@ export async function fetchPracticeHistoryByUser(userId: number) {
 
 // Kiểm tra trạng thái của practice session
 export async function checkPracticeSessionStatus(practiceId: number) {
-  const response = await fetch(`/api/practice/session/${practiceId}/status`);
+  const response = await fetch(buildApiUrl(`/api/practice/session/${practiceId}/status`));
 
   if (!response.ok) {
     throw new Error("Failed to check practice session status");

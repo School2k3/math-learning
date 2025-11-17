@@ -1,6 +1,8 @@
+import { buildApiUrl } from "../config/api";
+
 export async function fetchExamsByChapter(chapterId: number) {
   const url = `/api/exams?chapterId=${chapterId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exams");
   }
@@ -12,7 +14,7 @@ export async function fetchExamsByChapter(chapterId: number) {
 // Lấy tất cả exams (không filter)
 export async function fetchAllExams() {
   const url = `/api/exams`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exams");
   }
@@ -24,7 +26,7 @@ export async function fetchAllExams() {
 // Lấy exams theo grade
 export async function fetchExamsByGrade(grade: number) {
   const url = `/api/exams?grade=${grade}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exams");
   }
@@ -48,7 +50,7 @@ export async function startExam(examId: number, userId: number) {
 // Hàm gọi GET /api/exams/{id}
 export async function fetchExamById(id: number) {
   const url = `/api/exams/${id}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exam");
   }
@@ -108,7 +110,7 @@ export async function deleteExamById(id: number) {
 // Lấy tiến trình hiện tại của một exam (GET /api/exams/progress/{resultId})
 export async function fetchExamProgress(resultId: number) {
   const url = `/api/exams/progress/${resultId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exam progress");
   }
@@ -118,7 +120,7 @@ export async function fetchExamProgress(resultId: number) {
 // Lấy bài kiểm tra đang active cho user (GET /api/exams/active/{userId})
 export async function fetchActiveExamByUser(userId: number) {
   const url = `/api/exams/active/${userId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch active exam for user");
   }
@@ -169,7 +171,7 @@ export async function saveExamAnswer({
 // Lấy lịch sử các bài kiểm tra của user
 export async function fetchExamHistory(userId: number) {
   const url = `/api/exams/history/${userId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exam history");
   }
@@ -179,7 +181,7 @@ export async function fetchExamHistory(userId: number) {
 // Lấy chi tiết kết quả một bài kiểm tra đã làm
 export async function fetchExamResultDetail(resultId: number) {
   const url = `/api/exams/result/${resultId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exam result detail");
   }
@@ -212,7 +214,7 @@ export async function fetchExamResultsByExamId(
 // Lấy chi tiết một kết quả bài kiểm tra theo resultId (GET /api/exams/results/{id})
 export async function fetchExamResultById(resultId: number) {
   const url = `/api/exams/results/${resultId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exam result by id");
   }
@@ -224,7 +226,7 @@ export async function fetchExamResultById(resultId: number) {
 // GET /api/questions/exam/{examId} - Lấy danh sách câu hỏi trong bài kiểm tra
 export async function fetchExamQuestions(examId: number) {
   const url = `/api/questions/exam/${examId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exam questions");
   }
@@ -257,9 +259,16 @@ export async function removeQuestionFromExam(
   questionId: number
 ) {
   const payload = { examId, questionId };
-  console.log("removeQuestionFromExam request payload:", JSON.stringify(payload));
+  console.log(
+    "removeQuestionFromExam request payload:",
+    JSON.stringify(payload)
+  );
   console.log("removeQuestionFromExam examId type:", typeof examId, examId);
-  console.log("removeQuestionFromExam questionId type:", typeof questionId, questionId);
+  console.log(
+    "removeQuestionFromExam questionId type:",
+    typeof questionId,
+    questionId
+  );
   const response = await fetch(`/api/exams/questions/remove`, {
     method: "POST",
     headers: {

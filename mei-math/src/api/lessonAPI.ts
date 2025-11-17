@@ -1,6 +1,8 @@
+import { buildApiUrl } from "../config/api";
+
 export async function fetchLessonsByChapter(chapterId: number) {
   const url = `/api/lessons?chapterId=${chapterId}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch lessons");
   }
@@ -13,7 +15,7 @@ export async function fetchLessonsByChapter(chapterId: number) {
 export async function fetchAllLessons() {
   try {
     // Lấy tất cả chapters trước
-    const chaptersResponse = await fetch("/api/chapters");
+    const chaptersResponse = await fetch(buildApiUrl("/api/chapters"));
     if (!chaptersResponse.ok) {
       throw new Error("Failed to fetch chapters");
     }

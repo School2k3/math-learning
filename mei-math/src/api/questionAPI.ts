@@ -1,7 +1,9 @@
+import { buildApiUrl } from "../config/api";
+
 // Lấy tất cả questions (không filter)
 export async function fetchAllQuestions() {
   const url = `/api/questions`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch questions");
   }
@@ -13,7 +15,7 @@ export async function fetchAllQuestions() {
 // Lấy questions theo grade
 export async function fetchQuestionsByGrade(grade: number) {
   const url = `/api/questions?grade=${grade}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch questions");
   }
@@ -23,7 +25,7 @@ export async function fetchQuestionsByGrade(grade: number) {
 // Lấy questions theo type
 export async function fetchQuestionsByType(type: string) {
   const url = `/api/questions?type=${type}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch questions");
   }
@@ -33,7 +35,7 @@ export async function fetchQuestionsByType(type: string) {
 // Lấy questions theo answerType
 export async function fetchQuestionsByAnswerType(answerType: string) {
   const url = `/api/questions?answerType=${answerType}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch questions");
   }
@@ -52,7 +54,7 @@ export async function fetchQuestionsWithFilters(filters: {
   if (filters.answerType) params.append("answerType", filters.answerType);
 
   const url = `/api/questions?${params.toString()}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch questions");
   }
@@ -71,7 +73,7 @@ export async function fetchQuestionsByGradeTypeAnswerType(
   params.append("answerType", answerType);
 
   const url = `/api/questions?${params.toString()}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch questions");
   }

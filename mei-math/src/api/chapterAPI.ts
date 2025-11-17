@@ -1,6 +1,8 @@
+import { buildApiUrl } from "../config/api";
+
 export async function fetchChapters(grade: number, volume: number) {
   const url = `/api/chapters?grade=${grade}&volume=${volume}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch chapters");
   }
@@ -10,7 +12,7 @@ export async function fetchChapters(grade: number, volume: number) {
 // Lấy tất cả chapters (không filter)
 export async function fetchAllChapters() {
   const url = `/api/chapters`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch chapters");
   }
@@ -22,7 +24,7 @@ export async function fetchAllChapters() {
 // Lấy chapters theo grade
 export async function fetchChaptersByGrade(grade: number) {
   const url = `/api/chapters?grade=${grade}`;
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch chapters");
   }
@@ -38,7 +40,7 @@ export async function createChapter(chapterData: {
   try {
     console.log("createChapter data:", chapterData);
 
-    const response = await fetch("/api/chapters", {
+    const response = await fetch(buildApiUrl("/api/chapters"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -75,7 +77,7 @@ export async function updateChapter(
   try {
     console.log("updateChapter ID:", chapterId, "data:", chapterData);
 
-    const response = await fetch(`/api/chapters/${chapterId}`, {
+    const response = await fetch(buildApiUrl(`/api/chapters/${chapterId}`), {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -105,7 +107,7 @@ export async function deleteChapter(chapterId: number) {
   try {
     console.log("deleteChapter ID:", chapterId);
 
-    const response = await fetch(`/api/chapters/${chapterId}`, {
+    const response = await fetch(buildApiUrl(`/api/chapters/${chapterId}`), {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

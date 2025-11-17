@@ -1,8 +1,10 @@
+import { buildApiUrl } from "../config/api";
+
 export async function uploadImageFile(file: File): Promise<string> {
   const form = new FormData();
   form.append("image", file);
 
-  const response = await fetch("/api/upload/image", {
+  const response = await fetch(buildApiUrl("/api/upload/image"), {
     method: "POST",
     body: form,
   });
@@ -19,7 +21,7 @@ export async function uploadVideoFile(file: File): Promise<string> {
   const form = new FormData();
   form.append("video", file);
 
-  const response = await fetch("/api/upload/video", {
+  const response = await fetch(buildApiUrl("/api/upload/video"), {
     method: "POST",
     body: form,
   });
@@ -36,7 +38,7 @@ export async function uploadAudioFile(file: File): Promise<string> {
   const form = new FormData();
   form.append("audio", file);
 
-  const response = await fetch("/api/upload/audio", {
+  const response = await fetch(buildApiUrl("/api/upload/audio"), {
     method: "POST",
     body: form,
   });

@@ -29,7 +29,7 @@ export const loginAPI = async (
   try {
     const url = buildApiUrl("/api/auth/login");
     console.log("🔵 Login API URL:", url);
-    
+
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -39,7 +39,7 @@ export const loginAPI = async (
     });
 
     console.log("🟢 Login response status:", response.status);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error("❌ Login failed:", response.status, errorText);

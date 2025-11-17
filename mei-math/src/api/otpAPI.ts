@@ -10,7 +10,9 @@ export interface VerifyOTPResponse {
   message: string;
 }
 
-export const verifyOTPAPI = async (data: VerifyOTPRequest): Promise<VerifyOTPResponse> => {
+export const verifyOTPAPI = async (
+  data: VerifyOTPRequest
+): Promise<VerifyOTPResponse> => {
   try {
     const response = await fetch(buildApiUrl("/api/auth/verify-otp"), {
       method: "POST",
@@ -28,7 +30,9 @@ export const verifyOTPAPI = async (data: VerifyOTPRequest): Promise<VerifyOTPRes
   }
 };
 
-export const resendOTPAPI = async (email: string): Promise<VerifyOTPResponse> => {
+export const resendOTPAPI = async (
+  email: string
+): Promise<VerifyOTPResponse> => {
   try {
     const response = await fetch(buildApiUrl("/api/auth/resend-otp"), {
       method: "POST",

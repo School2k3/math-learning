@@ -25,12 +25,14 @@ export interface RegisterResponse {
   };
 }
 
-export const registerAPI = async (registerData: RegisterRequest): Promise<RegisterResponse> => {
+export const registerAPI = async (
+  registerData: RegisterRequest
+): Promise<RegisterResponse> => {
   try {
     // Tự động set role = "student" nếu grade có giá trị
     const requestData = {
       ...registerData,
-      role: registerData.grade ? "student" : registerData.role
+      role: registerData.grade ? "student" : registerData.role,
     };
 
     const response = await fetch(buildApiUrl("/api/auth/register"), {
