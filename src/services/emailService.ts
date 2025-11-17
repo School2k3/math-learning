@@ -13,14 +13,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Verify email connection on startup
-transporter.verify((error) => {
-  if (error) {
-    console.error('Email service error:', error);
-  } else {
-    console.log('Email service is ready to send messages');
-  }
-});
+// Verify email connection on startup (optional, won't block server)
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  transporter.verify((error) => {
+    if (error) {
+      console.warn('Email service warning:', error.message);
+      console.warn('Email notifications will not work. Check EMAIL_USER and EMAIL_PASS environment variables.');
+    } else {
+      console.log('Email service is ready to send messages');
+    }
+  });
+} else {
+  console.warn('Email service not configured. Set EMAIL_USER and EMAIL_PASS to enable email notifications.');
+}
 
 /**
  * Interface for email options
