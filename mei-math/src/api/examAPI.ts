@@ -256,16 +256,22 @@ export async function removeQuestionFromExam(
   examId: number,
   questionId: number
 ) {
+  const payload = { examId, questionId };
+  console.log("removeQuestionFromExam request payload:", JSON.stringify(payload));
+  console.log("removeQuestionFromExam examId type:", typeof examId, examId);
+  console.log("removeQuestionFromExam questionId type:", typeof questionId, questionId);
   const response = await fetch(`/api/exams/questions/remove`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ examId, questionId }),
+    body: JSON.stringify(payload),
   });
-  console.log("removeQuestionFromExam response status:", examId, questionId);
+  console.log("removeQuestionFromExam response status:", response.status);
   if (!response.ok) {
-    throw new Error("Failed to remove question from exam");
+    const errorData = await response.json().catch(() => ({}));
+    console.error("removeQuestionFromExam error:", errorData);
+    throw new Error(errorData.message || "Failed to remove question from exam");
   }
   return response.json();
 }

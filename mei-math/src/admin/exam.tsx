@@ -1190,11 +1190,11 @@ const ExamAdmin: React.FC = () => {
                       }}
                     >
                       <span>
-                        <strong>Câu {idx + 1}:</strong> ID {eq.questionId} 
+                        <strong>Câu {idx + 1}:</strong> ID {eq.id || eq.questionId} 
                         {eq.questionText && ` - ${eq.questionText}`}
                       </span>
                       <button
-                        onClick={() => handleRemoveQuestion(eq.questionId)}
+                        onClick={() => handleRemoveQuestion(eq.id || eq.questionId)}
                         style={{
                           padding: '4px 12px',
                           backgroundColor: '#f44336',
