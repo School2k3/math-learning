@@ -19,8 +19,8 @@ import {
 
 const DashUser: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Đánh giá chung");
-  const [startDate, setStartDate] = useState("2025-10-25");
-  const [endDate, setEndDate] = useState("2025-11-01");
+  // const [startDate, setStartDate] = useState("2025-10-25");
+  // const [endDate, setEndDate] = useState("2025-11-01");
   const [chapters, setChapters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [practiceHistory, setPracticeHistory] = useState<any[]>([]);
@@ -545,7 +545,7 @@ const DashUser: React.FC = () => {
     return (
       <>
         {/* Time Period Section */}
-        <div className="time-period-section">
+        {/* <div className="time-period-section">
           <h2 className="period-title">Trong 7 ngày qua...</h2>
           
           <div className="date-range-picker">
@@ -583,7 +583,7 @@ const DashUser: React.FC = () => {
               </span>
             </span>
           </div>
-        </div>
+        </div> */}
 
         {/* Statistics Cards */}
         <div className="stats-grid">

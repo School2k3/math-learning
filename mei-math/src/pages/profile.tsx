@@ -73,7 +73,12 @@ const Profile: React.FC = () => {
                 className="profile-avatar"
               />
             </div>
-            <button className="change-avatar-btn">Đổi ảnh đại diện</button>
+            <button
+              className="change-avatar-btn"
+              onClick={() => navigate("/rewards")}
+            >
+              Đổi ảnh đại diện
+            </button>
           </div>
 
           <div className="profile-info-section">

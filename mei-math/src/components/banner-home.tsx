@@ -35,7 +35,7 @@ const BannerHome: React.FC = () => {
                 rx="8"
                 fill="#23BDEE"
               />
-              <g clip-path="url(#clip0_1_907)">
+              <g clipPath="url(#clip0_1_907)">
                 <path
                   d="M18.1247 12.2217C17.5823 12.2217 17.1426 12.6767 17.1426 13.2379V15.2704H19.1069V13.2379C19.1069 12.6767 18.6671 12.2217 18.1247 12.2217Z"
                   fill="white"

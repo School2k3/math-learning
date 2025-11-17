@@ -23,6 +23,7 @@ import QuestionAdmin from "./admin/question";
 import ExamAdmin from "./admin/exam"; 
 import UserAdmin from "./admin/user";
 import AnswerAdmin from "./admin/answer";
+import RewardsPage from './pages/rewards';
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
           <Route path="/admin/exams" element={<ExamAdmin />} /> {/* Thêm route này */}
           <Route path="/admin/users" element={<UserAdmin />} /> {/* Thêm route này */}
           <Route path="/admin/answers" element={<AnswerAdmin />} /> {/* Thêm route này */}
+          <Route path="/rewards" element={<RewardsPage />} /> {/* Thêm route này */}
         </Routes>
       </BrowserRouter>
     </AuthProvider>

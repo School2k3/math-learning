@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Header from "../components/header";
-import Footer from "../components/footer";
 import { useNavigate } from "react-router-dom";
 import "../css/news.css";
 
@@ -206,7 +205,6 @@ const News: React.FC = () => {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 };
