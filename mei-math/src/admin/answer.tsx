@@ -168,7 +168,7 @@ const AnswerAdmin: React.FC = () => {
       {/* Sidebar */}
       <div className="admin-sidebar">
         <div className="admin-logo">
-          <img src="/public/logo-Photoroom.png" alt="MEI Logo" />
+          <img src="/logo-Photoroom.png" alt="MEI Logo" />
           <h2>MEI Math</h2>
           <p>Admin Dashboard</p>
         </div>
