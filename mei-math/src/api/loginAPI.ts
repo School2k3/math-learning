@@ -27,7 +27,10 @@ export const loginAPI = async (
   loginData: LoginRequest
 ): Promise<LoginResponse> => {
   try {
-    const response = await fetch(buildApiUrl("/api/auth/login"), {
+    const url = buildApiUrl("/api/auth/login");
+    console.log("🔵 Login API URL:", url);
+    
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -35,12 +38,20 @@ export const loginAPI = async (
       body: JSON.stringify(loginData),
     });
 
+    console.log("🟢 Login response status:", response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Login failed:", response.status, errorText);
+      throw new Error(`Login failed: ${response.status}`);
+    }
+
     const result: LoginResponse = await response.json();
-    console.log("loginAPI response:", result); // Debug log
+    console.log("✅ loginAPI response:", result);
     return result;
   } catch (error) {
-    console.error("Lỗi khi gọi API đăng nhập:", error);
-    throw new Error("Không thể kết nối đến server");
+    console.error("🔴 Lỗi khi gọi API đăng nhập:", error);
+    throw error;
   }
 };
 
