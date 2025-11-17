@@ -93,7 +93,7 @@ export async function createQuestionWithAnswers(questionData: {
   lessonId: number;
   answers: { answerText: string; isCorrect: boolean }[];
 }) {
-  const response = await fetch("/api/questions", {
+  const response = await fetch(buildApiUrl("/api/questions"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(questionData),
@@ -113,7 +113,7 @@ export async function createAnswersBatch(
     isCorrect: boolean;
   }[]
 ) {
-  const response = await fetch("/api/answers/batch", {
+  const response = await fetch(buildApiUrl("/api/answers/batch"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(answers),
@@ -126,7 +126,7 @@ export async function createAnswersBatch(
 
 // Xóa câu hỏi theo ID
 export async function deleteQuestionById(id: number) {
-  const response = await fetch(`/api/questions/${id}`, {
+  const response = await fetch(buildApiUrl(`/api/questions/${id}`), {
     method: "DELETE",
   });
   if (!response.ok) {
@@ -150,7 +150,7 @@ export async function updateQuestionById(
     lessonId: number;
   }
 ) {
-  const response = await fetch(`/api/questions/${id}`, {
+  const response = await fetch(buildApiUrl(`/api/questions/${id}`), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(questionData),

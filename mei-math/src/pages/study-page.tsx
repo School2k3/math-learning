@@ -609,7 +609,7 @@ const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({
                       </div>
                     )}
                     <div className="study-card-img">
-                      <img src="/public/mei-is.png" alt="card" />
+                      <img src="/mei-is.png" alt="card" />
                       <div className="study-card-label">UX/UI</div>
                     </div>
                     <div

@@ -35,7 +35,7 @@ export async function createOrUpdatePracticeSession(
   lessonId?: number
 ) {
   const url = "/api/practice/session";
-  const response = await fetch(url, {
+  const response = await fetch(buildApiUrl(url), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, lessonId }),
@@ -54,7 +54,7 @@ export async function createNewPracticeSession(
   lessonId?: number
 ) {
   const url = "/api/practice/session/new";
-  const response = await fetch(url, {
+  const response = await fetch(buildApiUrl(url), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, lessonId }),
@@ -74,7 +74,7 @@ export async function savePracticeAnswer(
   answerId: number
 ) {
   const url = "/api/practice/answer";
-  const response = await fetch(url, {
+  const response = await fetch(buildApiUrl(url), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ practiceId, questionId, answerId }),
@@ -103,7 +103,7 @@ export async function savePracticeAnswer(
 
 // Complete a practice session
 export async function completePracticeSession(practiceId: number) {
-  const response = await fetch(`/api/practice/session/${practiceId}/complete`, {
+  const response = await fetch(buildApiUrl(`/api/practice/session/${practiceId}/complete`), {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

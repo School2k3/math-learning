@@ -36,7 +36,7 @@ export async function fetchExamsByGrade(grade: number) {
 // Hàm gọi POST /api/exams/start
 export async function startExam(examId: number, userId: number) {
   const url = "/api/exams/start";
-  const response = await fetch(url, {
+  const response = await fetch(buildApiUrl(url), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ examId, userId }), // ĐÚNG tên trường như Swagger
@@ -64,7 +64,7 @@ export async function createExam(examData: {
   chapterId: number;
   durationMinutes: number;
 }) {
-  const response = await fetch("/api/exams", {
+  const response = await fetch(buildApiUrl("/api/exams"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(examData),
@@ -85,7 +85,7 @@ export async function updateExamById(
     durationMinutes: number;
   }
 ) {
-  const response = await fetch(`/api/exams/${id}`, {
+  const response = await fetch(buildApiUrl(`/api/exams/${id}`), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(examData),
@@ -98,7 +98,7 @@ export async function updateExamById(
 
 // DELETE /api/exams/{id} - Xóa bài kiểm tra
 export async function deleteExamById(id: number) {
-  const response = await fetch(`/api/exams/${id}`, {
+  const response = await fetch(buildApiUrl(`/api/exams/${id}`), {
     method: "DELETE",
   });
   if (!response.ok) {
@@ -130,7 +130,7 @@ export async function fetchActiveExamByUser(userId: number) {
 // Kết thúc bài kiểm tra (POST /api/exams/finish/{resultId})
 export async function finishExam(resultId: number) {
   const url = `/api/exams/finish/${resultId}`;
-  const response = await fetch(url, {
+  const response = await fetch(buildApiUrl(url), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
@@ -153,7 +153,7 @@ export async function saveExamAnswer({
   isFlagged?: boolean;
 }) {
   const url = `/api/exams/answer`;
-  const response = await fetch(url, {
+  const response = await fetch(buildApiUrl(url), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ resultId, questionId, chosenAnswerId, isFlagged }),
@@ -204,7 +204,7 @@ export async function fetchExamResultsByExamId(
   if (params.length > 0) {
     url += "?" + params.join("&");
   }
-  const response = await fetch(url);
+  const response = await fetch(buildApiUrl(url));
   if (!response.ok) {
     throw new Error("Failed to fetch exam results by examId");
   }
@@ -239,7 +239,7 @@ export async function addQuestionToExam(data: {
   questionId: number;
 }) {
   console.log("addQuestionToExam data:", data);
-  const response = await fetch("/api/exams/questions", {
+  const response = await fetch(buildApiUrl("/api/exams/questions"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -269,7 +269,7 @@ export async function removeQuestionFromExam(
     typeof questionId,
     questionId
   );
-  const response = await fetch(`/api/exams/questions/remove`, {
+  const response = await fetch(buildApiUrl(`/api/exams/questions/remove`), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

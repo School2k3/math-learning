@@ -15,7 +15,7 @@ export async function updateAnswerById(
     isCorrect: boolean;
   }
 ) {
-  const response = await fetch(`/api/answers/${id}`, {
+  const response = await fetch(buildApiUrl(`/api/answers/${id}`), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(answerData),
