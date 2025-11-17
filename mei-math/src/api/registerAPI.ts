@@ -1,3 +1,5 @@
+import { buildApiUrl } from "../config/api";
+
 export interface RegisterRequest {
   fullName: string;
   email: string;
@@ -31,7 +33,7 @@ export const registerAPI = async (registerData: RegisterRequest): Promise<Regist
       role: registerData.grade ? "student" : registerData.role
     };
 
-    const response = await fetch("http://localhost:3000/api/auth/register", {
+    const response = await fetch(buildApiUrl("/api/auth/register"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

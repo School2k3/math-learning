@@ -1,3 +1,5 @@
+import { buildApiUrl } from "../config/api";
+
 export interface LoginRequest {
   username: string;
   password: string;
@@ -25,7 +27,7 @@ export const loginAPI = async (
   loginData: LoginRequest
 ): Promise<LoginResponse> => {
   try {
-    const response = await fetch("http://localhost:3000/api/auth/login", {
+    const response = await fetch(buildApiUrl("/api/auth/login"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -52,7 +54,7 @@ export const getUserInfo = async () => {
       throw new Error("No refresh token found");
     }
 
-    const response = await fetch("http://localhost:5173/api/auth/me", {
+    const response = await fetch(buildApiUrl("/api/auth/me"), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

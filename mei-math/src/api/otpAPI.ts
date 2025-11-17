@@ -1,3 +1,5 @@
+import { buildApiUrl } from "../config/api";
+
 export interface VerifyOTPRequest {
   email: string;
   otp: string;
@@ -10,7 +12,7 @@ export interface VerifyOTPResponse {
 
 export const verifyOTPAPI = async (data: VerifyOTPRequest): Promise<VerifyOTPResponse> => {
   try {
-    const response = await fetch("http://localhost:3000/api/auth/verify-otp", {
+    const response = await fetch(buildApiUrl("/api/auth/verify-otp"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -28,7 +30,7 @@ export const verifyOTPAPI = async (data: VerifyOTPRequest): Promise<VerifyOTPRes
 
 export const resendOTPAPI = async (email: string): Promise<VerifyOTPResponse> => {
   try {
-    const response = await fetch("http://localhost:3000/api/auth/resend-otp", {
+    const response = await fetch(buildApiUrl("/api/auth/resend-otp"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
