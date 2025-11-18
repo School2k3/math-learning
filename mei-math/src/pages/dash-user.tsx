@@ -512,14 +512,14 @@ const DashUser: React.FC = () => {
                     <span className="exam-card-chapter">{chapters.find(c => c.id === exam.chapterId)?.title || 'Chương'}</span>
                   </div>
                   <div className="exam-card-info">
-                    <div className="exam-info-item">
+                    {/* <div className="exam-info-item">
                       <span className="exam-info-label">Số câu hỏi:</span>
                       <span className="exam-info-value">{exam.questionCount || 0}</span>
                     </div>
                     <div className="exam-info-item">
                       <span className="exam-info-label">Thời gian:</span>
                       <span className="exam-info-value">{exam.duration || 0} phút</span>
-                    </div>
+                    </div> */}
                   </div>
                   <button 
                     className="exam-history-btn"

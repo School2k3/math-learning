@@ -3,9 +3,11 @@ import Header from "../components/header";
 import { useNavigate, useLocation } from "react-router-dom";
 import { fetchExamResultsByExamId, fetchExamById } from "../api/examAPI";
 import { trackViewExamHistory } from "../components/GoogleAnalytics";
+import { useAuth } from "../contexts/AuthContext";
 import "../css/exams-history.css";
 
 const ExamsHistory: React.FC = () => {
+  const { user } = useAuth();
   const [examHistory, setExamHistory] = useState<any[]>([]);
   const [examInfo, setExamInfo] = useState<any>(null);
   const [statistics, setStatistics] = useState<any>(null);
@@ -37,9 +39,34 @@ const ExamsHistory: React.FC = () => {
         
         console.log("✅ Exam results loaded:", result);
         
-        setExamHistory(result.examResults || []);
+        // Lọc chỉ lấy kết quả của user hiện tại
+        const userResults = result.examResults?.filter(
+          (examResult: any) => examResult.userId === user?.id
+        ) || [];
+        
+        console.log("👤 Filtered results for current user:", userResults);
+        
+        // Tính lại statistics chỉ cho user hiện tại
+        const finishedResults = userResults.filter((r: any) => r.finishedAt);
+        const totalAttempts = finishedResults.length;
+        const avgScore = totalAttempts > 0 
+          ? finishedResults.reduce((sum: number, r: any) => sum + (r.score || 0), 0) / totalAttempts 
+          : 0;
+        const passRate = totalAttempts > 0
+          ? (finishedResults.filter((r: any) => (r.score || 0) >= 50).length / totalAttempts) * 100
+          : 0;
+        
+        const userStatistics = {
+          totalAttempts,
+          averageScore: Math.round(avgScore * 10) / 10,
+          passRate: Math.round(passRate * 10) / 10
+        };
+        
+        console.log("📈 User statistics:", userStatistics);
+        
+        setExamHistory(userResults);
         setExamInfo(result.exam || null);
-        setStatistics(result.statistics || null);
+        setStatistics(userStatistics);
       } catch (error) {
         console.error("❌ Error loading exam history:", error);
       } finally {
@@ -123,7 +150,7 @@ const ExamsHistory: React.FC = () => {
                 </div>
                 <div className="stat-item">
                   <span className="stat-label">Tỷ lệ đạt:</span>
-                  <span className="stat-value">{(statistics.passRate * 100).toFixed(0)}%</span>
+                  <span className="stat-value">{statistics.passRate?.toFixed(1)}%</span>
                 </div>
               </div>
             )}

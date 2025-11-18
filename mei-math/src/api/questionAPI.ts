@@ -99,7 +99,10 @@ export async function createQuestionWithAnswers(questionData: {
     body: JSON.stringify(questionData),
   });
   if (!response.ok) {
-    console.log("Failed to create question with answers:", await response.text());
+    console.log(
+      "Failed to create question with answers:",
+      await response.text()
+    );
     throw new Error("Failed to create question with answers");
   }
   return response.json();
