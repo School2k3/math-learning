@@ -1,0 +1,63 @@
+/* Trophy Display - Fixed position like ChatBot */
+.trophy-display-container {
+  position: fixed;
+  bottom: 90px; /* Trên chatbot button */
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  padding: 10px 16px;
+  border-radius: 30px;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  z-index: 999;
+  transition: all 0.3s ease;
+  cursor: default;
+  flex-direction: column;
+}
+
+.trophy-display-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+}
+
+.trophy-icon {
+  font-size: 24px;
+  animation: trophy-bounce 2s ease-in-out infinite;
+}
+
+@keyframes trophy-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.trophy-count {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .trophy-display-container {
+    bottom: 80px;
+    right: 20px;
+    padding: 8px 14px;
+  }
+
+  .trophy-icon {
+    font-size: 20px;
+  }
+
+  .trophy-count {
+    font-size: 16px;
+  }
+}

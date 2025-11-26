@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import ProgressCircle from "../components/ProgressCircle";
 import ChatBotButton from "../components/ChatBot/ChatBotButton";
+import TrophyDisplay from "../components/TrophyDisplay";
 import { trackChangeClassOrSemester } from "../components/GoogleAnalytics";
 import "../css/study-page.css";
 import { useNavigate, useSearchParams } from "react-router-dom"; // Thêm useSearchParams
 import { fetchChapters } from "../api/chapterAPI";
 import { fetchLessonsByChapter } from "../api/lessonAPI";
-import { fetchExamsByChapter, fetchExamResultsByExamId, fetchActiveExamByUser } from "../api/examAPI";
+import { fetchExamsByChapter, fetchExamResultsByExamId, fetchActiveExamByUser, finishExam } from "../api/examAPI";
 import { startExam } from "../api/examAPI"; 
 import { fetchExamById } from "../api/examAPI"; 
 import { createOrUpdatePracticeSession, fetchPracticeHistoryByUser } from "../api/praticeAPI"; // Import API progress
@@ -35,6 +36,9 @@ const [loadingLessons, setLoadingLessons] = useState(false);
 const [loadingExams, setLoadingExams] = useState(false);
 const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: number, completed: boolean}}>({});
 const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({});
+const [showExamModal, setShowExamModal] = useState(false);
+const [pendingExam, setPendingExam] = useState<any>(null);
+const [activeExamResult, setActiveExamResult] = useState<any>(null);
 
   // Cập nhật selectedClass khi user thay đổi (ví dụ: sau khi login)
   useEffect(() => {
@@ -655,36 +659,35 @@ const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({
                           const userId = user?.id || 1;
                           
                           // Kiểm tra xem có exam result đang active không
-                          let examResultToUse;
                           try {
-                            const activeExam = await fetchActiveExamByUser(userId);
+                            const activeExamData = await fetchActiveExamByUser(userId);
+                            console.log("Active exam data:", activeExamData);
                             
-                            // Nếu có active exam và đúng exam này → Resume
-                            if (activeExam && activeExam.examId === exam.id) {
-                              examResultToUse = activeExam;
-                              console.log("Resuming active exam:", activeExam);
-                            } else {
-                              // Có active exam nhưng là exam khác hoặc không có → Tạo mới
-                              const res = await startExam(exam.id, userId);
-                              examResultToUse = res.examResult;
-                              console.log("Started new exam:", res.examResult);
+                            const activeExam = activeExamData?.activeExam;
+                            
+                            // Nếu có active exam (dù cùng hay khác exam) → Hiển thị modal
+                            if (activeExam) {
+                              console.log("Active exam found, showing modal");
+                              setPendingExam(exam);
+                              setActiveExamResult(activeExamData);
+                              setShowExamModal(true);
+                              return;
                             }
                           } catch (err) {
-                            // Không có active exam → Tạo mới
-                            const res = await startExam(exam.id, userId);
-                            examResultToUse = res.examResult;
-                            console.log("No active exam, started new:", res.examResult);
+                            console.log("No active exam found or error:", err);
                           }
                           
+                          // Không có active exam → Tạo mới
+                          console.log("Creating new exam");
+                          const res = await startExam(exam.id, userId);
                           const examDetail = await fetchExamById(exam.id);
                           const grade = Number(selectedClass.replace("Lớp ", ""));
                           const semester = selectedSemester === "Học kỳ 1" ? 1 : 2;
                           
-                          // Truyền thêm chapterId, chapterTitle, gradeId và semester qua state
                           navigate("/exams", {
                             state: {
                               exam: examDetail.exam,
-                              examResult: examResultToUse,
+                              examResult: res.examResult,
                               chapterId: selectedChapterId,
                               chapterTitle: topics.find((t) => t.id === selectedChapterId)?.title || "",
                               gradeId: grade,
@@ -692,6 +695,7 @@ const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({
                             },
                           });
                         } catch (e) {
+                          console.error(e);
                           alert("Không thể bắt đầu bài kiểm tra!");
                         }
                       }}
@@ -725,8 +729,112 @@ const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({
         </div>
       </div>
       
+      {/* Trophy Display - hiển thị số cúp cố định */}
+      <TrophyDisplay />
+      
       {/* ChatBot Button - chỉ hiển thị ở trang study-page */}
       <ChatBotButton />
+      
+      {/* Modal xác nhận khi có bài kiểm tra đang làm dở */}
+      {showExamModal && (
+        <div className="exam-modal-overlay" onClick={() => setShowExamModal(false)}>
+          <div className="exam-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 className="exam-modal-title">Bạn đang có bài kiểm tra chưa hoàn thành</h3>
+            <p className="exam-modal-message">
+              Bạn có một bài kiểm tra đang làm dở. Bạn có muốn làm tiếp bài đó không?
+            </p>
+            
+            <div className="exam-modal-buttons">
+              <button
+                className="exam-modal-btn exam-modal-btn-continue"
+                onClick={async () => {
+                  try {
+                    const activeExam = activeExamResult?.activeExam;
+                    if (!activeExam || !activeExam.examId) {
+                      alert("Không tìm thấy thông tin bài kiểm tra!");
+                      setShowExamModal(false);
+                      return;
+                    }
+                    
+                    // Lấy thông tin exam
+                    const examDetail = await fetchExamById(activeExam.examId);
+                    const grade = Number(selectedClass.replace("Lớp ", ""));
+                    const semester = selectedSemester === "Học kỳ 1" ? 1 : 2;
+                    
+                    // Navigate với activeExam để resume (giống exams-history)
+                    navigate("/exams", {
+                      state: {
+                        exam: examDetail.exam,
+                        examResult: activeExam, // Truyền activeExam trực tiếp
+                        chapterId: selectedChapterId,
+                        chapterTitle: topics.find((t) => t.id === selectedChapterId)?.title || "",
+                        gradeId: grade,
+                        semester: semester,
+                      },
+                    });
+                    setShowExamModal(false);
+                  } catch (e) {
+                    console.error("Error continuing exam:", e);
+                    alert("Không thể tiếp tục bài kiểm tra!");
+                    setShowExamModal(false);
+                  }
+                }}
+              >
+                Làm tiếp
+              </button>
+              
+              <button
+                className="exam-modal-btn exam-modal-btn-new"
+                onClick={async () => {
+                  try {
+                    const userId = user?.id || 1;
+                    const examResultId = activeExamResult?.activeExam?.id;
+                    
+                    if (!examResultId) {
+                      alert("Không tìm thấy thông tin bài kiểm tra cũ!");
+                      setShowExamModal(false);
+                      return;
+                    }
+                    
+                    // Nộp bài cũ (finish exam cũ)
+                    await finishExam(examResultId);
+                    
+                    // Tạo bài mới
+                    const res = await startExam(pendingExam.id, userId);
+                    const examDetail = await fetchExamById(pendingExam.id);
+                    const grade = Number(selectedClass.replace("Lớp ", ""));
+                    const semester = selectedSemester === "Học kỳ 1" ? 1 : 2;
+                    
+                    navigate("/exams", {
+                      state: {
+                        exam: examDetail.exam,
+                        examResult: res.examResult,
+                        chapterId: selectedChapterId,
+                        chapterTitle: topics.find((t) => t.id === selectedChapterId)?.title || "",
+                        gradeId: grade,
+                        semester: semester,
+                      },
+                    });
+                    setShowExamModal(false);
+                  } catch (e) {
+                    console.error(e);
+                    alert("Không thể bắt đầu bài kiểm tra mới!");
+                  }
+                }}
+              >
+                Làm bài mới (nộp bài cũ)
+              </button>
+              
+              <button
+                className="exam-modal-btn exam-modal-btn-cancel"
+                onClick={() => setShowExamModal(false)}
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
