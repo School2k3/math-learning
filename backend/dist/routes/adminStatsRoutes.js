@@ -1,16 +1,12 @@
 import express from 'express';
 import adminStatsController from '../controllers/adminStatsController.js';
-import { authenticate } from '../middleware/auth.js';
-
 const router = express.Router();
-
 /**
  * @swagger
  * tags:
  *   name: Admin Statistics
  *   description: Admin dashboard statistics endpoints
  */
-
 /**
  * @swagger
  * /api/admin-stats:
@@ -65,7 +61,6 @@ const router = express.Router();
  *         description: Server error
  */
 router.get('/', adminStatsController.getAllAdminStats);
-
 /**
  * @swagger
  * /api/admin-stats/students:
@@ -79,7 +74,6 @@ router.get('/', adminStatsController.getAllAdminStats);
  *         description: Server error
  */
 router.get('/students', adminStatsController.getTotalStudents);
-
 /**
  * @swagger
  * /api/admin-stats/lessons:
@@ -93,7 +87,6 @@ router.get('/students', adminStatsController.getTotalStudents);
  *         description: Server error
  */
 router.get('/lessons', adminStatsController.getTotalLessons);
-
 /**
  * @swagger
  * /api/admin-stats/exams:
@@ -107,7 +100,6 @@ router.get('/lessons', adminStatsController.getTotalLessons);
  *         description: Server error
  */
 router.get('/exams', adminStatsController.getTotalExams);
-
 /**
  * @swagger
  * /api/admin-stats/chapters:
@@ -121,7 +113,6 @@ router.get('/exams', adminStatsController.getTotalExams);
  *         description: Server error
  */
 router.get('/chapters', adminStatsController.getTotalChapters);
-
 /**
  * @swagger
  * /api/admin-stats/active-students:
@@ -150,7 +141,6 @@ router.get('/chapters', adminStatsController.getTotalChapters);
  *         description: Server error
  */
 router.get('/active-students', adminStatsController.getActiveStudents);
-
 /**
  * @swagger
  * /api/admin-stats/completion-rate:
@@ -164,7 +154,6 @@ router.get('/active-students', adminStatsController.getActiveStudents);
  *         description: Server error
  */
 router.get('/completion-rate', adminStatsController.getLessonCompletionRate);
-
 /**
  * @swagger
  * /api/admin-stats/average-score:
@@ -178,7 +167,6 @@ router.get('/completion-rate', adminStatsController.getLessonCompletionRate);
  *         description: Server error
  */
 router.get('/average-score', adminStatsController.getAverageExamScore);
-
 /**
  * @swagger
  * /api/admin-stats/questions:
@@ -192,7 +180,6 @@ router.get('/average-score', adminStatsController.getAverageExamScore);
  *         description: Server error
  */
 router.get('/questions', adminStatsController.getTotalQuestionsAnswered);
-
 /**
  * @swagger
  * /api/admin-stats/students-by-grade:
@@ -206,7 +193,6 @@ router.get('/questions', adminStatsController.getTotalQuestionsAnswered);
  *         description: Server error
  */
 router.get('/students-by-grade', adminStatsController.getStudentsByGrade);
-
 /**
  * @swagger
  * /api/admin-stats/completion-breakdown:
@@ -235,7 +221,6 @@ router.get('/students-by-grade', adminStatsController.getStudentsByGrade);
  *         description: Server error
  */
 router.get('/completion-breakdown', adminStatsController.getLessonCompletionBreakdown);
-
 /**
  * @swagger
  * /api/admin-stats/monthly-trend:
@@ -271,7 +256,6 @@ router.get('/completion-breakdown', adminStatsController.getLessonCompletionBrea
  *         description: Server error
  */
 router.get('/monthly-trend', adminStatsController.getMonthlyTrend);
-
 /**
  * @swagger
  * /api/admin-stats/performance-by-topic:
@@ -300,7 +284,6 @@ router.get('/monthly-trend', adminStatsController.getMonthlyTrend);
  *         description: Server error
  */
 router.get('/performance-by-topic', adminStatsController.getPerformanceByTopic);
-
 /**
  * @swagger
  * /api/admin-stats/weekly-activity:
@@ -336,7 +319,6 @@ router.get('/performance-by-topic', adminStatsController.getPerformanceByTopic);
  *         description: Server error
  */
 router.get('/weekly-activity', adminStatsController.getWeeklyActivity);
-
 /**
  * @swagger
  * /api/admin-stats/recent-activity:
@@ -358,139 +340,4 @@ router.get('/weekly-activity', adminStatsController.getWeeklyActivity);
  *         description: Server error
  */
 router.get('/recent-activity', adminStatsController.getRecentActivity);
-
-/**
- * @swagger
- * /api/admin-stats/most-wrong-answers-practice:
- *   get:
- *     summary: Get most wrong answers in practice sessions with detailed statistics
- *     tags: [Admin Statistics]
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *           example: 20
- *         description: Maximum number of questions to return
- *       - in: query
- *         name: fromDate
- *         schema:
- *           type: string
- *           format: date
- *           example: 2025-11-01
- *         description: Start date filter (YYYY-MM-DD)
- *       - in: query
- *         name: toDate
- *         schema:
- *           type: string
- *           format: date
- *           example: 2025-11-26
- *         description: End date filter (YYYY-MM-DD)
- *     responses:
- *       200:
- *         description: Most wrong answers in practice retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       questionId:
- *                         type: integer
- *                       questionText:
- *                         type: string
- *                       wrongCount:
- *                         type: integer
- *                       totalAttempts:
- *                         type: integer
- *                       wrongPercentage:
- *                         type: number
- *                       uniqueStudents:
- *                         type: integer
- *                       correctAnswer:
- *                         type: object
- *                       commonWrongAnswers:
- *                         type: array
- *       500:
- *         description: Server error
- */
-router.get('/most-wrong-answers-practice', adminStatsController.getMostWrongAnswersPractice);
-
-/**
- * @swagger
- * /api/admin-stats/most-wrong-answers-exam:
- *   get:
- *     summary: Get most wrong answers in exams with detailed statistics
- *     tags: [Admin Statistics]
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *           example: 20
- *         description: Maximum number of questions to return
- *       - in: query
- *         name: fromDate
- *         schema:
- *           type: string
- *           format: date
- *           example: 2025-11-01
- *         description: Start date filter (YYYY-MM-DD)
- *       - in: query
- *         name: toDate
- *         schema:
- *           type: string
- *           format: date
- *           example: 2025-11-26
- *         description: End date filter (YYYY-MM-DD)
- *     responses:
- *       200:
- *         description: Most wrong answers in exams retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       questionId:
- *                         type: integer
- *                       questionText:
- *                         type: string
- *                       wrongCount:
- *                         type: integer
- *                       totalAttempts:
- *                         type: integer
- *                       wrongPercentage:
- *                         type: number
- *                       uniqueStudents:
- *                         type: integer
- *                       appearsInExams:
- *                         type: integer
- *                       correctAnswer:
- *                         type: object
- *                       commonWrongAnswers:
- *                         type: array
- *       500:
- *         description: Server error
- */
-router.get('/most-wrong-answers-exam', adminStatsController.getMostWrongAnswersExam);
-
 export default router;

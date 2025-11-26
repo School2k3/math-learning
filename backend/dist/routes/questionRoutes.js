@@ -1,14 +1,8 @@
 import express from 'express';
 import questionController from '../controllers/questionController.js';
 import { validateRequest } from '../middleware/validation.js';
-import { 
-  createQuestionSchema, 
-  updateQuestionSchema,
-  updateAnswersSchema
-} from '../schemas/question.schema.js';
-
+import { createQuestionSchema, updateQuestionSchema, updateAnswersSchema } from '../schemas/question.schema.js';
 const router = express.Router();
-
 /**
  * @swagger
  * /api/questions:
@@ -48,7 +42,6 @@ const router = express.Router();
  *         description: Server error
  */
 router.get('/', questionController.getAllQuestions);
-
 /**
  * @swagger
  * /api/questions/grade/{grade}:
@@ -70,7 +63,6 @@ router.get('/', questionController.getAllQuestions);
  *         description: Server error
  */
 router.get('/grade/:grade', questionController.getQuestionsByGrade);
-
 /**
  * @swagger
  * /api/questions/lesson/{lessonId}:
@@ -92,7 +84,6 @@ router.get('/grade/:grade', questionController.getQuestionsByGrade);
  *         description: Server error
  */
 router.get('/lesson/:lessonId', questionController.getQuestionsByLesson);
-
 /**
  * @swagger
  * /api/questions/lesson/{lessonId}/practice:
@@ -114,7 +105,6 @@ router.get('/lesson/:lessonId', questionController.getQuestionsByLesson);
  *         description: Server error
  */
 router.get('/lesson/:lessonId/practice', questionController.getPracticeQuestionsByLesson);
-
 /**
  * @swagger
  * /api/questions/exam/{examId}:
@@ -136,7 +126,6 @@ router.get('/lesson/:lessonId/practice', questionController.getPracticeQuestions
  *         description: Server error
  */
 router.get('/exam/:examId', questionController.getQuestionsByExamId);
-
 /**
  * @swagger
  * /api/questions/{id}:
@@ -167,7 +156,6 @@ router.get('/exam/:examId', questionController.getQuestionsByExamId);
  *         description: Server error
  */
 router.get('/:id', questionController.getQuestionById);
-
 // /**
 //  * @swagger
 //  * /api/questions/{id}/audio:
@@ -200,7 +188,6 @@ router.get('/:id', questionController.getQuestionById);
 //  *         description: Server error
 //  */
 // router.get('/:id/audio', questionController.getQuestionAudio);
-
 /**
  * @swagger
  * /api/questions/{id}/audio:
@@ -233,7 +220,6 @@ router.get('/:id', questionController.getQuestionById);
  *         description: Server error
  */
 router.get('/:id/audio', questionController.getQuestionAudio);
-
 /**
  * @swagger
  * /api/questions/{id}/audio/generate:
@@ -241,8 +227,8 @@ router.get('/:id/audio', questionController.getQuestionAudio);
  *     summary: Generate audio for a question
  *     tags: [Questions]
  *     description: >
- *       Synthesize question text and answers into audio using Gemini TTS, 
- *       upload to Cloudinary và lưu URL vào trường audioUrl của Question.  
+ *       Synthesize question text and answers into audio using Gemini TTS,
+ *       upload to Cloudinary và lưu URL vào trường audioUrl của Question.
  *       Dùng query param `force=true` nếu muốn generate lại kể cả khi đã có audio.
  *     parameters:
  *       - in: path
@@ -280,7 +266,6 @@ router.get('/:id/audio', questionController.getQuestionAudio);
  *         description: Server error
  */
 router.post('/:id/audio/generate', questionController.generateQuestionAudio);
-
 /**
  * @swagger
  * /api/questions:
@@ -358,7 +343,6 @@ router.post('/:id/audio/generate', questionController.generateQuestionAudio);
  *         description: Server error
  */
 router.post('/', validateRequest(createQuestionSchema), questionController.createQuestion);
-
 /**
  * @swagger
  * /api/questions/{id}:
@@ -426,7 +410,6 @@ router.post('/', validateRequest(createQuestionSchema), questionController.creat
  *         description: Server error
  */
 router.put('/:id', validateRequest(updateQuestionSchema), questionController.updateQuestion);
-
 /**
  * @swagger
  * /api/questions/{id}/answers:
@@ -473,7 +456,6 @@ router.put('/:id', validateRequest(updateQuestionSchema), questionController.upd
  *         description: Server error
  */
 router.put('/:id/answers', validateRequest(updateAnswersSchema), questionController.updateQuestionAnswers);
-
 /**
  * @swagger
  * /api/questions/{id}:
@@ -499,5 +481,4 @@ router.put('/:id/answers', validateRequest(updateAnswersSchema), questionControl
  *         description: Server error
  */
 router.delete('/:id', questionController.deleteQuestion);
-
 export default router;

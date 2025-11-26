@@ -9,6 +9,34 @@ import {
   sendBadRequestResponse
 } from '../utils/apiResponse.js';
 import { CreateQuestionInput, UpdateQuestionInput, UpdateAnswersInput } from '../schemas/question.schema.js';
+import { synthesizeQuestionAudio } from '../services/questionAudioService.js';
+
+function buildQuestionTtsPrompt(question: any) {
+  const questionText =
+    question.questionText ||
+    question.question_text ||
+    question.text ||
+    '';
+
+  const answers = (question.answers || []).map((a: any, index: number) => {
+    const answerText =
+      a.answerText ||
+      a.answer_text ||
+      a.text ||
+      '';
+
+    return `Đáp án ${index + 1}: ${answerText}`;
+  });
+
+  const lines = [
+    `Hãy đọc rõ ràng, chậm rãi như giáo viên tiểu học.`,
+    `Câu hỏi: ${questionText}`,
+    ...answers,
+  ];
+
+  return lines.join('\n');
+}
+
 
 const questionController: Controller = {
   // Get all questions with optional filtering
@@ -219,6 +247,82 @@ const questionController: Controller = {
       sendErrorResponse(res, 'Error retrieving question audio');
     }
   },
+
+  // Generate or refresh question audio
+generateQuestionAudio: async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const force = req.query.force === 'true';
+    const questionId = parseInt(id, 10);
+
+    if (isNaN(questionId)) {
+      sendBadRequestResponse(res, 'Invalid question ID');
+      return;
+    }
+
+    const question = await prisma.question.findUnique({
+      where: { id: questionId },
+      include: {
+        answers: {
+          orderBy: { id: 'asc' },
+        },
+      },
+    });
+
+    if (!question) {
+      sendNotFoundResponse(res, 'Question not found');
+      return;
+    }
+
+    // Nếu đã có audioUrl và không có ?force=true thì không generate lại
+    if (!force && question.audioUrl) {
+      sendSuccessResponse(
+        res,
+        { id: question.id, audioUrl: question.audioUrl, cached: true },
+        'Question audio already exists'
+      );
+      return;
+    }
+
+    if (!question.answers.length) {
+      sendBadRequestResponse(
+        res,
+        'Question must have answers before generating audio'
+      );
+      return;
+    }
+
+    const audioResult = await synthesizeQuestionAudio({
+      questionId: question.id,
+      questionText: question.questionText,
+      answers: question.answers.map((answer) => ({
+        answerText: answer.answerText,
+      })),
+    });
+
+    const updatedQuestion = await prisma.question.update({
+      where: { id: questionId },
+      data: { audioUrl: audioResult.audioUrl },
+      select: {
+        id: true,
+        audioUrl: true,
+      },
+    });
+
+    sendSuccessResponse(
+      res,
+      {
+        ...updatedQuestion,
+        cached: false,
+        mimeType: audioResult.mimeType,
+      },
+      'Question audio generated successfully'
+    );
+  } catch (error) {
+    console.error('Error generating question audio:', error);
+    sendErrorResponse(res, 'Failed to generate question audio');
+  }
+},
 
   // Create a new question with answers
   createQuestion: async (req: Request, res: Response): Promise<void> => {
