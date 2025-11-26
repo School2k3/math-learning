@@ -4,7 +4,6 @@
   background: #fff;
   min-height: 100vh;
   width: 1400px;
- 
 }
 .study-sidebar {
   width: 400px;
@@ -153,7 +152,7 @@
   justify-content: flex-end;
   align-items: center;
   margin-top: -10px;
-  margin-right: 60px; 
+  margin-right: 60px;
 }
 .study-content-selects select + select {
   margin-right: 12px;
@@ -165,7 +164,7 @@
   font-size: 16px;
 }
 .study-content-cards {
-  display: block; 
+  display: block;
   margin-top: 10px;
 }
 .study-card {
@@ -174,7 +173,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   padding: 18px 20px 0px 18px;
   width: 420px;
-  
 }
 .study-card-img {
   position: relative;
@@ -226,4 +224,111 @@
   box-shadow: 0 2px 8px #23bdee33;
   transform: scale(1.12);
   transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+/* Exam Modal Styles */
+.exam-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.exam-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.exam-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #252641;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.exam-modal-message {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 2rem 0;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.exam-modal-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.exam-modal-btn {
+  padding: 0.875rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.exam-modal-btn-continue {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.exam-modal-btn-continue:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.exam-modal-btn-new {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.exam-modal-btn-new:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}
+
+.exam-modal-btn-cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.exam-modal-btn-cancel:hover {
+  background: #e0e0e0;
 }
