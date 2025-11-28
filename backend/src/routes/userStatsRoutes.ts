@@ -315,4 +315,130 @@ router.get('/:userId/practice-minutes', userStatsController.getPracticeMinutes);
  */
 router.get('/:userId/exam-minutes', userStatsController.getExamMinutes);
 
+/**
+ * @swagger
+ * /api/user-stats/{userId}/most-wrong-answers-practice:
+ *   get:
+ *     summary: Get user's most wrong answers in practice sessions
+ *     tags: [User Statistics]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *           example: 20
+ *         description: Maximum number of questions to return
+ *     responses:
+ *       200:
+ *         description: User most wrong answers in practice retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       questionId:
+ *                         type: integer
+ *                       questionText:
+ *                         type: string
+ *                       questionImage:
+ *                         type: string
+ *                       wrongCount:
+ *                         type: integer
+ *                       totalAttempts:
+ *                         type: integer
+ *                       wrongPercentage:
+ *                         type: number
+ *                       correctAnswer:
+ *                         type: object
+ *                       lastWrongAnswer:
+ *                         type: object
+ *                       allAnswers:
+ *                         type: array
+ *                       explanationText:
+ *                         type: string
+ *       500:
+ *         description: Server error
+ */
+router.get('/:userId/most-wrong-answers-practice', userStatsController.getUserMostWrongAnswersPractice);
+
+/**
+ * @swagger
+ * /api/user-stats/{userId}/most-wrong-answers-exam:
+ *   get:
+ *     summary: Get user's most wrong answers in exams
+ *     tags: [User Statistics]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *           example: 20
+ *         description: Maximum number of questions to return
+ *     responses:
+ *       200:
+ *         description: User most wrong answers in exams retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       questionId:
+ *                         type: integer
+ *                       questionText:
+ *                         type: string
+ *                       questionImage:
+ *                         type: string
+ *                       wrongCount:
+ *                         type: integer
+ *                       totalAttempts:
+ *                         type: integer
+ *                       wrongPercentage:
+ *                         type: number
+ *                       appearsInExams:
+ *                         type: integer
+ *                       correctAnswer:
+ *                         type: object
+ *                       lastWrongAnswer:
+ *                         type: object
+ *                       allAnswers:
+ *                         type: array
+ *                       explanationText:
+ *                         type: string
+ *       500:
+ *         description: Server error
+ */
+router.get('/:userId/most-wrong-answers-exam', userStatsController.getUserMostWrongAnswersExam);
+
 export default router;
