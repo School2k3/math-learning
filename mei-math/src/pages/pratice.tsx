@@ -20,6 +20,8 @@ const ScoreBar: React.FC<{
 }> = ({ score, correctCount, incorrectCount }) => {
   const progress = Math.min(score, 100);
   
+  console.log("📊 ScoreBar render:", { score, correctCount, incorrectCount, progress });
+  
   return (
     <div className="score-bar-container">
       <div className="score-progress-track">
@@ -114,21 +116,55 @@ const Pratice: React.FC = () => {
     }
   }, [chapterId]);
 
-  // State declarations - must be before useEffect
-  const [current, setCurrent] = useState(0);
+  // Khôi phục dữ liệu từ localStorage ngay khi khởi tạo
+  const getSavedData = () => {
+    if (practiceId) {
+      const savedData = localStorage.getItem(`practice_${practiceId}`);
+      console.log("🔍 Checking localStorage for practice_" + practiceId + ":", savedData);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          console.log("🔄 Khởi tạo với dữ liệu đã lưu:", parsed);
+          return parsed;
+        } catch (e) {
+          console.error("❌ Lỗi parse localStorage:", e);
+        }
+      } else {
+        console.log("ℹ️ Không tìm thấy dữ liệu đã lưu trong localStorage");
+      }
+    } else {
+      console.log("⚠️ practiceId chưa có khi khởi tạo");
+    }
+    return null;
+  };
+
+  const savedData = getSavedData();
+  
+  console.log("🎯 Initializing states with savedData:", savedData);
+
+  // State declarations - khởi tạo với dữ liệu đã lưu nếu có
+  const [current, setCurrent] = useState(savedData?.currentIndex || 0);
   const [selected, setSelected] = useState<number | null>(null);
   const [showIncorrect, setShowIncorrect] = useState(false);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [incorrectCount, setIncorrectCount] = useState(0);
-  const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(savedData?.correctCount || 0);
+  const [incorrectCount, setIncorrectCount] = useState(savedData?.incorrectCount || 0);
+  const [score, setScore] = useState(savedData?.score || 0);
+  
+  console.log("🎯 Initial state values:", {
+    current: savedData?.currentIndex || 0,
+    correctCount: savedData?.correctCount || 0,
+    incorrectCount: savedData?.incorrectCount || 0,
+    score: savedData?.score || 0
+  });
   const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [restoredFromStorage, setRestoredFromStorage] = useState(!!savedData);
   const [isFinished, setIsFinished] = useState(false);
   const [usedQuestions, setUsedQuestions] = useState<Set<number>>(new Set());
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(savedData?.elapsedTime || 0);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -157,11 +193,17 @@ const Pratice: React.FC = () => {
             const scoreData = await fetchPracticeSessionScore(practiceId);
             console.log("📈 Session score data:", scoreData);
             
-            if (scoreData && (scoreData.score !== undefined && scoreData.score > 0)) {
+            // Không khôi phục ở đây nữa, để useEffect riêng xử lý sau khi questions load
+            // Chỉ kiểm tra xem có dữ liệu trong localStorage không
+            const savedData = localStorage.getItem(`practice_${practiceId}`);
+            if (savedData) {
+              console.log("💾 Phát hiện dữ liệu đã lưu, sẽ khôi phục sau khi questions load");
+            } else if (scoreData && (scoreData.score !== undefined && scoreData.score > 0)) {
+              // Fallback: sử dụng dữ liệu từ API nếu không có localStorage
               const currentScore = scoreData.score;
               const correctAnswers = Math.floor(currentScore / 10);
               
-              console.log("🎯 Restoring session:", {
+              console.log("🎯 Restoring session from API:", {
                 score: currentScore,
                 correctAnswers,
                 incorrectCount: scoreData.incorrectAnswers || 0
@@ -202,15 +244,20 @@ const Pratice: React.FC = () => {
     loadSessionData();
   }, [practiceId, navigate, sessionLoaded]);
   
-  // Separate useEffect to set current question when questions are loaded and session is restored
+  // Log thông tin khôi phục nếu có
   useEffect(() => {
-    if (sessionLoaded && questions.length > 0 && correctCount > 0) {
-      const nextQuestionIndex = Math.min(correctCount, questions.length - 1);
-      setCurrent(nextQuestionIndex);
-      console.log(`📍 Updated current question to ${nextQuestionIndex + 1} (${correctCount} correct answers, ${questions.length} total questions)`);
+    if (restoredFromStorage && savedData) {
+      console.log("✅ Component đã khởi tạo với dữ liệu đã lưu:", {
+        score: savedData.score,
+        correctCount: savedData.correctCount,
+        incorrectCount: savedData.incorrectCount,
+        elapsedTime: savedData.elapsedTime,
+        currentIndex: savedData.currentIndex,
+        nextIndex: current
+      });
     }
-  }, [sessionLoaded, questions.length, correctCount]);
-
+  }, []);
+  
   // Xử lý khi user đóng tab hoặc reload trang
   useEffect(() => {
     const handleBeforeUnload = (_e: BeforeUnloadEvent) => {
@@ -390,6 +437,10 @@ const Pratice: React.FC = () => {
             await completePracticeSession(practiceId);
             setSessionCompleted(true); // Đánh dấu đã complete
             
+            // Xóa dữ liệu đã lưu trong localStorage khi hoàn thành
+            localStorage.removeItem(`practice_${practiceId}`);
+            console.log("🗑️ Đã xóa dữ liệu practice khỏi localStorage");
+            
             // Track hoàn thành bài tập với điểm số
             trackCompletePractice(lessonTitle, newScore, 10); // 10 câu = 100 điểm
           } catch (error) {
@@ -441,8 +492,44 @@ const Pratice: React.FC = () => {
       // Không tự động complete session khi unmount
       // Session chỉ được complete khi user đạt 100 điểm
       console.log("Component unmounting, session completion handled manually");
+      console.log("=== DỮ LIỆU ĐƯỢC LƯU KHI THOÁT ===");
+      console.log("Practice Session ID:", practiceId);
+      console.log("Lesson ID:", lessonId);
+      console.log("Lesson Title:", lessonTitle);
+      console.log("Chapter ID:", chapterId);
+      console.log("Chapter Title:", chapterTitle);
+      console.log("Điểm hiện tại:", score);
+      console.log("Số câu đúng:", correctCount);
+      console.log("Số câu sai:", incorrectCount);
+      console.log("Câu hỏi hiện tại (index):", current);
+      console.log("Tổng số câu hỏi:", questions.length);
+      console.log("Thời gian đã làm (giây):", elapsedTime);
+      console.log("Thời gian đã làm (format):", formatTime(elapsedTime));
+      console.log("Session đã hoàn thành:", sessionCompleted);
+      console.log("Đã kết thúc:", isFinished);
+      console.log("===================================");
+      
+      // Lưu vào localStorage để backup (nếu session chưa hoàn thành)
+      if (!sessionCompleted && !isFinished && practiceId) {
+        const practiceData = {
+          practiceId,
+          lessonId,
+          lessonTitle,
+          chapterId,
+          chapterTitle,
+          score,
+          correctCount,
+          incorrectCount,
+          currentIndex: current,
+          totalQuestions: questions.length,
+          elapsedTime,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(`practice_${practiceId}`, JSON.stringify(practiceData));
+        console.log("💾 Đã lưu dữ liệu vào localStorage:", practiceData);
+      }
     };
-  }, []);
+  }, [practiceId, lessonId, lessonTitle, chapterId, chapterTitle, score, correctCount, incorrectCount, current, questions.length, elapsedTime, sessionCompleted, isFinished]);
 
   return (
     <div>
