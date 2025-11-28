@@ -389,6 +389,7 @@
 
 .modal-body {
   padding: 24px;
+  text-align: left;
 }
 
 .modal-footer {
@@ -402,7 +403,11 @@
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .form-group label {
@@ -411,6 +416,8 @@
   font-weight: 600;
   color: #495057;
   font-size: 14px;
+  text-align: left;
+  width: 100%;
 }
 
 .form-group input[type="text"],
@@ -436,7 +443,7 @@
   border: 2px dashed #dee2e6;
   border-radius: 8px;
   padding: 20px;
-  text-align: center;
+  text-align: left;
   transition: all 0.3s;
   background: #f8f9fa;
 }
@@ -459,17 +466,20 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
+  text-align: left;
 }
 
 .upload-icon {
   font-size: 32px;
+  text-align: left;
 }
 
 .upload-preview {
   position: relative;
   margin-top: 12px;
+  text-align: left;
 }
 
 .upload-preview img,
@@ -504,6 +514,8 @@
 
 .required {
   color: #dc3545;
+  font-weight: bold;
+  margin-left: 2px;
 }
 
 .preview-modal .modal-content {

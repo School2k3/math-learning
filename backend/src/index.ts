@@ -1,4 +1,4 @@
-import './config/env.js';
+import dotenv from 'dotenv';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
@@ -17,6 +17,9 @@ import rewardRoutes from './routes/rewardRoutes.js';
 import lessonReviewRoutes from './routes/lessonReviewRoutes.js';
 import userStatsRoutes from './routes/userStatsRoutes.js';
 import adminStatsRoutes from './routes/adminStatsRoutes.js';
+
+// Initialize environment variables
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -80,10 +83,5 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`API Documentation: http://localhost:${PORT}/api-docs`);
 });
-
-console.log('GEMINI key prefix:', process.env.GEMINI_API_KEY?.slice(0,4));
-console.log('CLOUDINARY key prefix:', process.env.CLOUDINARY_API_KEY?.slice(0,4));
-console.log('CLOUDINARY secret prefix:', process.env.CLOUDINARY_API_SECRET?.slice(0,4));
-console.log('CLOUDINARY cloud name prefix:', process.env.CLOUDINARY_CLOUD_NAME?.slice(0,4));
 
 export default app;

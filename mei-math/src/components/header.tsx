@@ -86,6 +86,12 @@ const Header: React.FC<{ bgWhite?: boolean }> = ({ bgWhite }) => {
                   <button onClick={() => navigate("/profile")}>
                     Thông tin cá nhân
                   </button>
+                  <button onClick={() => navigate("/practice-continue")}>
+                    📝 Tiếp tục thực hành
+                  </button>
+                  <button onClick={() => navigate("/exams-history")}>
+                    📊 Lịch sử kiểm tra
+                  </button>
                   <button onClick={() => navigate("/settings")}>Cài đặt</button>
                   <button onClick={handleLogout}>Đăng xuất</button>
                 </div>

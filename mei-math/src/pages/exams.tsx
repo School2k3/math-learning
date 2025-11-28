@@ -139,8 +139,9 @@ const Exams: React.FC = () => {
   // Tính trạng thái cho từng câu hỏi
   const getStatus = (idx: number): Status => {
     if (idx === current) return "current";
-    if (answers[idx] !== null) return "answered";
+    // Ưu tiên hiển thị review nếu đã đánh dấu cân nhắc, kể cả khi đã chọn đáp án
     if (reviewFlags[idx]) return "review";
+    if (answers[idx] !== null) return "answered";
     return "not_answered";
   };
 
@@ -451,36 +452,45 @@ const Exams: React.FC = () => {
               NỘP BÀI
             </button>
             <div className="exams-question-list">
-              <div style={{ fontWeight: 600, marginBottom: "8px" }}>Danh sách câu hỏi</div>
-              <div className="exams-question-numbers">
+              <div style={{ fontWeight: 600, marginBottom: "12px" }}>Danh sách câu hỏi</div>
+              <div className="exams-question-grid">
                 {examQuestions.map((q: any, idx: number) => {
                   const status = getStatus(idx);
                   let bg = "#eaf6fb";
-                  if (status === "current") bg = "#23bdee";
-                  else if (status === "review") bg = "#ffbc63";
-                  else if (status === "answered") bg = "#4caf50";
+                  let textColor = "#252641";
+                  if (status === "current") {
+                    bg = "#23bdee";
+                    textColor = "#fff";
+                  } else if (status === "review") {
+                    bg = "#ffbc63";
+                    textColor = "#252641";
+                  } else if (status === "answered") {
+                    bg = "#4caf50";
+                    textColor = "#fff";
+                  }
                   return (
-                    <span
+                    <button
                       key={q.id}
                       className="exams-question-number"
                       style={{
                         background: bg,
-                        color: status === "current" ? "#fff" : "#252641",
-                        borderRadius: "6px",
-                        width: "28px",
-                        height: "28px",
-                        display: "inline-flex",
+                        color: textColor,
+                        borderRadius: "8px",
+                        width: "45px",
+                        height: "45px",
+                        display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        margin: "2px",
                         fontWeight: 600,
                         cursor: "pointer",
-                        border: "1px solid #ccc"
+                        border: "2px solid #ddd",
+                        fontSize: "16px",
+                        transition: "all 0.2s ease"
                       }}
                       onClick={() => handleSelect(idx)}
                     >
                       {idx + 1}
-                    </span>
+                    </button>
                   );
                 })}
               </div>

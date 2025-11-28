@@ -5,7 +5,8 @@ import {
   fetchPracticeQuestionsByLesson, 
   completePracticeSession,
   savePracticeAnswer, // Nhập hàm lưu đáp án
-  checkPracticeSessionStatus // Thêm import này
+  checkPracticeSessionStatus, // Thêm import này
+  fetchPracticeSessionScore // Thêm import này để lấy thông tin chi tiết
 } from "../api/praticeAPI";
 import { fetchAllChapters } from "../api/chapterAPI";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -113,38 +114,102 @@ const Pratice: React.FC = () => {
     }
   }, [chapterId]);
 
-  // Kiểm tra trạng thái session khi component mount
-  useEffect(() => {
-    if (practiceId) {
-      checkPracticeSessionStatus(practiceId)
-        .then((status) => {
-          console.log("Session status:", status);
-          if (status.completed) {
-            setSessionCompleted(true);
-            console.warn("Practice session already completed");
-            // Có thể redirect về study page hoặc hiển thị thông báo
-            alert("Phiên luyện tập này đã hoàn thành. Vui lòng tạo phiên mới.");
-            navigate(-1); // Quay lại trang trước
-          }
-        })
-        .catch((error) => {
-          console.error("Error checking session status:", error);
-        });
-    }
-  }, [practiceId, navigate]);
-
+  // State declarations - must be before useEffect
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [showIncorrect, setShowIncorrect] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [score, setScore] = useState(0);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [usedQuestions, setUsedQuestions] = useState<Set<number>>(new Set());
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
-  const [sessionCompleted, setSessionCompleted] = useState(false); // Thêm state này
-  const [elapsedTime, setElapsedTime] = useState(0); // Thời gian đã trôi qua (giây)
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
+
+  // Kiểm tra trạng thái session khi component mount
+  useEffect(() => {
+    const loadSessionData = async () => {
+      if (practiceId && !sessionLoaded) {
+        try {
+          console.log("🔍 Loading practice session data for ID:", practiceId);
+          
+          // Kiểm tra trạng thái session trước
+          const status = await checkPracticeSessionStatus(practiceId);
+          console.log("📊 Session status:", status);
+          
+          if (status.completed) {
+            setSessionCompleted(true);
+            console.warn("Practice session already completed");
+            alert("Phiên luyện tập này đã hoàn thành. Vui lòng tạo phiên mới.");
+            navigate(-1);
+            return;
+          }
+          
+          // Lấy thông tin chi tiết về điểm số
+          try {
+            const scoreData = await fetchPracticeSessionScore(practiceId);
+            console.log("📈 Session score data:", scoreData);
+            
+            if (scoreData && (scoreData.score !== undefined && scoreData.score > 0)) {
+              const currentScore = scoreData.score;
+              const correctAnswers = Math.floor(currentScore / 10);
+              
+              console.log("🎯 Restoring session:", {
+                score: currentScore,
+                correctAnswers,
+                incorrectCount: scoreData.incorrectAnswers || 0
+              });
+              
+              setScore(currentScore);
+              setCorrectCount(correctAnswers);
+              setIncorrectCount(scoreData.incorrectAnswers || 0);
+              
+              // Tính thời gian đã trôi qua từ startedAt
+              if (scoreData.startedAt) {
+                const startTime = new Date(scoreData.startedAt).getTime();
+                const now = Date.now();
+                const elapsed = Math.floor((now - startTime) / 1000);
+                setElapsedTime(elapsed);
+                console.log(`⏰ Elapsed time: ${elapsed}s from ${scoreData.startedAt}`);
+              }
+              
+              // Set current question sau khi có đủ dữ liệu
+              const nextQuestionIndex = Math.min(correctAnswers, 9); // Giả sử có tối đa 10 câu
+              setCurrent(nextQuestionIndex);
+              console.log(`➡️ Resuming from question ${nextQuestionIndex + 1}`);
+            } else {
+              console.log("ℹ️ New session or no score yet");
+            }
+          } catch (scoreError) {
+            console.warn("⚠️ Could not fetch session score:", scoreError);
+          }
+          
+          setSessionLoaded(true);
+        } catch (error) {
+          console.error("❌ Error loading session data:", error);
+          setSessionLoaded(true);
+        }
+      }
+    };
+
+    loadSessionData();
+  }, [practiceId, navigate, sessionLoaded]);
+  
+  // Separate useEffect to set current question when questions are loaded and session is restored
+  useEffect(() => {
+    if (sessionLoaded && questions.length > 0 && correctCount > 0) {
+      const nextQuestionIndex = Math.min(correctCount, questions.length - 1);
+      setCurrent(nextQuestionIndex);
+      console.log(`📍 Updated current question to ${nextQuestionIndex + 1} (${correctCount} correct answers, ${questions.length} total questions)`);
+    }
+  }, [sessionLoaded, questions.length, correctCount]);
 
   // Xử lý khi user đóng tab hoặc reload trang
   useEffect(() => {
@@ -466,8 +531,6 @@ const Pratice: React.FC = () => {
           </div>
         ) : (
           <div className="pratice-question-block">
-            {/* Thêm dòng này phía trên Câu */}
-            
             <div className="pratice-question"><div style={{ fontSize: "22px", fontWeight: 500, color: "#0c1211ff", marginBottom: 16, textAlign: "left" }}>
               {chapterTitle ? (
                 <span

@@ -1,3 +1,49 @@
+/* Resume Session Banner */
+.resume-session-banner {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+  animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.resume-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.resume-text {
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resume-text strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.resume-text span {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
 .pratice-container {
   max-width: 900px;
   margin: 0 auto;
@@ -88,7 +134,7 @@
 }
 
 .pratice-question {
-   color: #252641;
+  color: #252641;
   font-size: 16px;
   font-weight: 400;
   margin-bottom: 10px; /* giảm margin */

@@ -821,34 +821,17 @@ const ExamAdmin: React.FC = () => {
 
         {/* Modal Quản lý câu hỏi */}
         {showQuestionManager && selectedExamId && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '24px',
-              maxWidth: '900px',
-              width: '90%',
-              maxHeight: '80vh',
-              overflow: 'auto'
-            }}>
-              <h2 style={{ marginBottom: '20px' }}>
-                📝 Quản lý câu hỏi - {selectedExamTitle}
-                {isNewExam && <span style={{ color: '#4caf50', fontSize: '14px', marginLeft: '8px' }}>(Mới tạo)</span>}
-              </h2>
+          <div className="exam-modal-overlay">
+            <div className="exam-modal-content">
+              <div className="exam-modal-header">
+                <h2>
+                  📝 Quản lý câu hỏi - {selectedExamTitle}
+                  {isNewExam && <span style={{ color: '#4caf50', fontSize: '14px', marginLeft: '8px' }}>(Mới tạo)</span>}
+                </h2>
+              </div>
               
               {/* Tabs chọn chế độ thêm */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              <div className="exam-modal-tabs">
                 <button
                   onClick={() => setAddMode('manual')}
                   style={{
@@ -892,7 +875,7 @@ const ExamAdmin: React.FC = () => {
 
               {/* Chế độ nhập tay - TẠO NHIỀU CÂU HỎI MỚI */}
               {addMode === 'manual' && (
-                <div style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '4px', marginBottom: '20px', maxHeight: '600px', overflow: 'auto' }}>
+                <div className="exam-form-section">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <h4>Tạo câu hỏi mới ({questionsList.length} câu)</h4>
                     <button
@@ -950,8 +933,8 @@ const ExamAdmin: React.FC = () => {
                       </div>
                       
                       {/* Nội dung câu hỏi */}
-                      <div style={{ marginBottom: '8px' }}>
-                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Nội dung *</label>
+                      <div className="exam-form-group">
+                        <label>Nội dung *</label>
                         <textarea
                           value={question.questionText}
                           onChange={(e) => {
@@ -960,37 +943,38 @@ const ExamAdmin: React.FC = () => {
                             setQuestionsList(updated);
                           }}
                           placeholder="Nhập nội dung câu hỏi..."
-                          style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ddd', minHeight: '50px', fontSize: '13px' }}
+                          style={{ minHeight: '50px' }}
                         />
                       </div>
                       
                       {/* Upload hình ảnh */}
-                      <div style={{ marginBottom: '8px' }}>
-                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Hình ảnh</label>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const updated = [...questionsList];
-                              updated[qIndex].imageFile = file;
-                              updated[qIndex].imageUrl = '';
-                              setQuestionsList(updated);
-                            }
-                          }}
-                          style={{ fontSize: '12px' }}
-                        />
-                        {question.imageFile && (
-                          <p style={{ fontSize: '11px', color: '#4caf50', marginTop: '4px' }}>
-                            ✓ {question.imageFile.name}
-                          </p>
-                        )}
+                      <div className="exam-form-group">
+                        <label>Hình ảnh</label>
+                        <div className="exam-upload-zone">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const updated = [...questionsList];
+                                updated[qIndex].imageFile = file;
+                                updated[qIndex].imageUrl = '';
+                                setQuestionsList(updated);
+                              }
+                            }}
+                          />
+                          {question.imageFile && (
+                            <p style={{ fontSize: '11px', color: '#4caf50', marginTop: '4px' }}>
+                              ✓ {question.imageFile.name}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       
                       {/* Lời giải */}
-                      <div style={{ marginBottom: '8px' }}>
-                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Lời giải (tùy chọn)</label>
+                      <div className="exam-form-group">
+                        <label>Lời giải (tùy chọn)</label>
                         <textarea
                           value={question.explanationText}
                           onChange={(e) => {
@@ -999,13 +983,13 @@ const ExamAdmin: React.FC = () => {
                             setQuestionsList(updated);
                           }}
                           placeholder="Nhập lời giải..."
-                          style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #ddd', minHeight: '40px', fontSize: '13px' }}
+                          style={{ minHeight: '40px' }}
                         />
                       </div>
                       
                       {/* Loại đáp án */}
-                      <div style={{ marginBottom: '8px' }}>
-                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Loại đáp án</label>
+                      <div className="exam-form-group">
+                        <label>Loại đáp án</label>
                         <select
                           value={question.answerType}
                           onChange={(e) => {
@@ -1013,7 +997,6 @@ const ExamAdmin: React.FC = () => {
                             updated[qIndex].answerType = e.target.value as 'choice' | 'fill';
                             setQuestionsList(updated);
                           }}
-                          style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px' }}
                           title="Loại đáp án"
                         >
                           <option value="choice">Trắc nghiệm</option>
@@ -1022,8 +1005,8 @@ const ExamAdmin: React.FC = () => {
                       </div>
                       
                       {/* Danh sách đáp án */}
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Đáp án * (min 2)</label>
+                      <div className="exam-form-group">
+                        <label>Đáp án * (min 2)</label>
                         {question.answers.map((answer, aIndex) => (
                           <div key={aIndex} style={{ display: 'flex', gap: '6px', marginBottom: '6px', alignItems: 'center' }}>
                             <select
@@ -1033,7 +1016,7 @@ const ExamAdmin: React.FC = () => {
                                 updated[qIndex].answers[aIndex].isCorrect = e.target.value === 'true';
                                 setQuestionsList(updated);
                               }}
-                              style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px', width: '80px' }}
+                              style={{ width: '80px' }}
                             >
                               <option value="false">Sai</option>
                               <option value="true">Đúng</option>
@@ -1047,7 +1030,7 @@ const ExamAdmin: React.FC = () => {
                                 setQuestionsList(updated);
                               }}
                               placeholder={`Đáp án ${aIndex + 1}`}
-                              style={{ flex: 1, padding: '6px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '12px' }}
+                              style={{ flex: 1 }}
                             />
                           </div>
                         ))}
@@ -1137,13 +1120,13 @@ const ExamAdmin: React.FC = () => {
 
               {/* Chế độ ngẫu nhiên */}
               {addMode === 'random' && (
-                <div style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '4px', marginBottom: '20px' }}>
+                <div className="exam-form-section">
                   <h4>Lấy câu hỏi ngẫu nhiên</h4>
                   <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
                     Sẽ lấy ngẫu nhiên từ câu hỏi loại "Exam" thuộc chương: {getChapterTitle(selectedExamChapter || 0)}
                   </p>
-                  <div style={{ marginTop: '12px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px' }}>Số câu hỏi:</label>
+                  <div className="exam-form-group">
+                    <label>Số câu hỏi:</label>
                     <input
                       type="number"
                       value={randomCount}
@@ -1151,7 +1134,6 @@ const ExamAdmin: React.FC = () => {
                       min="1"
                       max="100"
                       placeholder="Nhập số câu hỏi muốn lấy"
-                      style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
                     />
                   </div>
                   <button
@@ -1171,8 +1153,7 @@ const ExamAdmin: React.FC = () => {
                 </div>
               )}
 
-              {/* Danh sách câu hỏi trong exam */}
-              <div>
+              <div className="exam-form-section">
                 <h4>Câu hỏi trong đề ({examQuestions.length} câu)</h4>
                 <div style={{ marginTop: '12px', maxHeight: '300px', overflow: 'auto' }}>
                   {examQuestions.map((eq, idx) => (
@@ -1186,7 +1167,8 @@ const ExamAdmin: React.FC = () => {
                         borderRadius: '4px',
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        textAlign: 'left'
                       }}
                     >
                       <span>
@@ -1217,7 +1199,7 @@ const ExamAdmin: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '8px' }}>
+              <div className="exam-modal-footer">
                 <button
                   onClick={closeQuestionManager}
                   style={{

@@ -1,3 +1,110 @@
+/* Practice Banner Styles */
+.practice-banner {
+  background: linear-gradient(135deg, #49bbbd 0%, #23bdee 100%);
+  border-radius: 12px;
+  margin: 20px;
+  box-shadow: 0 4px 12px rgba(73, 187, 189, 0.3);
+  overflow: hidden;
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.practice-banner-content {
+  display: flex;
+  align-items: center;
+  padding: 20px 24px;
+  gap: 20px;
+}
+
+.practice-banner-icon {
+  font-size: 48px;
+  flex-shrink: 0;
+}
+
+.practice-banner-text {
+  flex: 1;
+  color: white;
+}
+
+.practice-banner-text h4 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.practice-banner-text p {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.practice-banner-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.practice-banner-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.practice-banner-btn.continue {
+  background: white;
+  color: #49bbbd;
+}
+
+.practice-banner-btn.continue:hover {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.practice-banner-btn.dismiss {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.practice-banner-btn.dismiss:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Responsive cho banner */
+@media (max-width: 768px) {
+  .practice-banner-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .practice-banner-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .practice-banner-btn {
+    flex: 1;
+    max-width: 150px;
+  }
+}
+
 .study-main {
   display: flex;
   gap: 32px;
