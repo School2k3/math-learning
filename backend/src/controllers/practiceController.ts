@@ -297,6 +297,75 @@ const practiceController: Controller = {
       console.error('Error getting practice score:', error);
       res.status(500).json({ message: 'Error getting practice score', error: (error as Error).message });
     }
+  },
+
+  // Get detailed state for resuming a practice session
+  getSessionState: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { practiceId } = req.params;
+
+      const practiceSession = await prisma.practiceSession.findUnique({
+        where: { id: parseInt(practiceId) },
+        include: { lesson: true }
+      });
+
+      if (!practiceSession) {
+        res.status(404).json({ message: 'Practice session not found' });
+        return;
+      }
+
+      const [totalAnswered, lastAnswer] = await Promise.all([
+        prisma.practiceAnswer.count({
+          where: { practiceId: practiceSession.id }
+        }),
+        prisma.practiceAnswer.findFirst({
+          where: { practiceId: practiceSession.id },
+          orderBy: { id: 'desc' },
+          include: {
+            question: {
+              select: {
+                id: true,
+                questionText: true,
+                imageUrl: true,
+                audioUrl: true,
+                explanationText: true,
+                explanationImg: true
+              }
+            },
+            chosenAnswer: {
+              select: {
+                id: true,
+                answerText: true,
+                isCorrect: true
+              }
+            }
+          }
+        })
+      ]);
+
+      const elapsedMs = (practiceSession.finishedAt ?? new Date()).getTime() - practiceSession.startedAt.getTime();
+
+      res.status(200).json({
+        practiceSession,
+        score: practiceSession.score,
+        totalAnswered,
+        elapsedTimeSeconds: Math.max(0, Math.floor(elapsedMs / 1000)),
+        isCompleted: practiceSession.finishedAt !== null,
+        lesson: practiceSession.lesson ? {
+          id: practiceSession.lesson.id,
+          title: practiceSession.lesson.title,
+          imageUrl: practiceSession.lesson.imageUrl
+        } : null,
+        lastAnsweredQuestion: lastAnswer ? {
+          question: lastAnswer.question,
+          chosenAnswer: lastAnswer.chosenAnswer,
+          isCorrect: lastAnswer.isCorrect
+        } : null
+      });
+    } catch (error) {
+      console.error('Error getting practice session state:', error);
+      res.status(500).json({ message: 'Error getting practice session state', error: (error as Error).message });
+    }
   }
 };
 

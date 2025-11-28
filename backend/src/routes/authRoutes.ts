@@ -7,7 +7,8 @@ import {
   logout,
   requestOtp,
   verifyOtp,
-  getUserTrophies
+  getUserTrophies,
+  updateUser
 } from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -323,5 +324,86 @@ router.post('/verify-otp', verifyOtp);
  *         description: Server error
  */
 router.get('/trophies/:userId', getUserTrophies);
+
+/**
+ * @swagger
+ * /api/auth/users/{userId}:
+ *   put:
+ *     summary: Update user profile
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 example: John Doe Updated
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: newemail@example.com
+ *               grade:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 example: 4
+ *               avatarUrl:
+ *                 type: string
+ *                 example: https://example.com/avatar.jpg
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: NewPassword123
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: User updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     fullName:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     grade:
+ *                       type: integer
+ *                     avatarUrl:
+ *                       type: string
+ *                     isVerified:
+ *                       type: boolean
+ *                     trophies:
+ *                       type: integer
+ *       400:
+ *         description: Bad request - Invalid input or user not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/users/:userId', updateUser);
 
 export default router;
