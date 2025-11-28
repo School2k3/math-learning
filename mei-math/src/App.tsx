@@ -3,6 +3,7 @@ import HomePage from "./pages/HomePage";
 import StudyPage from "./pages/study-page";
 import TheoreticalVideo from "./pages/theoretical-video";
 import Pratice from "./pages/pratice";
+import PracticeContinue from "./pages/practice-continue";
 import Exams from "./pages/exams";
 import ExamsHistory from "./pages/exams-history";
 import ExamsReview from "./pages/exams-review";
@@ -35,6 +36,7 @@ function App() {
           <Route path="/study" element={<StudyPage />} />
           <Route path="/theoretical-video" element={<TheoreticalVideo />} />
           <Route path="/pratice" element={<Pratice />} />
+          <Route path="/practice-continue" element={<PracticeContinue />} />
           <Route path="/exams" element={<Exams />} />
           <Route path="/exams-history" element={<ExamsHistory />} />
           <Route path="/exams/review/:resultId" element={<ExamsReview />} />

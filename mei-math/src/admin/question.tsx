@@ -274,7 +274,8 @@ const QuestionAdmin: React.FC = () => {
     ) {
       try {
         await deleteQuestionById(id);
-        setQuestions(questions.filter((q) => q.id !== id));
+        // Reload lại dữ liệu từ server để thấy sự thay đổi
+        await loadQuestions();
         alert("Đã xóa câu hỏi thành công!");
       } catch (err) {
         alert(

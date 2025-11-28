@@ -177,7 +177,7 @@ const ExamsHistory: React.FC = () => {
                   <th>Thời gian</th>
                   <th>Số điểm</th>
                   <th>Kết quả</th>
-                  <th>Hành động</th>
+                  {/* <th>Hành động</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -203,6 +203,7 @@ const ExamsHistory: React.FC = () => {
                         {exam.finishedAt ? 'Hoàn thành' : 'Đang làm'}
                       </span>
                     </td>
+                    {/* 
                     <td>
                       {!exam.finishedAt ? (
                         // Bài đang làm dở → Nút "Làm tiếp"
@@ -251,6 +252,7 @@ const ExamsHistory: React.FC = () => {
                         </button>
                       )}
                     </td>
+                    */}
                   </tr>
                 ))}
               </tbody>

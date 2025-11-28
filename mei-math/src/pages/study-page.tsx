@@ -39,6 +39,8 @@ const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({
 const [showExamModal, setShowExamModal] = useState(false);
 const [pendingExam, setPendingExam] = useState<any>(null);
 const [activeExamResult, setActiveExamResult] = useState<any>(null);
+const [incompletePractices, setIncompletePractices] = useState<any[]>([]);
+const [showPracticeBanner, setShowPracticeBanner] = useState(false);
 
   // Cập nhật selectedClass khi user thay đổi (ví dụ: sau khi login)
   useEffect(() => {
@@ -46,6 +48,34 @@ const [activeExamResult, setActiveExamResult] = useState<any>(null);
       setSelectedClass(`Lớp ${user.grade}`);
     }
   }, [user?.grade]);
+
+  // Tải các practice sessions chưa hoàn thành
+  useEffect(() => {
+    const loadIncompletePractices = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetchPracticeHistoryByUser(user.id);
+          const allPractices = response.practiceHistory || response.sessions || [];
+          
+          // Lọc các practice sessions chưa hoàn thành (score < 100 hoặc completed = false)
+          const incomplete = allPractices.filter((practice: any) => {
+            const isIncomplete = !practice.completed || practice.score < 100;
+            const hasStarted = practice.startedAt && !practice.finishedAt;
+            return isIncomplete && hasStarted;
+          });
+
+          setIncompletePractices(incomplete);
+          setShowPracticeBanner(incomplete.length > 0);
+        } catch (error) {
+          console.warn("No incomplete practice sessions found:", error);
+          setIncompletePractices([]);
+          setShowPracticeBanner(false);
+        }
+      }
+    };
+
+    loadIncompletePractices();
+  }, [user?.id]);
 
   // Kiểm tra xem lớp đang chọn có phù hợp với lớp của học sinh không
   const selectedGrade = Number(selectedClass.replace("Lớp ", ""));
@@ -213,6 +243,34 @@ const [activeExamResult, setActiveExamResult] = useState<any>(null);
   return (
     <div>
       <Header bgWhite />
+      
+      {/* Banner thông báo practice sessions đang dở */}
+      {showPracticeBanner && incompletePractices.length > 0 && (
+        <div className="practice-banner">
+          <div className="practice-banner-content">
+            <div className="practice-banner-icon">📝</div>
+            <div className="practice-banner-text">
+              <h4>Bạn có {incompletePractices.length} bài thực hành đang dở!</h4>
+              <p>Tiếp tục học để hoàn thành bài tập và đạt điểm cao.</p>
+            </div>
+            <div className="practice-banner-actions">
+              <button 
+                className="practice-banner-btn continue"
+                onClick={() => navigate('/practice-continue')}
+              >
+                📚 Tiếp tục làm bài
+              </button>
+              <button 
+                className="practice-banner-btn dismiss"
+                onClick={() => setShowPracticeBanner(false)}
+              >
+                ✕ Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="study-main">
         <div className="study-sidebar">
           <h2 className="study-title">Danh sách chương học</h2>

@@ -8,6 +8,17 @@ import LessonCompletionChart from "../components/chart/LessonCompletionChart";
 import ScoreTrendChart from "../components/chart/ScoreTrendChart";
 import SubjectPerformanceChart from "../components/chart/SubjectPerformanceChart";
 import WeeklyActivityChart from "../components/chart/WeeklyActivityChart";
+import { 
+  fetchAdminStats, 
+  fetchStudentsCount, 
+  fetchLessonsCount, 
+  fetchExamsCount, 
+  fetchChaptersCount, 
+  fetchActiveStudents,
+  fetchLessonCompletion,
+  fetchQuestionsAnswered,
+  fetchRecentActivity
+} from "../api/adminStatsAPI";
 
 interface DashboardStats {
   totalStudents: number;
@@ -18,6 +29,12 @@ interface DashboardStats {
   completionRate: number;
   averageScore: number;
   totalQuestions: number;
+  trend?: {
+    students: number;
+    completion: number;
+    score: number;
+    questions: number;
+  };
 }
 
 interface DateRange {
@@ -40,6 +57,10 @@ const HomeAdmin: React.FC = () => {
   });
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [questionsData, setQuestionsData] = useState<any>(null);
   
   // Thêm state cho date range
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -50,20 +71,163 @@ const HomeAdmin: React.FC = () => {
   const [chartsLoading, setChartsLoading] = useState(false);
 
   useEffect(() => {
-    // Giả lập fetch data từ API
-    setTimeout(() => {
-      setStats({
-        totalStudents: 1247,
-        totalLessons: 156,
-        totalExams: 45,
-        totalChapters: 28,
-        activeStudents: 892,
-        completionRate: 78.5,
-        averageScore: 7.8,
-        totalQuestions: 2890
-      });
-      setLoading(false);
-    }, 1000);
+    const loadDashboardData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        console.log("🔄 Loading dashboard data...");
+        
+        // Load all stats in parallel
+        const [
+          adminStatsData,
+          studentsData,
+          lessonsData,
+          examsData,
+          chaptersData,
+          activeStudentsData,
+          completionData,
+          questionsData,
+          recentActivityData
+        ] = await Promise.allSettled([
+          fetchAdminStats(),
+          fetchStudentsCount(),
+          fetchLessonsCount(),
+          fetchExamsCount(),
+          fetchChaptersCount(),
+          fetchActiveStudents(undefined, 7), // 7 ngày gần nhất
+          fetchLessonCompletion(),
+          fetchQuestionsAnswered(),
+          fetchRecentActivity(5) // 5 hoạt động gần nhất
+        ]);
+
+        // Check for critical failures
+        const criticalApiFailed = [studentsData, lessonsData, examsData, chaptersData]
+          .every(result => result.status === 'rejected');
+
+        if (criticalApiFailed) {
+          console.warn("⚠️ All critical APIs failed, using fallback data");
+        }
+
+        // Log individual API results for debugging
+        console.log("📊 API Results:", {
+          adminStats: adminStatsData.status,
+          students: studentsData.status,
+          lessons: lessonsData.status,
+          exams: examsData.status,
+          chapters: chaptersData.status,
+          activeStudents: activeStudentsData.status,
+          completion: completionData.status
+        });
+
+        // Process results với safe access
+        const totalStudents = studentsData.status === 'fulfilled' 
+          ? studentsData.value.byGrade.reduce((sum, grade) => sum + grade.count, 0)
+          : 0;
+
+        const totalLessons = lessonsData.status === 'fulfilled' 
+          ? lessonsData.value.totalLessons 
+          : 0;
+
+        const totalExams = examsData.status === 'fulfilled' 
+          ? examsData.value.totalExams 
+          : 0;
+
+        const totalChapters = chaptersData.status === 'fulfilled' 
+          ? chaptersData.value.totalChapters 
+          : 0;
+
+        const activeStudentsCount = activeStudentsData.status === 'fulfilled' 
+          ? activeStudentsData.value.activeStudents.length 
+          : 0;
+
+        // Safe access để tránh undefined errors
+        const completionRate = completionData.status === 'fulfilled' 
+          ? completionData.value?.lessonCompletion?.completionRate || 0
+          : 0;
+
+        const averageScore = completionData.status === 'fulfilled' 
+          ? completionData.value?.lessonCompletion?.averageScore || 0
+          : 0;
+
+        // Xử lý questions data
+        const totalQuestionsAnswered = questionsData.status === 'fulfilled'
+          ? questionsData.value?.totalAnswers || 0
+          : 0;
+
+        // Xử lý recent activity data
+        if (recentActivityData.status === 'fulfilled' && recentActivityData.value?.data) {
+          setRecentActivities(recentActivityData.value.data);
+        }
+
+        // Lưu questions data để sử dụng ở nơi khác
+        if (questionsData.status === 'fulfilled') {
+          setQuestionsData(questionsData.value);
+        }
+
+        // Main stats từ adminStatsData hoặc từ các API riêng lẻ với safe access
+        const mainStats = adminStatsData.status === 'fulfilled' 
+          ? adminStatsData.value 
+          : null;
+
+        console.log("📊 Processed data:", {
+          mainStats,
+          totalStudents,
+          totalLessons,
+          totalExams,
+          totalChapters,
+          activeStudentsCount,
+          completionRate,
+          averageScore
+        });
+
+        setStats({
+          totalStudents: mainStats?.totalStudents || totalStudents,
+          totalLessons: mainStats?.totalLessons || totalLessons,
+          totalExams: mainStats?.totalExams || totalExams,
+          totalChapters: mainStats?.totalChapters || totalChapters,
+          activeStudents: mainStats?.activeStudents?.count || activeStudentsCount,
+          completionRate: completionRate,
+          averageScore: averageScore,
+          totalQuestions: totalQuestionsAnswered || mainStats?.lessonCompletion?.totalQuestionsAnswered || 0,
+          trend: {
+            students: 12.5, // Tạm thời hardcode, có thể tính từ dữ liệu lịch sử
+            completion: 5.2,
+            score: 0.3,
+            questions: questionsData.status === 'fulfilled' ? (questionsData.value?.totalAnswers || 0) - (mainStats?.lessonCompletion?.totalQuestionsAnswered || 0) : 156
+          }
+        });
+
+        setLastUpdated(new Date());
+        console.log("✅ Dashboard data loaded successfully");
+        
+      } catch (error) {
+        console.error("❌ Error loading dashboard data:", error);
+        setError(error instanceof Error ? error.message : "Có lỗi xảy ra khi tải dữ liệu");
+        
+        // Fallback data nếu API fail
+        setStats({
+          totalStudents: 0,
+          totalLessons: 0,
+          totalExams: 0,
+          totalChapters: 0,
+          activeStudents: 0,
+          completionRate: 0,
+          averageScore: 0,
+          totalQuestions: 0,
+          trend: {
+            students: 0,
+            completion: 0,
+            score: 0,
+            questions: 0
+          }
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
   // Function để handle thay đổi date range
@@ -74,19 +238,47 @@ const HomeAdmin: React.FC = () => {
     }));
   };
 
-  // Function để apply filter
-  const handleApplyFilter = () => {
+  // Function để apply filter với date range
+  const handleApplyFilter = async () => {
     if (dateRange.startDate > dateRange.endDate) {
       alert("Ngày bắt đầu không thể lớn hơn ngày kết thúc!");
       return;
     }
     
     setChartsLoading(true);
-    console.log("Filtering data from", dateRange.startDate, "to", dateRange.endDate);
-    setTimeout(() => {
-      setChartsLoading(false);
+    console.log("🔄 Filtering data from", dateRange.startDate, "to", dateRange.endDate);
+    
+    try {
+      // Reload specific data với date filter
+      const [activeStudentsData, completionData] = await Promise.allSettled([
+        fetchActiveStudents(dateRange.endDate, 7),
+        fetchLessonCompletion(dateRange.endDate)
+      ]);
 
-    }, 1500);
+      // Update active students count với safe access
+      if (activeStudentsData.status === 'fulfilled' && activeStudentsData.value?.activeStudents) {
+        setStats(prev => ({
+          ...prev,
+          activeStudents: activeStudentsData.value.activeStudents.length
+        }));
+      }
+
+      // Update completion rate với safe access
+      if (completionData.status === 'fulfilled' && completionData.value?.lessonCompletion) {
+        setStats(prev => ({
+          ...prev,
+          completionRate: completionData.value.lessonCompletion.completionRate || 0,
+          averageScore: completionData.value.lessonCompletion.averageScore || 0
+        }));
+      }
+
+      console.log("✅ Filter applied successfully");
+    } catch (error) {
+      console.error("❌ Error applying filter:", error);
+      // Don't throw error, just log it
+    } finally {
+      setChartsLoading(false);
+    }
   };
 
   // Function để reset về 30 ngày gần nhất
@@ -213,8 +405,28 @@ const HomeAdmin: React.FC = () => {
       {/* Main Content */}
       <div className="admin-main">
         <div className="admin-header">
-          <h1>Dashboard Tổng quan</h1>
-          <p>Thống kê hệ thống học toán MEI Math</p>
+          <div>
+            <h1>Dashboard Tổng quan</h1>
+            <p>Thống kê hệ thống học toán MEI Math</p>
+            {lastUpdated && (
+              <p className="last-updated">
+                Cập nhật lần cuối: {lastUpdated.toLocaleString('vi-VN')}
+              </p>
+            )}
+          </div>
+          
+          {error && (
+            <div className="error-banner">
+              <span className="error-icon">⚠️</span>
+              <span>{error}</span>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="reload-btn"
+              >
+                🔄 Tải lại
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards - giữ nguyên */}
@@ -222,7 +434,7 @@ const HomeAdmin: React.FC = () => {
           <div className="stat-card primary">
             <div className="stat-icon">👥</div>
             <div className="stat-content">
-              <h3>{loading ? "..." : stats.totalStudents.toLocaleString()}</h3>
+              <h3>{loading ? "..." : (stats.totalStudents || 0).toLocaleString()}</h3>
               <p>Tổng học sinh</p>
             </div>
           </div>
@@ -252,30 +464,38 @@ const HomeAdmin: React.FC = () => {
           </div>
         </div>
 
-        {/* Secondary Stats - giữ nguyên */}
+        {/* Secondary Stats với dữ liệu thực từ API */}
         <div className="secondary-stats">
           <div className="stat-item">
-            <div className="stat-number">{loading ? "..." : `${stats.activeStudents.toLocaleString()}`}</div>
+            <div className="stat-number">{loading ? "..." : `${(stats.activeStudents || 0).toLocaleString()}`}</div>
             <div className="stat-label">Học sinh hoạt động (7 ngày)</div>
-            <div className="stat-trend positive">+12.5%</div>
+            <div className={`stat-trend ${stats.trend?.students && stats.trend.students > 0 ? 'positive' : stats.trend?.students === 0 ? 'neutral' : 'negative'}`}>
+              {loading ? "..." : `${(stats.trend?.students || 0) > 0 ? '+' : ''}${stats.trend?.students || 0}%`}
+            </div>
           </div>
 
           <div className="stat-item">
-            <div className="stat-number">{loading ? "..." : `${stats.completionRate}%`}</div>
+            <div className="stat-number">{loading ? "..." : `${(stats.completionRate || 0).toFixed(1)}%`}</div>
             <div className="stat-label">Tỷ lệ hoàn thành bài học</div>
-            <div className="stat-trend positive">+5.2%</div>
+            <div className={`stat-trend ${stats.trend?.completion && stats.trend.completion > 0 ? 'positive' : stats.trend?.completion === 0 ? 'neutral' : 'negative'}`}>
+              {loading ? "..." : `${(stats.trend?.completion || 0) > 0 ? '+' : ''}${stats.trend?.completion || 0}%`}
+            </div>
           </div>
 
           <div className="stat-item">
-            <div className="stat-number">{loading ? "..." : `${stats.averageScore}/10`}</div>
+            <div className="stat-number">{loading ? "..." : `${(stats.averageScore || 0).toFixed(1)}/10`}</div>
             <div className="stat-label">Điểm trung bình</div>
-            <div className="stat-trend neutral">+0.3</div>
+            <div className={`stat-trend ${stats.trend?.score && stats.trend.score > 0 ? 'positive' : stats.trend?.score === 0 ? 'neutral' : 'negative'}`}>
+              {loading ? "..." : `${(stats.trend?.score || 0) > 0 ? '+' : ''}${stats.trend?.score || 0}`}
+            </div>
           </div>
 
           <div className="stat-item">
-            <div className="stat-number">{loading ? "..." : stats.totalQuestions.toLocaleString()}</div>
-            <div className="stat-label">Tổng câu hỏi</div>
-            <div className="stat-trend positive">+156</div>
+            <div className="stat-number">{loading ? "..." : (stats.totalQuestions || 0).toLocaleString()}</div>
+            <div className="stat-label">Tổng câu hỏi đã trả lời</div>
+            <div className={`stat-trend ${stats.trend?.questions && stats.trend.questions > 0 ? 'positive' : stats.trend?.questions === 0 ? 'neutral' : 'negative'}`}>
+              {loading ? "..." : `${(stats.trend?.questions || 0) > 0 ? '+' : ''}${stats.trend?.questions || 0}`}
+            </div>
           </div>
         </div>
 
@@ -357,31 +577,53 @@ const HomeAdmin: React.FC = () => {
           </div>
         </div>
 
-        {/* Recent Activity - giữ nguyên */}
+        {/* Recent Activity với dữ liệu thực từ API */}
         <div className="recent-activity">
           <h3>Hoạt động gần đây</h3>
           <div className="activity-list">
-            <div className="activity-item">
-              <div className="activity-icon">📚</div>
-              <div className="activity-content">
-                <p><strong>Nguyễn Văn An</strong> đã hoàn thành bài học "Phép cộng trong phạm vi 100"</p>
-                <span className="activity-time">5 phút trước</span>
-              </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-icon">📋</div>
-              <div className="activity-content">
-                <p><strong>Trần Thị Bình</strong> đã làm bài kiểm tra "Kiểm tra chương 1" - Điểm: 9/10</p>
-                <span className="activity-time">12 phút trước</span>
-              </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-icon">👨‍🏫</div>
-              <div className="activity-content">
-                <p><strong>Giáo viên Lan</strong> đã thêm 5 câu hỏi mới vào chương "Phép trừ"</p>
-                <span className="activity-time">1 giờ trước</span>
-              </div>
-            </div>
+            {recentActivities.length > 0 ? (
+              recentActivities.map((activity, index) => (
+                <div key={index} className="activity-item">
+                  <div className="activity-icon">
+                    {activity.type === "exam" ? "📋" : activity.type === "practice" ? "📚" : "👨‍🏫"}
+                  </div>
+                  <div className="activity-content">
+                    <p>
+                      <strong>{activity.user?.fullName || activity.user?.username}</strong> {activity.title}
+                      {activity.score !== undefined && (
+                        <span> - Điểm: {activity.score}/10</span>
+                      )}
+                    </p>
+                    <span className="activity-time">{activity.time}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              // Fallback nếu không có dữ liệu từ API
+              <>
+                <div className="activity-item">
+                  <div className="activity-icon">📚</div>
+                  <div className="activity-content">
+                    <p><strong>Nguyễn Văn An</strong> đã hoàn thành bài học "Phép cộng trong phạm vi 100"</p>
+                    <span className="activity-time">5 phút trước</span>
+                  </div>
+                </div>
+                <div className="activity-item">
+                  <div className="activity-icon">📋</div>
+                  <div className="activity-content">
+                    <p><strong>Trần Thị Bình</strong> đã làm bài kiểm tra "Kiểm tra chương 1" - Điểm: 9/10</p>
+                    <span className="activity-time">12 phút trước</span>
+                  </div>
+                </div>
+                <div className="activity-item">
+                  <div className="activity-icon">👨‍🏫</div>
+                  <div className="activity-content">
+                    <p><strong>Giáo viên Lan</strong> đã thêm 5 câu hỏi mới vào chương "Phép trừ"</p>
+                    <span className="activity-time">1 giờ trước</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -119,7 +119,22 @@ export async function deleteChapter(chapterId: number) {
     if (!response.ok) {
       const errorData = await response.text();
       console.error("deleteChapter error response:", errorData);
-      throw new Error(`Failed to delete chapter: ${response.status}`);
+
+      // Parse error message từ response
+      let errorMessage = `Failed to delete chapter: ${response.status}`;
+      try {
+        const parsedError = JSON.parse(errorData);
+        if (parsedError.message) {
+          errorMessage = parsedError.message;
+        }
+      } catch (parseError) {
+        // Nếu không parse được JSON, sử dụng raw text
+        if (errorData) {
+          errorMessage = errorData;
+        }
+      }
+
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();

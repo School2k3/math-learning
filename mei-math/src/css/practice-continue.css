@@ -1,0 +1,270 @@
+/* Practice Continue Page Styles */
+.loading-message {
+  text-align: center;
+  font-size: 18px;
+  color: #666;
+  padding: 60px 20px;
+}
+
+.no-history-container {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.no-history-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.no-history-container h3 {
+  font-size: 24px;
+  color: #252641;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.no-history-container p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 30px;
+  color: #666;
+}
+
+.start-new-btn,
+.new-practice-btn {
+  background: linear-gradient(135deg, #49bbbd 0%, #23bdee 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 18px;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(73, 187, 189, 0.3);
+}
+
+.start-new-btn:hover,
+.new-practice-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(73, 187, 189, 0.4);
+}
+
+.practice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.practice-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.practice-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.practice-header {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+.lesson-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #252641;
+  margin: 0 0 8px 0;
+}
+
+.chapter-badge {
+  background: #e3f2fd;
+  color: #49bbbd;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.practice-content {
+  margin-bottom: 20px;
+}
+
+.practice-stats {
+  margin-bottom: 16px;
+}
+
+.stat-group {
+  margin-bottom: 12px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.stat-icon {
+  font-size: 18px;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: #666;
+  font-size: 14px;
+}
+
+.stat-value {
+  font-weight: 700;
+  font-size: 16px;
+  color: #ffd700;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #49bbbd 0%, #23bdee 100%);
+  transition: width 0.3s ease;
+}
+
+/* Dynamic width for progress fill */
+.progress-fill[data-width="0%"] {
+  width: 0%;
+}
+.progress-fill[data-width="10%"] {
+  width: 10%;
+}
+.progress-fill[data-width="20%"] {
+  width: 20%;
+}
+.progress-fill[data-width="30%"] {
+  width: 30%;
+}
+.progress-fill[data-width="40%"] {
+  width: 40%;
+}
+.progress-fill[data-width="50%"] {
+  width: 50%;
+}
+.progress-fill[data-width="60%"] {
+  width: 60%;
+}
+.progress-fill[data-width="70%"] {
+  width: 70%;
+}
+.progress-fill[data-width="80%"] {
+  width: 80%;
+}
+.progress-fill[data-width="90%"] {
+  width: 90%;
+}
+.progress-fill[data-width="100%"] {
+  width: 100%;
+}
+
+.practice-dates {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.date-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date-label {
+  font-size: 12px;
+  color: #888;
+  font-weight: 500;
+}
+
+.date-value {
+  font-size: 14px;
+  color: #252641;
+  font-weight: 600;
+}
+
+.practice-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.continue-practice-btn {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.continue-practice-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+.bottom-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 2px solid #f0f0f0;
+}
+
+/* Header margin fix */
+.header-margin {
+  margin-top: -30px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .practice-card {
+    padding: 16px;
+  }
+
+  .practice-dates {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .lesson-title {
+    font-size: 18px;
+  }
+
+  .continue-practice-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .stat-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

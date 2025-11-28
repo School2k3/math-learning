@@ -31,6 +31,7 @@ const LessonAdmin: React.FC = () => {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [hasInitialized, setHasInitialized] = useState(false);
   const navigate = useNavigate();
 
   // Filter states
@@ -152,8 +153,8 @@ const LessonAdmin: React.FC = () => {
     }
   };
 
-  // Load data từ API
-  const loadData = async () => {
+  // Load data từ API với filters cụ thể
+  const loadDataWithFilters = async (chapterFilter = filterChapter, gradeFilter = filterGrade) => {
     try {
       setLoading(true);
       setError("");
@@ -164,16 +165,16 @@ const LessonAdmin: React.FC = () => {
       );
       // Load lessons dựa trên filter
       let lessonsResponse;
-      if (filterChapter === "all") {
+      if (chapterFilter === "all") {
         lessonsResponse = await fetchAllLessons();
       } else {
-        lessonsResponse = await fetchLessonsByChapter(Number(filterChapter));
+        lessonsResponse = await fetchLessonsByChapter(Number(chapterFilter));
       }
       let lessonsList =
         lessonsResponse.data?.lessons || lessonsResponse.lessons || [];
-      // Nếu filterGrade khác "all", chỉ lấy các bài học thuộc chương có grade đúng
-      if (filterGrade !== "all") {
-        const gradeNum = Number(filterGrade);
+      // Nếu gradeFilter khác "all", chỉ lấy các bài học thuộc chương có grade đúng
+      if (gradeFilter !== "all") {
+        const gradeNum = Number(gradeFilter);
         const chapterIds = chaptersResponse.chapters
           .filter((ch: Chapter) => ch.grade === gradeNum)
           .map((ch: Chapter) => ch.id);
@@ -191,23 +192,38 @@ const LessonAdmin: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, [filterChapter, filterGrade]);
+  // Load data từ API
+  const loadData = async () => {
+    return loadDataWithFilters(filterChapter, filterGrade);
+  };
 
-  // Đọc URL params khi component mount
+  // Đọc URL params và load data ban đầu
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const chapterId = params.get('chapterId');
     const grade = params.get('grade');
     
-    if (chapterId) {
-      setFilterChapter(chapterId);
+    // Set initial filters từ URL params nếu có
+    const initialChapterFilter = chapterId || 'all';
+    const initialGradeFilter = grade || 'all';
+    
+    // Set state
+    setFilterChapter(initialChapterFilter);
+    setFilterGrade(initialGradeFilter);
+    
+    // Load data với filters từ URL ngay lập tức
+    loadDataWithFilters(initialChapterFilter, initialGradeFilter);
+    
+    // Đánh dấu đã khởi tạo để tránh load lại khi set state
+    setTimeout(() => setHasInitialized(true), 100);
+  }, []); // Chỉ chạy một lần khi mount
+
+  // Load data khi user thay đổi filters thủ công
+  useEffect(() => {
+    if (hasInitialized) {
+      loadData();
     }
-    if (grade) {
-      setFilterGrade(grade);
-    }
-  }, []);
+  }, [filterChapter, filterGrade, hasInitialized]);
 
   // Không cần filter trên client nữa vì đã filter qua API
   const filteredLessons = lessons;

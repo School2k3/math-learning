@@ -109,13 +109,15 @@ const ChapterAdmin: React.FC = () => {
     }
   };
 
-  // Xóa chương (tạm thời vô hiệu hóa - chỉ có API GET)
+  // Xóa chương
   const handleDelete = async (id: number) => {
-    if (
-      !window.confirm(
-        "Bạn có chắc chắn muốn xóa chương này? Hành động này không thể hoàn tác!"
-      )
-    ) {
+    // Tìm thông tin chương để hiển thị warning tốt hơn
+    const chapter = chapters.find(c => c.id === id);
+    const confirmMessage = chapter && chapter.lessonsCount > 0
+      ? `CẢNH BÁO: Chương "${chapter.title}" có ${chapter.lessonsCount} bài học.\n\nBạn cần xóa tất cả bài học trong chương này trước khi có thể xóa chương.\n\nBạn có muốn tiếp tục thử xóa chương này không?`
+      : `Bạn có chắc chắn muốn xóa chương "${chapter?.title || 'này'}"? Hành động này không thể hoàn tác!`;
+    
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
@@ -128,7 +130,19 @@ const ChapterAdmin: React.FC = () => {
       alert("Xóa chương thành công!");
     } catch (error) {
       console.error("Error deleting chapter:", error);
-      alert("Lỗi khi xóa chương: " + (error as Error).message);
+      
+      // Hiển thị error message cụ thể từ server
+      let errorMessage = "Lỗi khi xóa chương";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      // Thêm hướng dẫn cụ thể cho lỗi phổ biến                    
+      if (errorMessage.includes("existing lessons")) {
+        errorMessage += "\n\nVui lòng xóa tất cả bài học trong chương này trước khi xóa chương.";
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
