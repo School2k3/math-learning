@@ -223,18 +223,21 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   word-wrap: break-word;
+  text-align: left;
 }
 
 .user-message .message-content {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-bottom-right-radius: 4px;
+  text-align: left;
 }
 
 .bot-message .message-content {
   background: white;
   color: #333;
   border-bottom-left-radius: 4px;
+  text-align: left;
 }
 
 /* Markdown Styling */
