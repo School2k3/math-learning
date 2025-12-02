@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "../css/admin-css/user.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { getAllUsers, updateUser } from "../api/userAPI";
+import type { User as ApiUser } from "../api/userAPI";
 
 interface User {
   user_id: number;
@@ -32,52 +34,65 @@ const UserAdmin: React.FC = () => {
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<User>>({});
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newUser, setNewUser] = useState<Partial<User>>({});
 
-  // Mock data
-  const mockUsers: User[] = [
-    {
-      user_id: 1,
-      username: "admin",
-      password_hash: "$2b$10$Z6bXuEhr3U...",
-      email: "zeroschool10@gmail.com",
-      full_name: "Adminator",
-      role: "admin",
-      grade: 1,
-      avatar_url: null,
-      created_at: "2025-10-03 15:02:15.483",
-      updated_at: "2025-10-03 15:02:46.713",
-      is_verified: true,
-    },
-    {
-      user_id: 2,
-      username: "duong1234",
-      password_hash: "$2b$10$P.Ne0QWSv...",
-      email: "duongdhkpmi7ctt@gmail.com",
-      full_name: "Nguyen Dinh Duong",
-      role: "student",
-      grade: 1,
-      avatar_url: null,
-      created_at: "2025-10-04 01:41:33.664",
-      updated_at: "2025-10-04 01:42:20.987",
-      is_verified: true,
-    },
-  ];
-
-  // Load mock data
+  // Load data from API
   const loadData = async () => {
     try {
       setLoading(true);
       setError("");
-      // Giả lập API call
-      setTimeout(() => {
-        setUsers(mockUsers);
-        setLoading(false);
-      }, 500);
+      
+      console.log("🔵 Bắt đầu tải danh sách users từ API...");
+      
+      // Build params from filters
+      const params: any = {};
+      if (filterRole !== "all") params.role = filterRole;
+      if (filterGrade !== "all") params.grade = Number(filterGrade);
+      if (filterVerified !== "all") params.isVerified = filterVerified === "true";
+      if (searchTerm) params.search = searchTerm;
+      
+      const response = await getAllUsers(params);
+      
+      console.log("✅ API response:", response);
+      
+      if (response.success && response.data.users) {
+        // Map API data to component's User interface
+        const mappedUsers: User[] = response.data.users.map((user: ApiUser) => ({
+          user_id: user.id,
+          username: user.username,
+          password_hash: "***", // Don't show password hash
+          email: user.email,
+          full_name: user.fullName,
+          role: user.role as "student" | "teacher" | "admin",
+          grade: user.grade || 1,
+          avatar_url: user.avatarUrl || null,
+          created_at: user.createdAt || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_verified: user.isVerified,
+        }));
+        
+        setUsers(mappedUsers);
+        console.log("✅ Đã load", mappedUsers.length, "users");
+      } else {
+        console.error("❌ API response không hợp lệ:", response);
+        setError("Dữ liệu trả về không hợp lệ");
+        setUsers([]);
+      }
+      
+      setLoading(false);
     } catch (error) {
-      setError("Không thể tải dữ liệu: " + (error as Error).message);
-      console.error("Error loading users:", error);
+      const errorMessage = (error as Error).message;
+      
+      // Nếu token hết hạn, redirect về login
+      if (errorMessage.includes("401")) {
+        console.error("🔴 Token hết hạn, chuyển về trang đăng nhập...");
+        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        logout();
+        navigate("/auth/login");
+        return;
+      }
+      
+      setError("Không thể tải dữ liệu: " + errorMessage);
+      console.error("🔴 Error loading users:", error);
       setUsers([]);
       setLoading(false);
     }
@@ -107,49 +122,7 @@ const UserAdmin: React.FC = () => {
     return true;
   });
 
-  // Thêm user mới
-  const handleAdd = () => {
-    if (
-      !newUser.username ||
-      !newUser.email ||
-      !newUser.full_name ||
-      !newUser.role
-    ) {
-      alert("Vui lòng điền đầy đủ thông tin bắt buộc!");
-      return;
-    }
 
-    const newId = Math.max(...users.map((u) => u.user_id)) + 1;
-    const now = new Date().toISOString().replace("T", " ").slice(0, 19);
-
-    // Cập nhật hàm handleAdd để tạo user với avatar null
-    const userToAdd: User = {
-      user_id: newId,
-      username: newUser.username!,
-      password_hash: "$2b$10$" + Math.random().toString(36).substring(2, 15), // Mock hash
-      email: newUser.email!,
-      full_name: newUser.full_name!,
-      role: newUser.role as "student" | "teacher" | "admin",
-      grade: newUser.grade || 1,
-      avatar_url: null, // Đổi thành null thay vì auto-generate
-      created_at: now,
-      updated_at: now,
-      is_verified: false,
-    };
-
-    setUsers([...users, userToAdd]);
-    setNewUser({});
-    setShowAddForm(false);
-    alert("Thêm người dùng thành công!");
-  };
-
-  // Xóa user
-  const handleDelete = (id: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
-      setUsers(users.filter((user) => user.user_id !== id));
-      alert("Xóa người dùng thành công!");
-    }
-  };
 
   // Bắt đầu chỉnh sửa
   const handleEdit = (user: User) => {
@@ -158,26 +131,45 @@ const UserAdmin: React.FC = () => {
   };
 
   // Lưu chỉnh sửa
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editData.username || !editData.email || !editData.full_name) {
       alert("Vui lòng điền đầy đủ thông tin bắt buộc!");
       return;
     }
 
-    const updatedUsers = users.map((user) =>
-      user.user_id === editingId
-        ? {
-            ...user,
-            ...editData,
-            updated_at: new Date().toISOString().replace("T", " ").slice(0, 19),
-          }
-        : user
-    );
-
-    setUsers(updatedUsers);
-    setEditingId(null);
-    setEditData({});
-    alert("Cập nhật người dùng thành công!");
+    try {
+      console.log("🔵 Đang cập nhật user ID:", editingId);
+      
+      // Prepare update data
+      const updateData = {
+        username: editData.username,
+        email: editData.email,
+        fullName: editData.full_name,
+        role: editData.role,
+        grade: editData.grade,
+        isVerified: editData.is_verified,
+      };
+      
+      console.log("📤 Update data:", updateData);
+      
+      const response = await updateUser(editingId!, updateData);
+      
+      console.log("✅ Update response:", response);
+      
+      if (response.success) {
+        alert("Cập nhật người dùng thành công!");
+        setEditingId(null);
+        setEditData({});
+        
+        // Reload data from API
+        await loadData();
+      } else {
+        alert("Cập nhật thất bại: " + response.message);
+      }
+    } catch (error) {
+      console.error("🔴 Lỗi khi cập nhật user:", error);
+      alert("Lỗi khi cập nhật: " + (error as Error).message);
+    }
   };
 
   const handleLogout = () => {
@@ -191,8 +183,6 @@ const UserAdmin: React.FC = () => {
   const handleCancel = () => {
     setEditingId(null);
     setEditData({});
-    setShowAddForm(false);
-    setNewUser({});
   };
 
   // Format datetime
@@ -317,9 +307,6 @@ const UserAdmin: React.FC = () => {
             <h1>Quản lý người dùng</h1>
             <p>{filteredUsers.length} người dùng</p>
           </div>
-          <button className="btn-add" onClick={() => setShowAddForm(true)}>
-            + Thêm mới
-          </button>
         </div>
 
         {/* Filter Section */}
@@ -463,120 +450,6 @@ const UserAdmin: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {/* Form thêm mới */}
-              {showAddForm && (
-                <tr className="add-row">
-                  <td>-</td>
-                  <td>
-                    <div
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        backgroundColor: "#ddd",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      👤
-                    </div>
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={newUser.username || ""}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, username: e.target.value })
-                      }
-                      placeholder="Tên đăng nhập"
-                      className="input-field"
-                      required
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      value={newUser.full_name || ""}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, full_name: e.target.value })
-                      }
-                      placeholder="Họ và tên"
-                      className="input-field"
-                      required
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="email"
-                      value={newUser.email || ""}
-                      onChange={(e) =>
-                        setNewUser({ ...newUser, email: e.target.value })
-                      }
-                      placeholder="Email"
-                      className="input-field"
-                      required
-                    />
-                  </td>
-                  <td>
-                    <select
-                      value={newUser.role || ""}
-                      onChange={(e) =>
-                        setNewUser({
-                          ...newUser,
-                          role: e.target.value as
-                            | "student"
-                            | "teacher"
-                            | "admin",
-                        })
-                      }
-                      className="select-field"
-                      required
-                    >
-                      <option value="">Chọn vai trò</option>
-                      <option value="student">Học sinh</option>
-                      <option value="teacher">Giáo viên</option>
-                      <option value="admin">Quản trị viên</option>
-                    </select>
-                  </td>
-                  <td>
-                    <select
-                      value={newUser.grade || ""}
-                      onChange={(e) =>
-                        setNewUser({
-                          ...newUser,
-                          grade: Number(e.target.value),
-                        })
-                      }
-                      className="select-field"
-                    >
-                      <option value="">Chọn lớp</option>
-                      <option value={1}>1</option>
-                      <option value={2}>2</option>
-                      <option value={3}>3</option>
-                      <option value={4}>4</option>
-                      <option value={5}>5</option>
-                    </select>
-                  </td>
-                  <td>
-                    <span className="status-badge unverified">
-                      Chưa xác thực
-                    </span>
-                  </td>
-                  <td>-</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="btn-save" onClick={handleAdd}>
-                        💾 Lưu
-                      </button>
-                      <button className="btn-cancel" onClick={handleCancel}>
-                        ❌ Hủy
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-
               {/* Danh sách người dùng */}
               {filteredUsers.map((user) => (
                 <tr key={user.user_id}>
@@ -749,13 +622,7 @@ const UserAdmin: React.FC = () => {
                           className="btn-edit"
                           onClick={() => handleEdit(user)}
                         >
-                          ✏️
-                        </button>
-                        <button
-                          className="btn-delete"
-                          onClick={() => handleDelete(user.user_id)}
-                        >
-                          🗑️
+                          ✏️ Sửa
                         </button>
                       </div>
                     )}
