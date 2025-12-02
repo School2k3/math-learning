@@ -10,6 +10,8 @@ import {
 } from '../utils/apiResponse.js';
 import { CreateQuestionInput, UpdateQuestionInput, UpdateAnswersInput } from '../schemas/question.schema.js';
 import { synthesizeQuestionAudio } from '../services/questionAudioService.js';
+import * as XLSX from 'xlsx';
+import multer from 'multer';
 
 function buildQuestionTtsPrompt(question: any) {
   const questionText =
@@ -567,7 +569,350 @@ generateQuestionAudio: async (req: Request, res: Response): Promise<void> => {
       console.error('Error deleting question:', error);
       sendErrorResponse(res, 'Failed to delete question');
     }
+  },
+
+  // Import questions from Excel file
+  importQuestionsFromExcel: async (req: Request, res: Response): Promise<void> => {
+    try {
+      if (!req.file) {
+        sendBadRequestResponse(res, 'No file uploaded');
+        return;
+      }
+
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      // Convert to JSON
+      const data: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+      if (data.length === 0) {
+        sendBadRequestResponse(res, 'Excel file is empty');
+        return;
+      }
+
+      const results = {
+        success: [] as any[],
+        failed: [] as any[],
+        total: data.length
+      };
+
+      // Process each row
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        const rowNumber = i + 2; // +2 because Excel rows start at 1 and first row is header
+        
+        try {
+          // 1. Validate required fields - check for blank/empty values
+          const requiredFields = {
+            questionText: row.questionText,
+            grade: row.grade,
+            type: row.type,
+            answerType: row.answerType,
+            answer1: row.answer1,
+            answer2: row.answer2,
+            correctAnswer: row.correctAnswer
+          };
+
+          const missingFields: string[] = [];
+          for (const [field, value] of Object.entries(requiredFields)) {
+            if (value === undefined || value === null || value.toString().trim() === '') {
+              missingFields.push(field);
+            }
+          }
+
+          if (missingFields.length > 0) {
+            results.failed.push({
+              row: rowNumber,
+              error: `Missing required fields: ${missingFields.join(', ')}`,
+              data: row
+            });
+            continue;
+          }
+
+          // 2. Validate grade (must be 1-5)
+          const grade = parseInt(row.grade);
+          if (isNaN(grade) || grade < 1 || grade > 5) {
+            results.failed.push({
+              row: rowNumber,
+              error: 'Grade must be a number between 1 and 5',
+              data: row
+            });
+            continue;
+          }
+
+          // 3. Validate type (must be "practice" or "exam")
+          const type = row.type.toString().trim().toLowerCase();
+          if (type !== 'practice' && type !== 'exam') {
+            results.failed.push({
+              row: rowNumber,
+              error: 'Type must be either "practice" or "exam"',
+              data: row
+            });
+            continue;
+          }
+
+          // 4. Validate answerType (must be "combobox", "text", or "choice")
+          const answerType = row.answerType.toString().trim().toLowerCase();
+          if (answerType !== 'combobox' && answerType !== 'text' && answerType !== 'choice') {
+            results.failed.push({
+              row: rowNumber,
+              error: 'AnswerType must be "combobox", "text", or "choice"',
+              data: row
+            });
+            continue;
+          }
+
+          // 5. Validate lessonId if provided
+          let lessonId: number | null = null;
+          if (row.lessonId) {
+            lessonId = parseInt(row.lessonId);
+            if (isNaN(lessonId)) {
+              results.failed.push({
+                row: rowNumber,
+                error: 'LessonId must be a valid number',
+                data: row
+              });
+              continue;
+            }
+
+            // Check if lesson exists
+            const lessonExists = await prisma.lesson.findUnique({
+              where: { id: lessonId }
+            });
+
+            if (!lessonExists) {
+              results.failed.push({
+                row: rowNumber,
+                error: `Lesson with ID ${lessonId} does not exist`,
+                data: row
+              });
+              continue;
+            }
+          }
+
+          // 6. Collect all answers (answer1 to answer4)
+          const answers: { text: string; index: number }[] = [];
+          for (let j = 1; j <= 4; j++) {
+            const answerKey = `answer${j}`;
+            if (row[answerKey] && row[answerKey].toString().trim() !== '') {
+              answers.push({
+                text: row[answerKey].toString().trim(),
+                index: j
+              });
+            }
+          }
+
+          if (answers.length === 0) {
+            results.failed.push({
+              row: rowNumber,
+              error: 'No answers provided',
+              data: row
+            });
+            continue;
+          }
+
+          // 7. Validate correctAnswer - must match one of the answer values
+          const correctAnswerValue = row.correctAnswer.toString().trim();
+          const matchingAnswer = answers.find(a => a.text === correctAnswerValue);
+
+          if (!matchingAnswer) {
+            results.failed.push({
+              row: rowNumber,
+              error: `correctAnswer "${correctAnswerValue}" must match one of the answer values (answer1, answer2, answer3, or answer4)`,
+              data: row
+            });
+            continue;
+          }
+
+          // Create question with answers in transaction
+          const question = await prisma.$transaction(async (tx) => {
+            const newQuestion = await tx.question.create({
+              data: {
+                questionText: row.questionText.toString().trim(),
+                imageUrl: row.imageUrl?.toString().trim() || null,
+                audioUrl: row.audioUrl?.toString().trim() || null,
+                explanationText: row.explanationText?.toString().trim() || null,
+                explanationImg: row.explanationImg?.toString().trim() || null,
+                grade: grade,
+                type: type,
+                answerType: answerType,
+                lessonId: lessonId
+              }
+            });
+
+            // Create answers
+            await tx.answer.createMany({
+              data: answers.map(answer => ({
+                questionId: newQuestion.id,
+                answerText: answer.text,
+                isCorrect: answer.text === correctAnswerValue
+              }))
+            });
+
+            return newQuestion;
+          });
+
+          results.success.push({
+            row: rowNumber,
+            questionId: question.id,
+            questionText: question.questionText
+          });
+
+        } catch (error: any) {
+          results.failed.push({
+            row: rowNumber,
+            error: error.message || 'Failed to create question',
+            data: row
+          });
+        }
+      }
+
+      sendSuccessResponse(res, results, `Import completed: ${results.success.length} succeeded, ${results.failed.length} failed`);
+    } catch (error) {
+      console.error('Error importing questions:', error);
+      sendErrorResponse(res, 'Failed to import questions from Excel');
+    }
+  },
+
+  // Download Excel template
+  downloadExcelTemplate: async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Create instruction sheet data
+      const instructions = [
+        { Field: 'INSTRUCTIONS FOR IMPORTING QUESTIONS', Description: '' },
+        { Field: '', Description: '' },
+        { Field: '📋 REQUIRED FIELDS (Cannot be blank):', Description: '' },
+        { Field: '  • questionText', Description: 'The question text' },
+        { Field: '  • grade', Description: 'Must be 1, 2, 3, 4, or 5' },
+        { Field: '  • type', Description: 'Must be "practice" or "exam"' },
+        { Field: '  • answerType', Description: 'Must be "choice", "text", or "combobox"' },
+        { Field: '  • answer1', Description: 'First answer option (required)' },
+        { Field: '  • answer2', Description: 'Second answer option (required)' },
+        { Field: '  • correctAnswer', Description: 'MUST exactly match one of answer1-4 TEXT (not the number!)' },
+        { Field: '', Description: '' },
+        { Field: '📝 OPTIONAL FIELDS (Can be blank):', Description: '' },
+        { Field: '  • imageUrl', Description: 'URL to question image' },
+        { Field: '  • audioUrl', Description: 'URL to question audio' },
+        { Field: '  • explanationText', Description: 'Text explaining the answer' },
+        { Field: '  • explanationImg', Description: 'URL to explanation image' },
+        { Field: '  • lessonId', Description: 'Lesson ID (must exist in database if provided)' },
+        { Field: '  • answer3', Description: 'Third answer option (optional)' },
+        { Field: '  • answer4', Description: 'Fourth answer option (optional)' },
+        { Field: '', Description: '' },
+        { Field: '⚠️ VALIDATION RULES:', Description: '' },
+        { Field: '  1. Grade', Description: 'Must be a number from 1 to 5' },
+        { Field: '  2. Type', Description: 'Only "practice" or "exam" (case-insensitive)' },
+        { Field: '  3. AnswerType', Description: 'Only "choice", "text", or "combobox" (case-insensitive)' },
+        { Field: '  4. LessonId', Description: 'If provided, must exist in the database' },
+        { Field: '  5. CorrectAnswer', Description: 'MUST match the exact TEXT of answer1, answer2, answer3, or answer4' },
+        { Field: '', Description: '' },
+        { Field: '✅ CORRECT EXAMPLE:', Description: '' },
+        { Field: '  answer1: "London"', Description: '' },
+        { Field: '  answer2: "Paris"', Description: '' },
+        { Field: '  answer3: "Berlin"', Description: '' },
+        { Field: '  correctAnswer: "Paris"', Description: '← Matches answer2 text exactly!' },
+        { Field: '', Description: '' },
+        { Field: '❌ WRONG EXAMPLE:', Description: '' },
+        { Field: '  answer1: "London"', Description: '' },
+        { Field: '  answer2: "Paris"', Description: '' },
+        { Field: '  correctAnswer: "2"', Description: '← WRONG! Use "Paris" not "2"' },
+        { Field: '', Description: '' },
+        { Field: '💡 TIPS:', Description: '' },
+        { Field: '  • Fill in the Questions sheet (next tab) with your data', Description: '' },
+        { Field: '  • Delete the example rows before importing', Description: '' },
+        { Field: '  • Make sure all required fields are filled', Description: '' },
+        { Field: '  • correctAnswer is the TEXT value, not the answer number!', Description: '' },
+        { Field: '  • Leave optional fields blank if not needed', Description: '' },
+        { Field: '', Description: '' },
+        { Field: '📤 HOW TO IMPORT:', Description: '' },
+        { Field: '  1. Fill in your questions in the Questions sheet', Description: '' },
+        { Field: '  2. Save the file', Description: '' },
+        { Field: '  3. Upload via: POST /api/questions/import', Description: '' },
+        { Field: '  4. Check the response for success/failed rows', Description: '' }
+      ];
+
+      // Create template data
+      const templateData = [
+        {
+          questionText: 'What is 2 + 2?',
+          imageUrl: '',
+          audioUrl: '',
+          explanationText: 'Addition of two numbers',
+          explanationImg: '',
+          grade: 1,
+          type: 'practice',
+          answerType: 'choice',
+          lessonId: '8',
+          answer1: '3',
+          answer2: '4',
+          answer3: '5',
+          answer4: '6',
+          correctAnswer: '4'
+        },
+        {
+          questionText: 'What is 5 - 3?',
+          imageUrl: '',
+          audioUrl: '',
+          explanationText: 'Subtraction example',
+          explanationImg: '',
+          grade: 1,
+          type: 'exam',
+          answerType: 'choice',
+          lessonId: '',
+          answer1: '1',
+          answer2: '2',
+          answer3: '3',
+          answer4: '4',
+          correctAnswer: '2'
+        }
+      ];
+
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      
+      // Add Instructions sheet first
+      const instructionSheet = XLSX.utils.json_to_sheet(instructions);
+      instructionSheet['!cols'] = [
+        { wch: 50 }, // Field column
+        { wch: 80 }  // Description column
+      ];
+      XLSX.utils.book_append_sheet(workbook, instructionSheet, 'Instructions');
+
+      // Add Questions sheet
+      const worksheet = XLSX.utils.json_to_sheet(templateData);
+      worksheet['!cols'] = [
+        { wch: 50 }, // questionText
+        { wch: 40 }, // imageUrl
+        { wch: 40 }, // audioUrl
+        { wch: 50 }, // explanationText
+        { wch: 40 }, // explanationImg
+        { wch: 10 }, // grade
+        { wch: 15 }, // type
+        { wch: 15 }, // answerType
+        { wch: 10 }, // lessonId
+        { wch: 30 }, // answer1
+        { wch: 30 }, // answer2
+        { wch: 30 }, // answer3
+        { wch: 30 }, // answer4
+        { wch: 30 }  // correctAnswer
+      ];
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set headers and send file
+      res.setHeader('Content-Disposition', 'attachment; filename=questions_template.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error generating template:', error);
+      sendErrorResponse(res, 'Failed to generate template');
+    }
   }
+
 };
 
 export default questionController;
