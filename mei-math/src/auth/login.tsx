@@ -33,23 +33,6 @@ const Login: React.FC = () => {
     setError("");
 
     try {
-      // Kiểm tra tài khoản admin trước khi gọi API
-      if (username === "admin" && password === "admin") {
-        // Tạo user admin giả lập
-        const adminUser = {
-          id: 0,
-          username: "admin",
-          email: "admin@mei.com",
-          role: "admin",
-          fullName: "Administrator",
-          grade: 0,
-        };
-
-        login(adminUser, "admin-token", "admin-refresh-token");
-        navigate("/home-admin");
-        return;
-      }
-
       const loginData: LoginRequest = {
         username: username,
         password: password,
@@ -58,6 +41,7 @@ const Login: React.FC = () => {
       const result = await loginAPI(loginData);
 
       if (result.success && result.data) {
+        // Lưu token và user info vào context và localStorage
         login(result.data.user, result.data.accessToken, result.data.refreshToken);
 
         // Track login event
