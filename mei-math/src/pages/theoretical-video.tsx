@@ -6,6 +6,14 @@ import { fetchAllChapters } from "../api/chapterAPI";
 import { trackWatchVideo } from "../components/GoogleAnalytics";
 import { createOrUpdatePracticeSession } from "../api/praticeAPI";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  getReviewsByLessonId,
+  getUserLikedReviews,
+  createLessonReview,
+  toggleLikeReview,
+  deleteLessonReview,
+} from "../api/lessonReviewAPI";
+import type { LessonReview, ReviewStatistics } from "../api/lessonReviewAPI";
     
 
 const TheoreticalVideo: React.FC = () => {
@@ -19,6 +27,19 @@ const TheoreticalVideo: React.FC = () => {
   const chapterId = searchParams.get("chapterId"); // Thêm chapterId từ URL
   const gradeId = searchParams.get("gradeId"); // Lấy gradeId từ URL
   const semester = searchParams.get("semester"); // Lấy semester từ URL
+
+  // States cho reviews
+  const [reviews, setReviews] = useState<LessonReview[]>([]);
+  const [statistics, setStatistics] = useState<ReviewStatistics | null>(null);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [userLikedReviews, setUserLikedReviews] = useState<number[]>([]);
+  const [selectedRating, setSelectedRating] = useState<number | undefined>(undefined);
+  
+  // States cho form tạo review
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [newRating, setNewRating] = useState(5);
+  const [newReviewText, setNewReviewText] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   // Track khi xem video
   useEffect(() => {
@@ -42,9 +63,123 @@ const TheoreticalVideo: React.FC = () => {
     }
   }, [chapterId]);
 
+  // Load reviews khi component mount
+  useEffect(() => {
+    if (lessonId) {
+      loadReviews();
+      if (user?.id) {
+        loadUserLikedReviews();
+      }
+    }
+  }, [lessonId, selectedRating, user?.id]);
+
+  const loadReviews = async () => {
+    if (!lessonId) return;
+    
+    setLoadingReviews(true);
+    try {
+      const result = await getReviewsByLessonId(Number(lessonId), selectedRating);
+      setReviews(result.reviews);
+      setStatistics(result.statistics);
+    } catch (error) {
+      console.error("Error loading reviews:", error);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const loadUserLikedReviews = async () => {
+    if (!lessonId) return;
+    
+    try {
+      const result = await getUserLikedReviews(Number(lessonId));
+      setUserLikedReviews(result.likes);
+    } catch (error) {
+      console.error("Error loading user liked reviews:", error);
+    }
+  };
+
+  const handleCreateReview = async () => {
+    if (!user?.id || !lessonId) {
+      alert("Vui lòng đăng nhập để đánh giá!");
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const result = await createLessonReview({
+        userId: user.id,
+        lessonId: Number(lessonId),
+        rating: newRating,
+        comment: newReviewText.trim() || undefined,
+      });
+
+      if (result.review) {
+        alert("Đánh giá thành công!");
+        // Reset form
+        setShowReviewForm(false);
+        setNewRating(5);
+        setNewReviewText("");
+        // Reload reviews and statistics
+        await loadReviews();
+        await loadUserLikedReviews();
+      }
+    } catch (error) {
+      alert("Không thể gửi đánh giá. Vui lòng thử lại!");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const handleToggleLike = async (reviewId: number) => {
+    if (!user?.id || !lessonId) {
+      alert("Vui lòng đăng nhập để thích đánh giá!");
+      return;
+    }
+
+    const isCurrentlyLiked = userLikedReviews.includes(reviewId);
+    
+    try {
+      await toggleLikeReview(reviewId, Number(lessonId), !isCurrentlyLiked);
+      
+      // Update local state
+      if (isCurrentlyLiked) {
+        setUserLikedReviews(userLikedReviews.filter(id => id !== reviewId));
+      } else {
+        setUserLikedReviews([...userLikedReviews, reviewId]);
+      }
+      
+      loadReviews(); // Reload to get updated like counts
+    } catch (error) {
+      alert("Không thể cập nhật. Vui lòng thử lại!");
+    }
+  };
+
+  const handleDeleteReview = async (reviewUserId: number) => {
+    if (!user?.id || !lessonId) return;
+    if (user.id !== reviewUserId) {
+      alert("Bạn chỉ có thể xóa đánh giá của mình!");
+      return;
+    }
+
+    if (!window.confirm("Bạn có chắc chắn muốn xóa đánh giá này?")) {
+      return;
+    }
+
+    try {
+      const result = await deleteLessonReview(user.id, Number(lessonId));
+      if (result.success) {
+        alert("Xóa đánh giá thành công!");
+        loadReviews();
+      }
+    } catch (error) {
+      alert("Không thể xóa đánh giá. Vui lòng thử lại!");
+    }
+  };
+
   return (
     <div>
-      <div style={{ marginTop: "-170px" }}>
+      <div style={{ marginTop: "-30px" }}>
         <Header bgWhite />
       </div>
       <div className="video-page-container">
@@ -146,6 +281,175 @@ const TheoreticalVideo: React.FC = () => {
               Thực hành ngay
             </button>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="reviews-section">
+          <div className="reviews-header">
+            <h2 className="reviews-title">Đánh giá bài học</h2>
+            {user && (
+              <button 
+                className="btn-add-review"
+                onClick={() => setShowReviewForm(!showReviewForm)}
+              >
+                {showReviewForm ? "Hủy" : "+ Viết đánh giá"}
+              </button>
+            )}
+          </div>
+
+          {/* Statistics */}
+          {statistics && (
+            <div className="review-statistics">
+              <div className="stats-summary">
+                <div className="average-rating">
+                  <span className="rating-number">{statistics.averageRating.toFixed(1)}</span>
+                  <div className="stars">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span key={star} className={star <= Math.round(statistics.averageRating) ? "star filled" : "star"}>
+                        ⭐
+                      </span>
+                    ))}
+                  </div>
+                  <span className="total-reviews">({statistics.totalReviews} đánh giá)</span>
+                </div>
+                <div className="rating-bars">
+                  {[5, 4, 3, 2, 1].map((rating) => (
+                    <div key={rating} className="rating-bar-row">
+                      <span className="rating-label">{rating} ⭐</span>
+                      <div className="rating-bar">
+                        <div 
+                          className="rating-bar-fill"
+                          style={{
+                            width: `${statistics.totalReviews > 0 
+                              ? (statistics.ratingDistribution[rating.toString() as keyof typeof statistics.ratingDistribution] / statistics.totalReviews) * 100 
+                              : 0}%`
+                          }}
+                        />
+                      </div>
+                      <span className="rating-count">
+                        {statistics.ratingDistribution[rating.toString() as keyof typeof statistics.ratingDistribution]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Review Form */}
+          {showReviewForm && user && (
+            <div className="review-form">
+              <h3>Viết đánh giá của bạn</h3>
+              <div className="form-group">
+                <label>Đánh giá:</label>
+                <div className="rating-input">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={star <= newRating ? "star-input filled" : "star-input"}
+                      onClick={() => setNewRating(star)}
+                    >
+                      ⭐
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Nhận xét (tùy chọn):</label>
+                <textarea
+                  value={newReviewText}
+                  onChange={(e) => setNewReviewText(e.target.value)}
+                  placeholder="Chia sẻ cảm nhận của bạn về bài học..."
+                  rows={4}
+                  className="review-textarea"
+                />
+              </div>
+              <button 
+                className="btn-submit-review"
+                onClick={handleCreateReview}
+                disabled={submittingReview}
+              >
+                {submittingReview ? "Đang gửi..." : "Gửi đánh giá"}
+              </button>
+            </div>
+          )}
+
+          {/* Filter */}
+          <div className="reviews-filter">
+            <label>Lọc theo:</label>
+            <select 
+              value={selectedRating || ""} 
+              onChange={(e) => setSelectedRating(e.target.value ? Number(e.target.value) : undefined)}
+              className="rating-filter"
+            >
+              <option value="">Tất cả đánh giá</option>
+              <option value="5">5 sao</option>
+              <option value="4">4 sao</option>
+              <option value="3">3 sao</option>
+              <option value="2">2 sao</option>
+              <option value="1">1 sao</option>
+            </select>
+          </div>
+
+          {/* Reviews List */}
+          {loadingReviews ? (
+            <div className="loading-reviews">Đang tải đánh giá...</div>
+          ) : reviews.length === 0 ? (
+            <div className="no-reviews">
+              <p>Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá bài học này!</p>
+            </div>
+          ) : (
+            <div className="reviews-list">
+              {reviews.map((review) => (
+                <div key={review.id} className="review-item">
+                  <div className="review-header">
+                    <div className="user-info">
+                      <img 
+                        src={review.user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.user?.fullName || "User")}&background=random`}
+                        alt={review.user?.fullName}
+                        className="user-avatar"
+                      />
+                      <div className="user-details">
+                        <span className="user-name">{review.user?.fullName || "Người dùng"}</span>
+                        <div className="review-stars">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span key={star} className={star <= review.rating ? "star filled" : "star"}>
+                              ⭐
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="review-meta">
+                      <span className="review-date">
+                        {new Date(review.createdAt).toLocaleDateString("vi-VN")}
+                      </span>
+                      {user?.id === review.userId && (
+                        <button 
+                          className="btn-delete-review"
+                          onClick={() => handleDeleteReview(review.userId)}
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {review.comment && (
+                    <p className="review-text">{review.comment}</p>
+                  )}
+                  <div className="review-actions">
+                    <button
+                      className={`btn-like ${userLikedReviews.includes(review.id) ? "liked" : ""}`}
+                      onClick={() => handleToggleLike(review.id)}
+                      disabled={!user}
+                    >
+                      👍 Hữu ích
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { fetchCompletionBreakdown } from "../../api/adminStatsAPI";
 
 interface CompletionData {
   [key: string]: any;
@@ -8,12 +9,6 @@ interface CompletionData {
   color: string;
 }
 
-const data: CompletionData[] = [
-  { name: "Hoàn thành", value: 78.5, color: "#4CAF50" },
-  { name: "Đang học", value: 15.3, color: "#FF9800" },
-  { name: "Chưa bắt đầu", value: 6.2, color: "#F44336" },
-];
-
 interface LessonCompletionChartProps {
   dateRange?: {
     startDate: string;
@@ -21,7 +16,43 @@ interface LessonCompletionChartProps {
   };
 }
 
-const LessonCompletionChart: React.FC<LessonCompletionChartProps> = ({ dateRange: _dateRange }) => {
+const LessonCompletionChart: React.FC<LessonCompletionChartProps> = ({ dateRange }) => {
+  const [data, setData] = useState<CompletionData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const result = await fetchCompletionBreakdown(dateRange?.startDate, dateRange?.endDate);
+        console.log("📊 Completion breakdown result:", result);
+        
+        // result đã là CompletionBreakdownData (không cần .data)
+        const chartData = [
+          { name: "Hoàn thành", value: result.completed.percentage, color: "#4CAF50" },
+          { name: "Đang học", value: result.inProgress.percentage, color: "#FF9800" },
+        ];
+        setData(chartData);
+      } catch (error) {
+        console.error("Error loading completion data:", error);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [dateRange]);
+
+  if (loading) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Tỷ lệ hoàn thành bài học</h3>
+        <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p>Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;

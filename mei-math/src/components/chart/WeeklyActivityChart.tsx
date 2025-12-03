@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { fetchWeeklyActivity } from "../../api/adminStatsAPI";
 
 interface ActivityData {
   day: string;
@@ -8,16 +9,6 @@ interface ActivityData {
   lessonsCompleted: number;
 }
 
-const data: ActivityData[] = [
-  { day: "CN", activeUsers: 156, newRegistrations: 12, lessonsCompleted: 234 },
-  { day: "T2", activeUsers: 342, newRegistrations: 28, lessonsCompleted: 456 },
-  { day: "T3", activeUsers: 389, newRegistrations: 35, lessonsCompleted: 523 },
-  { day: "T4", activeUsers: 367, newRegistrations: 31, lessonsCompleted: 487 },
-  { day: "T5", activeUsers: 398, newRegistrations: 42, lessonsCompleted: 567 },
-  { day: "T6", activeUsers: 445, newRegistrations: 38, lessonsCompleted: 612 },
-  { day: "T7", activeUsers: 278, newRegistrations: 22, lessonsCompleted: 345 },
-];
-
 interface WeeklyActivityChartProps {
   dateRange?: {
     startDate: string;
@@ -25,7 +16,45 @@ interface WeeklyActivityChartProps {
   };
 }
 
-const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ dateRange: _dateRange }) => {
+const WeeklyActivityChart: React.FC<WeeklyActivityChartProps> = ({ dateRange }) => {
+  const [data, setData] = useState<ActivityData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const result = await fetchWeeklyActivity(4, dateRange?.startDate, dateRange?.endDate);
+        console.log("📊 Weekly activity result:", result);
+        
+        // result.data chứa array của weekly data
+        const chartData = result.data.map(item => ({
+          day: item.week,
+          activeUsers: item.activeStudents,
+          newRegistrations: item.examRegistrations,
+          lessonsCompleted: item.lessonCompletion
+        }));
+        setData(chartData);
+      } catch (error) {
+        console.error("Error loading weekly activity:", error);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [dateRange]);
+
+  if (loading) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Hoạt động hàng tuần</h3>
+        <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p>Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="chart-container">
       <h3 className="chart-title">Hoạt động hàng tuần</h3>
