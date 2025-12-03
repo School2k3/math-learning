@@ -36,6 +36,10 @@ const adminStatsController: Controller = {
       
       // 4. Total chapters
       const totalChapters = await prisma.chapter.count();
+
+      // 5. Total questions and total answer choices
+      const totalQuestions = await prisma.question.count();
+      const totalAnswers = await prisma.answer.count();
       
       // 5. Active students (last 7 days) or specific date
       const sevenDaysAgo = new Date();
@@ -114,6 +118,8 @@ const adminStatsController: Controller = {
           },
           lessonCompletionRate: Math.round(lessonCompletionRate * 10) / 10,
           averageExamScore: Math.round(averageExamScore * 10) / 10,
+          totalQuestions,
+          totalAnswers,
           totalQuestionsAnswered,
         },
       });
