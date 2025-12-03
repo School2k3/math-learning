@@ -141,19 +141,19 @@ const HomeAdmin: React.FC = () => {
           ? activeStudentsData.value.activeStudents.length 
           : 0;
 
-        // Safe access để tránh undefined errors
-        const completionRate = completionData.status === 'fulfilled' 
-          ? completionData.value?.lessonCompletion?.completionRate || 0
-          : 0;
+        // Main stats từ adminStatsData với safe access
+        const mainStats = adminStatsData.status === 'fulfilled' 
+          ? adminStatsData.value 
+          : null;
 
-        const averageScore = completionData.status === 'fulfilled' 
-          ? completionData.value?.lessonCompletion?.averageScore || 0
-          : 0;
+        // Lấy completionRate và averageScore từ mainStats
+        const completionRate = mainStats?.lessonCompletionRate || 0;
+        const averageScore = mainStats?.averageExamScore || 0;
 
         // Xử lý questions data
         const totalQuestionsAnswered = questionsData.status === 'fulfilled'
           ? questionsData.value?.totalAnswers || 0
-          : 0;
+          : mainStats?.totalQuestionsAnswered || 0;
 
         // Xử lý recent activity data
         if (recentActivityData.status === 'fulfilled' && recentActivityData.value?.data) {
@@ -165,11 +165,6 @@ const HomeAdmin: React.FC = () => {
           setQuestionsData(questionsData.value);
         }
 
-        // Main stats từ adminStatsData hoặc từ các API riêng lẻ với safe access
-        const mainStats = adminStatsData.status === 'fulfilled' 
-          ? adminStatsData.value 
-          : null;
-
         console.log("📊 Processed data:", {
           mainStats,
           totalStudents,
@@ -178,7 +173,8 @@ const HomeAdmin: React.FC = () => {
           totalChapters,
           activeStudentsCount,
           completionRate,
-          averageScore
+          averageScore,
+          totalQuestionsAnswered
         });
 
         setStats({
@@ -189,12 +185,12 @@ const HomeAdmin: React.FC = () => {
           activeStudents: mainStats?.activeStudents?.count || activeStudentsCount,
           completionRate: completionRate,
           averageScore: averageScore,
-          totalQuestions: totalQuestionsAnswered || mainStats?.lessonCompletion?.totalQuestionsAnswered || 0,
+          totalQuestions: totalQuestionsAnswered,
           trend: {
-            students: 12.5, // Tạm thời hardcode, có thể tính từ dữ liệu lịch sử
+            students: 12.5,
             completion: 5.2,
             score: 0.3,
-            questions: questionsData.status === 'fulfilled' ? (questionsData.value?.totalAnswers || 0) - (mainStats?.lessonCompletion?.totalQuestionsAnswered || 0) : 156
+            questions: 156
           }
         });
 
@@ -483,7 +479,7 @@ const HomeAdmin: React.FC = () => {
           </div>
 
           <div className="stat-item">
-            <div className="stat-number">{loading ? "..." : `${(stats.averageScore || 0).toFixed(1)}/10`}</div>
+            <div className="stat-number">{loading ? "..." : `${(stats.averageScore || 0).toFixed(1)}/100`}</div>
             <div className="stat-label">Điểm trung bình</div>
             <div className={`stat-trend ${stats.trend?.score && stats.trend.score > 0 ? 'positive' : stats.trend?.score === 0 ? 'neutral' : 'negative'}`}>
               {loading ? "..." : `${(stats.trend?.score || 0) > 0 ? '+' : ''}${stats.trend?.score || 0}`}

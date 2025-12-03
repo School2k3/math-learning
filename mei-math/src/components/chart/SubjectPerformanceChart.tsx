@@ -1,20 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Legend } from "recharts";
+import { fetchPerformanceByTopic } from "../../api/adminStatsAPI";
 
 interface SubjectData {
   subject: string;
   avgScore: number;
   completion: number;
 }
-
-const data: SubjectData[] = [
-  { subject: "Số học", avgScore: 8.2, completion: 85 },
-  { subject: "Hình học", avgScore: 7.8, completion: 78 },
-  { subject: "Đo lường", avgScore: 8.5, completion: 92 },
-  { subject: "Giải toán", avgScore: 7.5, completion: 72 },
-  { subject: "Logic", avgScore: 8.0, completion: 80 },
-  { subject: "Thống kê", avgScore: 7.9, completion: 75 },
-];
 
 interface SubjectPerformanceChartProps {
   dateRange?: {
@@ -23,7 +15,41 @@ interface SubjectPerformanceChartProps {
   };
 }
 
-const SubjectPerformanceChart: React.FC<SubjectPerformanceChartProps> = ({ dateRange: _dateRange }) => {
+const SubjectPerformanceChart: React.FC<SubjectPerformanceChartProps> = ({ dateRange }) => {
+  const [data, setData] = useState<SubjectData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const result = await fetchPerformanceByTopic(dateRange?.startDate, dateRange?.endDate);
+        const chartData = result.data.map(item => ({
+          subject: item.topic,
+          avgScore: item.averageScore,
+          completion: item.completionRate
+        }));
+        setData(chartData);
+      } catch (error) {
+        console.error("Error loading subject performance:", error);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [dateRange]);
+
+  if (loading) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Hiệu suất theo chủ đề</h3>
+        <div style={{ height: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p>Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="chart-container">
       <h3 className="chart-title">Hiệu suất theo chủ đề</h3>

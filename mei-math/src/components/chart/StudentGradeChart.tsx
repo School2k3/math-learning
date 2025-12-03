@@ -1,19 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { fetchStudentsByGrade } from "../../api/adminStatsAPI";
 
 interface StudentGradeData {
   grade: string;
   students: number;
   color: string;
 }
-
-const data: StudentGradeData[] = [
-  { grade: "Lớp 1", students: 324, color: "#8884d8" },
-  { grade: "Lớp 2", students: 298, color: "#82ca9d" },
-  { grade: "Lớp 3", students: 276, color: "#ffc658" },
-  { grade: "Lớp 4", students: 189, color: "#ff7300" },
-  { grade: "Lớp 5", students: 160, color: "#8dd1e1" },
-];
 
 interface StudentGradeChartProps {
   dateRange?: {
@@ -23,8 +16,40 @@ interface StudentGradeChartProps {
 }
 
 const StudentGradeChart: React.FC<StudentGradeChartProps> = ({ dateRange }) => {
-  // Sử dụng dateRange để filter dữ liệu
-  console.log("StudentGradeChart dateRange:", dateRange);
+  const [data, setData] = useState<StudentGradeData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const result = await fetchStudentsByGrade();
+        const chartData = result.data.map((item, index) => ({
+          grade: `Lớp ${item.grade}`,
+          students: item.count,
+          color: ["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#8dd1e1"][index % 5]
+        }));
+        setData(chartData);
+      } catch (error) {
+        console.error("Error loading student grades:", error);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [dateRange]);
+
+  if (loading) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Số lượng học sinh theo lớp</h3>
+        <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p>Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="chart-container">

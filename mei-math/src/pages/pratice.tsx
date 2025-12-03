@@ -9,6 +9,7 @@ import {
   fetchPracticeSessionScore // Thêm import này để lấy thông tin chi tiết
 } from "../api/praticeAPI";
 import { fetchAllChapters } from "../api/chapterAPI";
+import { generateQuestionAudio } from "../api/audioAPI";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { trackStartPractice, trackCompletePractice } from "../components/GoogleAnalytics";
 
@@ -305,13 +306,30 @@ const Pratice: React.FC = () => {
         return;
       }
 
-      // Lấy audioUrl trực tiếp từ câu hỏi
-      const audioUrl = currentQuestion.audioUrl;
+      let audioUrl = currentQuestion.audioUrl;
       
+      // Nếu không có audio, gọi API generate
       if (!audioUrl) {
-        console.warn("Câu hỏi này không có audio");
-        alert("Câu hỏi này không có âm thanh");
-        return;
+        console.log("⚠️ Không có audio, đang generate...");
+        setIsPlayingAudio(true); // Hiển thị loading
+        
+        try {
+          const result = await generateQuestionAudio(currentQuestion.id);
+          audioUrl = result.audioUrl;
+          console.log("✅ Audio đã được generate:", audioUrl);
+          
+          // Cập nhật audioUrl vào câu hỏi hiện tại
+          currentQuestion.audioUrl = audioUrl;
+        } catch (generateError: any) {
+          console.error("❌ Không thể generate audio:", generateError);
+          setIsPlayingAudio(false);
+          
+          // Thông báo lỗi nhưng không chặn người dùng
+          const errorMsg = generateError?.message || "Không thể tạo âm thanh";
+          console.warn(`⚠️ ${errorMsg}. Người dùng có thể tiếp tục làm bài không cần audio.`);
+          alert(`Tạm thời không có âm thanh cho câu hỏi này.\nBạn vẫn có thể làm bài bình thường.`);
+          return;
+        }
       }
 
       console.log("Đang phát audio:", audioUrl);

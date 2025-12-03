@@ -1,20 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { fetchMonthlyTrend } from "../../api/adminStatsAPI";
 
 interface ScoreData {
   month: string;
   avgScore: number;
   examsCompleted: number;
 }
-
-const data: ScoreData[] = [
-  { month: "T1", avgScore: 7.2, examsCompleted: 245 },
-  { month: "T2", avgScore: 7.5, examsCompleted: 268 },
-  { month: "T3", avgScore: 7.8, examsCompleted: 289 },
-  { month: "T4", avgScore: 7.6, examsCompleted: 312 },
-  { month: "T5", avgScore: 8.1, examsCompleted: 298 },
-  { month: "T6", avgScore: 8.3, examsCompleted: 334 },
-];
 
 interface ScoreTrendChartProps {
   dateRange?: {
@@ -23,7 +15,44 @@ interface ScoreTrendChartProps {
   };
 }
 
-const ScoreTrendChart: React.FC<ScoreTrendChartProps> = ({ dateRange: _dateRange }) => {
+const ScoreTrendChart: React.FC<ScoreTrendChartProps> = ({ dateRange }) => {
+  const [data, setData] = useState<ScoreData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const result = await fetchMonthlyTrend(6, dateRange?.startDate, dateRange?.endDate);
+        console.log("📊 Monthly trend result:", result);
+        
+        // result.data chứa array của monthly data
+        const chartData = result.data.map(item => ({
+          month: item.month,
+          avgScore: item.avgScore,
+          examsCompleted: item.examCount
+        }));
+        setData(chartData);
+      } catch (error) {
+        console.error("Error loading score trend:", error);
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [dateRange]);
+
+  if (loading) {
+    return (
+      <div className="chart-container">
+        <h3 className="chart-title">Xu hướng điểm số theo tháng</h3>
+        <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p>Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="chart-container">
       <h3 className="chart-title">Xu hướng điểm số theo tháng</h3>

@@ -15,6 +15,8 @@ import {
   getPracticeMinutes,
   getExamMinutes
 } from "../api/userStatsAPI";
+import { getMostWrongAnswersPractice } from "../api/practiceStatsAPI";
+import type { WrongAnswerQuestion } from "../api/practiceStatsAPI";
 
 
 const DashUser: React.FC = () => {
@@ -30,6 +32,11 @@ const DashUser: React.FC = () => {
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [exams, setExams] = useState<any[]>([]);
   const [loadingExams, setLoadingExams] = useState(false);
+  
+  // State cho câu hỏi sai nhiều nhất
+  const [wrongAnswers, setWrongAnswers] = useState<WrongAnswerQuestion[]>([]);
+  const [loadingWrongAnswers, setLoadingWrongAnswers] = useState(false);
+  const [wrongAnswersLimit, setWrongAnswersLimit] = useState(10);
   
   // State cho thống kê
   const [statsData, setStatsData] = useState({
@@ -281,6 +288,29 @@ const DashUser: React.FC = () => {
     loadChaptersAndLessons();
   }, [user]);
 
+  // Load wrong answers khi chuyển tab
+  useEffect(() => {
+    if (activeTab === "Tiến độ học tập" && user?.id) {
+      const loadWrongAnswers = async () => {
+        setLoadingWrongAnswers(true);
+        try {
+          const result = await getMostWrongAnswersPractice(user.id, wrongAnswersLimit);
+          console.log("✅ Wrong answers loaded:", result);
+          if (result.success && result.data) {
+            setWrongAnswers(result.data);
+          }
+        } catch (error) {
+          console.error("❌ Error loading wrong answers:", error);
+          setWrongAnswers([]);
+        } finally {
+          setLoadingWrongAnswers(false);
+        }
+      };
+
+      loadWrongAnswers();
+    }
+  }, [activeTab, wrongAnswersLimit, user]);
+
   // Load exams khi chuyển tab
   useEffect(() => {
     if (activeTab === "Bài kiểm tra vui học" && chapters.length > 0) {
@@ -485,6 +515,165 @@ const DashUser: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Tab "Tiến độ học tập" - Hiển thị câu hỏi sai nhiều nhất
+    if (activeTab === "Tiến độ học tập") {
+      return (
+        <div className="wrong-answers-section">
+          <div className="section-header">
+            <h2 className="section-title">Các câu hỏi bạn hay sai nhất</h2>
+            <div className="limit-selector">
+              <label htmlFor="limit-select">Hiển thị:</label>
+              <select 
+                id="limit-select"
+                value={wrongAnswersLimit}
+                onChange={(e) => setWrongAnswersLimit(Number(e.target.value))}
+                className="limit-select"
+              >
+                <option value={5}>5 câu</option>
+                <option value={10}>10 câu</option>
+                <option value={15}>15 câu</option>
+                <option value={20}>20 câu</option>
+              </select>
+            </div>
+          </div>
+          
+          {loadingWrongAnswers ? (
+            <div className="loading-state">Đang tải dữ liệu...</div>
+          ) : wrongAnswers.length === 0 ? (
+            <div className="empty-state">
+              <p>Chưa có dữ liệu về câu hỏi sai. Hãy bắt đầu luyện tập!</p>
+              <button 
+                className="start-practice-btn"
+                onClick={() => navigate("/study")}
+              >
+                Bắt đầu luyện tập
+              </button>
+            </div>
+          ) : (
+            <div className="wrong-answers-grid">
+              {wrongAnswers.map((item, index) => (
+                <div key={item.questionId} className="wrong-answer-card">
+                  <div className="card-header">
+                    <div className="rank-badge">#{index + 1}</div>
+                    <div className="wrong-count">
+                      <span className="count-number">{item.wrongCount}</span>
+                      <span className="count-label">lần sai</span>
+                    </div>
+                  </div>
+                  
+                  <div className="card-body">
+                    <div className="lesson-info">
+                      <span className="lesson-badge grade-badge">Lớp {item.grade}</span>
+                      <span className="chapter-badge" title={item.lesson.chapter.title}>
+                        📚 {item.lesson.chapter.title.length > 30 
+                          ? item.lesson.chapter.title.substring(0, 30) + '...' 
+                          : item.lesson.chapter.title}
+                      </span>
+                      <span className="lesson-name" title={item.lesson.title}>
+                        📖 {item.lesson.title}
+                      </span>
+                    </div>
+                    
+                    <div className="question-content">
+                      <p className="question-text">{item.questionText}</p>
+                      {item.questionImage && (
+                        <img 
+                          src={item.questionImage} 
+                          alt="Câu hỏi"
+                          className="question-image"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      )}
+                    </div>
+                    
+                    {/* Thống kê */}
+                    <div className="question-stats">
+                      <div className="stat-item">
+                        <span className="stat-label">Tỷ lệ sai:</span>
+                        <span className="stat-value error">{item.wrongPercentage.toFixed(1)}%</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-label">Số lần làm:</span>
+                        <span className="stat-value">{item.totalAttempts}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Đáp án đúng */}
+                    <div className="correct-answer">
+                      <span className="answer-label">✅ Đáp án đúng:</span>
+                      <span className="answer-text">{item.correctAnswer.answerText}</span>
+                    </div>
+                    
+                    {/* Đáp án sai phổ biến */}
+                    {item.commonWrongAnswers && item.commonWrongAnswers.length > 0 && (
+                      <div className="wrong-answers-list">
+                        <span className="answers-label">❌ Đáp án sai thường gặp:</span>
+                        <div className="answers-grid">
+                          {item.commonWrongAnswers.map((ans) => (
+                            <div key={ans.id} className="wrong-answer-item">
+                              <span className="wrong-answer-text">{ans.answerText}</span>
+                              <span className="wrong-answer-count">({ans.count} lần - {ans.percentage}%)</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Giải thích */}
+                    {item.explanationText && (
+                      <div className="explanation">
+                        <span className="explanation-label">💡 Giải thích:</span>
+                        <p className="explanation-text">{item.explanationText}</p>
+                        {item.explanationImg && (
+                          <img 
+                            src={item.explanationImg} 
+                            alt="Giải thích"
+                            className="explanation-image"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <button 
+                    className="practice-again-btn"
+                    onClick={() => {
+                      // Tìm chapterId từ lessonsMap hoặc từ item.lesson.chapter.id
+                      const lesson = lessonsMap[item.lesson.id];
+                      const chapterId = item.lesson.chapter.id || lesson?.chapterId;
+                      
+                      // Xác định học kỳ từ lesson hoặc chapter
+                      const chapter = chapterId ? chapters.find(c => c.id === chapterId) : null;
+                      const semester = chapter?.volume || 1;
+                      
+                      console.log("🔵 Navigate to practice:", {
+                        lessonId: item.lesson.id,
+                        chapterId,
+                        grade: item.grade,
+                        semester
+                      });
+                      
+                      // Navigate với đầy đủ params để focus vào đúng chương
+                      navigate(`/study?gradeId=${item.grade}&semester=${semester}&chapterId=${chapterId}`);
+                    }}
+                  >
+                    Luyện tập lại
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
