@@ -29,6 +29,7 @@ interface DashboardStats {
   completionRate: number;
   averageScore: number;
   totalQuestions: number;
+  totalAnswers: number;
   trend?: {
     students: number;
     completion: number;
@@ -53,7 +54,8 @@ const HomeAdmin: React.FC = () => {
     activeStudents: 0,
     completionRate: 0,
     averageScore: 0,
-    totalQuestions: 0
+    totalQuestions: 0,
+    totalAnswers: 0
   });
 
   const [loading, setLoading] = useState(true);
@@ -185,7 +187,8 @@ const HomeAdmin: React.FC = () => {
           activeStudents: mainStats?.activeStudents?.count || activeStudentsCount,
           completionRate: completionRate,
           averageScore: averageScore,
-          totalQuestions: totalQuestionsAnswered,
+          totalQuestions: mainStats?.totalQuestions || 0,
+          totalAnswers: mainStats?.totalAnswers || 0,
           trend: {
             students: 12.5,
             completion: 5.2,
@@ -456,6 +459,22 @@ const HomeAdmin: React.FC = () => {
             <div className="stat-content">
               <h3>{loading ? "..." : stats.totalChapters}</h3>
               <p>Tổng chương học</p>
+            </div>
+          </div>
+
+          <div className="stat-card success">
+            <div className="stat-icon">❓</div>
+            <div className="stat-content">
+              <h3>{loading ? "..." : stats.totalQuestions.toLocaleString()}</h3>
+              <p>Tổng câu hỏi</p>
+            </div>
+          </div>
+
+          <div className="stat-card primary">
+            <div className="stat-icon">✅</div>
+            <div className="stat-content">
+              <h3>{loading ? "..." : stats.totalAnswers.toLocaleString()}</h3>
+              <p>Tổng câu trả lời</p>
             </div>
           </div>
         </div>
