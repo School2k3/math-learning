@@ -127,7 +127,7 @@ const RewardsPage: React.FC = () => {
 
     try {
       setEquipping(rewardId);
-      await equipAvatar(user.id, userReward.rewardId);
+      await equipAvatar(user.id, userReward.id); // userReward.id chính là userRewardId
       
       // Cập nhật localStorage với cả currentAvatar và avatarUrl
       const updatedUser = { 
