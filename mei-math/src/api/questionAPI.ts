@@ -163,3 +163,93 @@ export async function updateQuestionById(
   }
   return response.json();
 }
+
+/**
+ * Download Excel template for importing questions
+ * GET /api/questions/import/template
+ */
+export async function downloadQuestionTemplate() {
+  try {
+    const url = buildApiUrl("/api/questions/import/template");
+    console.log("🔵 Download template URL:", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      },
+    });
+
+    console.log("🟢 Download template response status:", response.status);
+
+    if (!response.ok) {
+      throw new Error(`Failed to download template: ${response.status}`);
+    }
+
+    // Get blob from response
+    const blob = await response.blob();
+
+    // Create download link
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `questions_template_${new Date().getTime()}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+
+    console.log("✅ Template downloaded successfully");
+    return { success: true, message: "Template downloaded successfully" };
+  } catch (error) {
+    console.error("🔴 Error downloading template:", error);
+    throw error;
+  }
+}
+
+/**
+ * Import questions from Excel file
+ * POST /api/questions/import
+ */
+export async function importQuestionsFromExcel(file: File) {
+  try {
+    const url = buildApiUrl("/api/questions/import");
+    console.log("🔵 Import questions URL:", url);
+    console.log("📤 File:", file.name, file.size, "bytes");
+    console.log(
+      "⚠️ Lưu ý: Backend phải đọc sheet 'Questions', không phải sheet 'Instructions'"
+    );
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    console.log("🟢 Import response status:", response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Import failed:", errorData);
+      throw new Error(errorData.message || `Import failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("✅ Import result:", result);
+    return result;
+  } catch (error) {
+    console.error("🔴 Error importing questions:", error);
+    throw error;
+  }
+}

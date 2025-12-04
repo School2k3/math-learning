@@ -217,3 +217,51 @@ export const updateUser = async (
     throw error;
   }
 };
+
+/**
+ * Toggle user verification status (Admin only)
+ * PATCH /api/admin/users/{userId}/verification
+ */
+export const toggleUserVerification = async (
+  userId: number,
+  isVerified: boolean
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const url = buildApiUrl(`/api/admin/users/${userId}/verification`);
+    console.log("🔵 Toggle Verification API URL:", url);
+    console.log("📤 isVerified:", isVerified);
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ isVerified }),
+    });
+
+    console.log("🟢 Toggle Verification response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        "❌ Toggle Verification failed:",
+        response.status,
+        errorText
+      );
+      throw new Error(`Toggle Verification failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("✅ toggleUserVerification response:", result);
+    return result;
+  } catch (error) {
+    console.error("🔴 Lỗi khi gọi API toggle verification:", error);
+    throw error;
+  }
+};

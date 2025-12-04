@@ -158,17 +158,12 @@ const Pratice: React.FC = () => {
     score: savedData?.score || 0
   });
   const [sessionLoaded, setSessionLoaded] = useState(false);
-  const [restoredFromStorage, setRestoredFromStorage] = useState(!!savedData);
   const [isFinished, setIsFinished] = useState(false);
   const [usedQuestions, setUsedQuestions] = useState<Set<number>>(new Set());
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(savedData?.elapsedTime || 0);
   const [sessionCompleted, setSessionCompleted] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
 
   // Kiểm tra trạng thái session khi component mount
   useEffect(() => {
@@ -247,7 +242,7 @@ const Pratice: React.FC = () => {
   
   // Log thông tin khôi phục nếu có
   useEffect(() => {
-    if (restoredFromStorage && savedData) {
+    if (savedData) {
       console.log("✅ Component đã khởi tạo với dữ liệu đã lưu:", {
         score: savedData.score,
         correctCount: savedData.correctCount,
@@ -285,7 +280,7 @@ const Pratice: React.FC = () => {
     if (loading || isFinished) return; // Không đếm khi đang load hoặc đã hoàn thành
     
     const interval = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
+      setElapsedTime((prev: number) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);

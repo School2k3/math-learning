@@ -11,8 +11,13 @@ export interface AdminStats {
     period: string;
   };
   lessonCompletion: {
-    averageExamScore: number;
-    totalQuestionsAnswered: number;
+    percentage: number;
+    completed: number;
+    total: number;
+  };
+  examPerformance: {
+    avgScore: number;
+    totalExams: number;
   };
 }
 
@@ -77,6 +82,7 @@ export interface StudentGradeData {
 // New interfaces for additional APIs
 export interface QuestionsAnsweredData {
   totalAnswers: number;
+  totalQuestions: number;
   uniqueQuestions: number;
   correctAnswers: number;
   incorrectAnswers: number;

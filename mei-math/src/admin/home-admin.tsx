@@ -29,6 +29,7 @@ interface DashboardStats {
   completionRate: number;
   averageScore: number;
   totalQuestions: number;
+  totalAnswers: number;
   trend?: {
     students: number;
     completion: number;
@@ -53,14 +54,14 @@ const HomeAdmin: React.FC = () => {
     activeStudents: 0,
     completionRate: 0,
     averageScore: 0,
-    totalQuestions: 0
+    totalQuestions: 0,
+    totalAnswers: 0
   });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
-  const [questionsData, setQuestionsData] = useState<any>(null);
   
   // Thêm state cho date range
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -147,22 +148,25 @@ const HomeAdmin: React.FC = () => {
           : null;
 
         // Lấy completionRate và averageScore từ mainStats
-        const completionRate = mainStats?.lessonCompletionRate || 0;
-        const averageScore = mainStats?.averageExamScore || 0;
+        const completionRate = mainStats?.lessonCompletion?.percentage || 0;
+        const averageScore = mainStats?.examPerformance?.avgScore || 0;
 
         // Xử lý questions data
         const totalQuestionsAnswered = questionsData.status === 'fulfilled'
           ? questionsData.value?.totalAnswers || 0
-          : mainStats?.totalQuestionsAnswered || 0;
+          : 0;
+
+        const totalQuestions = questionsData.status === 'fulfilled'
+          ? questionsData.value?.totalQuestions || 0
+          : 0;
+
+        const totalAnswers = questionsData.status === 'fulfilled'
+          ? questionsData.value?.totalAnswers || 0
+          : 0;
 
         // Xử lý recent activity data
         if (recentActivityData.status === 'fulfilled' && recentActivityData.value?.data) {
           setRecentActivities(recentActivityData.value.data);
-        }
-
-        // Lưu questions data để sử dụng ở nơi khác
-        if (questionsData.status === 'fulfilled') {
-          setQuestionsData(questionsData.value);
         }
 
         console.log("📊 Processed data:", {
@@ -174,7 +178,9 @@ const HomeAdmin: React.FC = () => {
           activeStudentsCount,
           completionRate,
           averageScore,
-          totalQuestionsAnswered
+          totalQuestionsAnswered,
+          totalQuestions,
+          totalAnswers
         });
 
         setStats({
@@ -185,7 +191,8 @@ const HomeAdmin: React.FC = () => {
           activeStudents: mainStats?.activeStudents?.count || activeStudentsCount,
           completionRate: completionRate,
           averageScore: averageScore,
-          totalQuestions: totalQuestionsAnswered,
+          totalQuestions: totalQuestions,
+          totalAnswers: totalAnswers,
           trend: {
             students: 12.5,
             completion: 5.2,
@@ -211,6 +218,7 @@ const HomeAdmin: React.FC = () => {
           completionRate: 0,
           averageScore: 0,
           totalQuestions: 0,
+          totalAnswers: 0,
           trend: {
             students: 0,
             completion: 0,
@@ -456,6 +464,22 @@ const HomeAdmin: React.FC = () => {
             <div className="stat-content">
               <h3>{loading ? "..." : stats.totalChapters}</h3>
               <p>Tổng chương học</p>
+            </div>
+          </div>
+
+          <div className="stat-card success">
+            <div className="stat-icon">❓</div>
+            <div className="stat-content">
+              <h3>{loading ? "..." : stats.totalQuestions.toLocaleString()}</h3>
+              <p>Tổng câu hỏi</p>
+            </div>
+          </div>
+
+          <div className="stat-card primary">
+            <div className="stat-icon">✅</div>
+            <div className="stat-content">
+              <h3>{loading ? "..." : stats.totalAnswers.toLocaleString()}</h3>
+              <p>Tổng câu trả lời</p>
             </div>
           </div>
         </div>

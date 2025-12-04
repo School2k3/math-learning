@@ -13,6 +13,7 @@ interface Chapter {
   grade: number;
   volume: number;
   title: string;
+  lessonsCount?: number;
 }
 
 const ChapterAdmin: React.FC = () => {
@@ -113,7 +114,7 @@ const ChapterAdmin: React.FC = () => {
   const handleDelete = async (id: number) => {
     // Tìm thông tin chương để hiển thị warning tốt hơn
     const chapter = chapters.find(c => c.id === id);
-    const confirmMessage = chapter && chapter.lessonsCount > 0
+    const confirmMessage = chapter && (chapter.lessonsCount || 0) > 0
       ? `CẢNH BÁO: Chương "${chapter.title}" có ${chapter.lessonsCount} bài học.\n\nBạn cần xóa tất cả bài học trong chương này trước khi có thể xóa chương.\n\nBạn có muốn tiếp tục thử xóa chương này không?`
       : `Bạn có chắc chắn muốn xóa chương "${chapter?.title || 'này'}"? Hành động này không thể hoàn tác!`;
     

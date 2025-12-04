@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../css/admin-css/user.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getAllUsers, updateUser } from "../api/userAPI";
+import { getAllUsers, updateUser, toggleUserVerification } from "../api/userAPI";
 import type { User as ApiUser } from "../api/userAPI";
 
 interface User {
@@ -145,7 +145,7 @@ const UserAdmin: React.FC = () => {
         username: editData.username,
         email: editData.email,
         fullName: editData.full_name,
-        role: editData.role,
+        role: editData.role === 'teacher' ? 'student' : editData.role as 'student' | 'admin',
         grade: editData.grade,
         isVerified: editData.is_verified,
       };
@@ -179,11 +179,34 @@ const UserAdmin: React.FC = () => {
     }
   };
 
-  // Hủy chỉnh sửa
-  const handleCancel = () => {
-    setEditingId(null);
-    setEditData({});
+  // Toggle verification status
+  const handleToggleVerification = async (userId: number, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
+    const confirmMessage = newStatus 
+      ? "Xác nhận đánh dấu người dùng này là đã xác minh?"
+      : "Xác nhận bỏ xác minh người dùng này?";
+    
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      console.log(`🔵 Toggle verification for user ${userId}: ${currentStatus} -> ${newStatus}`);
+      
+      const response = await toggleUserVerification(userId, newStatus);
+      
+      if (response.success) {
+        alert(`✅ ${response.message}`);
+        // Reload data to reflect changes
+        await loadData();
+      } else {
+        alert(`❌ Lỗi: ${response.message}`);
+      }
+    } catch (error) {
+      console.error("🔴 Lỗi khi toggle verification:", error);
+      alert("❌ Lỗi khi cập nhật trạng thái xác minh: " + (error as Error).message);
+    }
   };
+
+
 
   // Format datetime
   const formatDateTime = (dateString: string) => {
@@ -591,15 +614,32 @@ const UserAdmin: React.FC = () => {
                         <option value="false">Chưa xác thực</option>
                       </select>
                     ) : (
-                      <span
-                        className={`status-badge ${
-                          user.is_verified ? "verified" : "unverified"
-                        }`}
-                      >
-                        {user.is_verified
-                          ? "✅ Đã xác thực"
-                          : "❌ Chưa xác thực"}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span
+                          className={`status-badge ${
+                            user.is_verified ? "verified" : "unverified"
+                          }`}
+                        >
+                          {user.is_verified
+                            ? "✅ Đã xác thực"
+                            : "❌ Chưa xác thực"}
+                        </span>
+                        <button
+                          onClick={() => handleToggleVerification(user.user_id, user.is_verified)}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            backgroundColor: user.is_verified ? '#ff9800' : '#4caf50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                          title={user.is_verified ? "Bỏ xác minh" : "Xác minh"}
+                        >
+                          {user.is_verified ? "🔓" : "🔒"}
+                        </button>
+                      </div>
                     )}
                   </td>
                   <td>{formatDateTime(user.created_at)}</td>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import { useNavigate, useLocation } from "react-router-dom";
-import { fetchExamResultsByExamId, fetchExamById } from "../api/examAPI";
+import { fetchExamResultsByExamId } from "../api/examAPI";
 import { trackViewExamHistory } from "../components/GoogleAnalytics";
 import { useAuth } from "../contexts/AuthContext";
 import "../css/exams-history.css";

@@ -222,7 +222,7 @@ export const createLessonReview = async (
  * POST /api/lesson-reviews/unlike
  */
 export const toggleLikeReview = async (
-  reviewId: number,
+  _reviewId: number,
   lessonId: number,
   isLike: boolean
 ): Promise<LikeReviewResponse> => {
