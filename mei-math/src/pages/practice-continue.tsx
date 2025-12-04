@@ -221,7 +221,7 @@ const PracticeContinue: React.FC = () => {
                       <div className="progress-bar">
                         <div 
                           className="progress-fill"
-                          data-width={`${Math.min(practice.score || 0, 100)}%`}
+                          style={{ width: `${Math.min(practice.score || 0, 100)}%` }}
                         />
                       </div>
                     </div>
