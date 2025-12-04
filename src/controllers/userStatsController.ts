@@ -450,6 +450,327 @@ const userStatsController: Controller = {
       });
     }
   },
+
+  // Get user's most wrong answers in practice
+  getUserMostWrongAnswersPractice: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      const { limit = '20' } = req.query;
+      const limitCount = parseInt(limit as string);
+      
+      // Get all incorrect practice answers for this user
+      const incorrectAnswers = await prisma.practiceAnswer.findMany({
+        where: {
+          isCorrect: false,
+          practiceSession: {
+            userId: parseInt(userId),
+          },
+        },
+        include: {
+          question: {
+            include: {
+              answers: true,
+              lesson: {
+                select: {
+                  id: true,
+                  title: true,
+                  chapter: {
+                    select: {
+                      title: true,
+                      grade: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          chosenAnswer: true,
+          practiceSession: {
+            select: {
+              startedAt: true,
+              finishedAt: true,
+            },
+          },
+        },
+      });
+      
+      // Group by question and count wrong attempts
+      const questionStats: { [key: number]: {
+        question: any;
+        wrongCount: number;
+        totalAttempts: number;
+        wrongPercentage: number;
+        wrongAnswers: Array<{ answer: any; attemptedAt: Date }>;
+        lastAttempted: Date;
+      } } = {};
+      
+      incorrectAnswers.forEach(answer => {
+        const questionId = answer.questionId;
+        
+        if (!questionStats[questionId]) {
+          questionStats[questionId] = {
+            question: answer.question,
+            wrongCount: 0,
+            totalAttempts: 0,
+            wrongPercentage: 0,
+            wrongAnswers: [],
+            lastAttempted: answer.practiceSession.startedAt,
+          };
+        }
+        
+        questionStats[questionId].wrongCount++;
+        questionStats[questionId].wrongAnswers.push({
+          answer: answer.chosenAnswer,
+          attemptedAt: answer.practiceSession.startedAt,
+        });
+        
+        // Update last attempted date
+        if (answer.practiceSession.startedAt > questionStats[questionId].lastAttempted) {
+          questionStats[questionId].lastAttempted = answer.practiceSession.startedAt;
+        }
+      });
+      
+      // Get total attempts for each question by this user
+      const allAnswers = await prisma.practiceAnswer.findMany({
+        where: {
+          questionId: { in: Object.keys(questionStats).map(id => parseInt(id)) },
+          practiceSession: {
+            userId: parseInt(userId),
+          },
+        },
+        select: {
+          questionId: true,
+        },
+      });
+      
+      allAnswers.forEach(answer => {
+        if (questionStats[answer.questionId]) {
+          questionStats[answer.questionId].totalAttempts++;
+        }
+      });
+      
+      // Calculate percentages and format data
+      const formattedStats = Object.values(questionStats)
+        .map(stat => {
+          const wrongPercentage = stat.totalAttempts > 0 
+            ? (stat.wrongCount / stat.totalAttempts) * 100 
+            : 0;
+          
+          // Get correct answer
+          const correctAnswer = stat.question.answers.find((a: any) => a.isCorrect);
+          
+          // Get most recent wrong answer
+          const recentWrongAnswer = stat.wrongAnswers
+            .sort((a, b) => b.attemptedAt.getTime() - a.attemptedAt.getTime())[0];
+          
+          return {
+            questionId: stat.question.id,
+            questionText: stat.question.questionText,
+            questionImage: stat.question.imageUrl,
+            audioUrl: stat.question.audioUrl,
+            grade: stat.question.grade,
+            lesson: stat.question.lesson,
+            wrongCount: stat.wrongCount,
+            totalAttempts: stat.totalAttempts,
+            wrongPercentage: Math.round(wrongPercentage * 10) / 10,
+            lastAttempted: stat.lastAttempted,
+            correctAnswer: correctAnswer ? {
+              id: correctAnswer.id,
+              answerText: correctAnswer.answerText,
+            } : null,
+            lastWrongAnswer: recentWrongAnswer ? {
+              id: recentWrongAnswer.answer.id,
+              answerText: recentWrongAnswer.answer.answerText,
+              attemptedAt: recentWrongAnswer.attemptedAt,
+            } : null,
+            allAnswers: stat.question.answers.map((a: any) => ({
+              id: a.id,
+              answerText: a.answerText,
+              isCorrect: a.isCorrect,
+            })),
+            explanationText: stat.question.explanationText,
+            explanationImg: stat.question.explanationImg,
+          };
+        })
+        .sort((a, b) => b.wrongCount - a.wrongCount)
+        .slice(0, limitCount);
+      
+      res.status(200).json({
+        success: true,
+        message: 'User most wrong answers in practice retrieved successfully',
+        data: formattedStats,
+      });
+    } catch (error) {
+      console.error('Error getting user most wrong answers in practice:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Error retrieving user most wrong answers in practice', 
+        error: (error as Error).message 
+      });
+    }
+  },
+
+  // Get user's most wrong answers in exams
+  getUserMostWrongAnswersExam: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      const { limit = '20' } = req.query;
+      const limitCount = parseInt(limit as string);
+      
+      // Get all incorrect exam answers for this user
+      const incorrectAnswers = await prisma.examAnswer.findMany({
+        where: {
+          isCorrect: false,
+          examResult: {
+            userId: parseInt(userId),
+          },
+        },
+        include: {
+          question: {
+            include: {
+              answers: true,
+            },
+          },
+          chosenAnswer: true,
+          examResult: {
+            select: {
+              startedAt: true,
+              finishedAt: true,
+              score: true,
+              exam: {
+                select: {
+                  id: true,
+                  title: true,
+                  grade: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      
+      // Group by question and count wrong attempts
+      const questionStats: { [key: number]: {
+        question: any;
+        wrongCount: number;
+        totalAttempts: number;
+        wrongPercentage: number;
+        wrongAnswers: Array<{ answer: any; exam: any; attemptedAt: Date; score: number }>;
+        lastAttempted: Date;
+        exams: Set<number>;
+      } } = {};
+      
+      incorrectAnswers.forEach(answer => {
+        const questionId = answer.questionId;
+        
+        if (!questionStats[questionId]) {
+          questionStats[questionId] = {
+            question: answer.question,
+            wrongCount: 0,
+            totalAttempts: 0,
+            wrongPercentage: 0,
+            wrongAnswers: [],
+            lastAttempted: answer.examResult.startedAt,
+            exams: new Set(),
+          };
+        }
+        
+        questionStats[questionId].wrongCount++;
+        questionStats[questionId].exams.add(answer.examResult.exam.id);
+        questionStats[questionId].wrongAnswers.push({
+          answer: answer.chosenAnswer,
+          exam: answer.examResult.exam,
+          attemptedAt: answer.examResult.startedAt,
+          score: answer.examResult.score,
+        });
+        
+        // Update last attempted date
+        if (answer.examResult.startedAt > questionStats[questionId].lastAttempted) {
+          questionStats[questionId].lastAttempted = answer.examResult.startedAt;
+        }
+      });
+      
+      // Get total attempts for each question by this user
+      const allAnswers = await prisma.examAnswer.findMany({
+        where: {
+          questionId: { in: Object.keys(questionStats).map(id => parseInt(id)) },
+          examResult: {
+            userId: parseInt(userId),
+          },
+        },
+        select: {
+          questionId: true,
+        },
+      });
+      
+      allAnswers.forEach(answer => {
+        if (questionStats[answer.questionId]) {
+          questionStats[answer.questionId].totalAttempts++;
+        }
+      });
+      
+      // Calculate percentages and format data
+      const formattedStats = Object.values(questionStats)
+        .map(stat => {
+          const wrongPercentage = stat.totalAttempts > 0 
+            ? (stat.wrongCount / stat.totalAttempts) * 100 
+            : 0;
+          
+          // Get correct answer
+          const correctAnswer = stat.question.answers.find((a: any) => a.isCorrect);
+          
+          // Get most recent wrong answer
+          const recentWrongAnswer = stat.wrongAnswers
+            .sort((a, b) => b.attemptedAt.getTime() - a.attemptedAt.getTime())[0];
+          
+          return {
+            questionId: stat.question.id,
+            questionText: stat.question.questionText,
+            questionImage: stat.question.imageUrl,
+            audioUrl: stat.question.audioUrl,
+            grade: stat.question.grade,
+            wrongCount: stat.wrongCount,
+            totalAttempts: stat.totalAttempts,
+            wrongPercentage: Math.round(wrongPercentage * 10) / 10,
+            lastAttempted: stat.lastAttempted,
+            appearsInExams: stat.exams.size,
+            correctAnswer: correctAnswer ? {
+              id: correctAnswer.id,
+              answerText: correctAnswer.answerText,
+            } : null,
+            lastWrongAnswer: recentWrongAnswer ? {
+              id: recentWrongAnswer.answer.id,
+              answerText: recentWrongAnswer.answer.answerText,
+              exam: recentWrongAnswer.exam,
+              attemptedAt: recentWrongAnswer.attemptedAt,
+              examScore: Math.round(recentWrongAnswer.score * 10) / 10,
+            } : null,
+            allAnswers: stat.question.answers.map((a: any) => ({
+              id: a.id,
+              answerText: a.answerText,
+              isCorrect: a.isCorrect,
+            })),
+            explanationText: stat.question.explanationText,
+            explanationImg: stat.question.explanationImg,
+          };
+        })
+        .sort((a, b) => b.wrongCount - a.wrongCount)
+        .slice(0, limitCount);
+      
+      res.status(200).json({
+        success: true,
+        message: 'User most wrong answers in exams retrieved successfully',
+        data: formattedStats,
+      });
+    } catch (error) {
+      console.error('Error getting user most wrong answers in exams:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Error retrieving user most wrong answers in exams', 
+        error: (error as Error).message 
+      });
+    }
+  },
 };
 
 export default userStatsController;

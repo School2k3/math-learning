@@ -170,4 +170,30 @@ router.get('/history/:userId', practiceController.getUserPracticeHistory);
  */
 router.get('/session/:practiceId/score', practiceController.getCurrentScore);
 
+/**
+ * @swagger
+ * /api/practice/session/{practiceId}/state:
+ *   get:
+ *     summary: Get full session state for resuming practice
+ *     tags: [Practice]
+ *     description: Returns score, elapsed time, and last answered question for a practice session
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: practiceId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Practice session ID
+ *     responses:
+ *       200:
+ *         description: Practice session state retrieved successfully
+ *       404:
+ *         description: Practice session not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/session/:practiceId/state', practiceController.getSessionState);
+
 export default router;
