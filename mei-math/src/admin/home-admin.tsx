@@ -16,7 +16,6 @@ import {
   fetchChaptersCount, 
   fetchActiveStudents,
   fetchLessonCompletion,
-  fetchQuestionsAnswered,
   fetchRecentActivity
 } from "../api/adminStatsAPI";
 
@@ -29,6 +28,7 @@ interface DashboardStats {
   completionRate: number;
   averageScore: number;
   totalQuestions: number;
+  totalQuestionsAnswered: number;
   totalAnswers: number;
   trend?: {
     students: number;
@@ -55,6 +55,7 @@ const HomeAdmin: React.FC = () => {
     completionRate: 0,
     averageScore: 0,
     totalQuestions: 0,
+    totalQuestionsAnswered: 0,
     totalAnswers: 0
   });
 
@@ -88,7 +89,6 @@ const HomeAdmin: React.FC = () => {
           chaptersData,
           activeStudentsData,
           completionData,
-          questionsData,
           recentActivityData
         ] = await Promise.allSettled([
           fetchAdminStats(),
@@ -98,7 +98,6 @@ const HomeAdmin: React.FC = () => {
           fetchChaptersCount(),
           fetchActiveStudents(undefined, 7), // 7 ngày gần nhất
           fetchLessonCompletion(),
-          fetchQuestionsAnswered(),
           fetchRecentActivity(5) // 5 hoạt động gần nhất
         ]);
 
@@ -148,21 +147,17 @@ const HomeAdmin: React.FC = () => {
           : null;
 
         // Lấy completionRate và averageScore từ mainStats
-        const completionRate = mainStats?.lessonCompletion?.percentage || 0;
-        const averageScore = mainStats?.examPerformance?.avgScore || 0;
+        // Backend trả về flat structure: lessonCompletionRate và averageExamScore
+        const completionRate = mainStats?.lessonCompletionRate || mainStats?.lessonCompletion?.percentage || 0;
+        const averageScore = mainStats?.averageExamScore || mainStats?.examPerformance?.avgScore || 0;
 
-        // Xử lý questions data
-        const totalQuestionsAnswered = questionsData.status === 'fulfilled'
-          ? questionsData.value?.totalAnswers || 0
-          : 0;
-
-        const totalQuestions = questionsData.status === 'fulfilled'
-          ? questionsData.value?.totalQuestions || 0
-          : 0;
-
-        const totalAnswers = questionsData.status === 'fulfilled'
-          ? questionsData.value?.totalAnswers || 0
-          : 0;
+        // Lấy questions data từ mainStats
+        // totalQuestions: Tổng số câu hỏi trong hệ thống (498)
+        // totalQuestionsAnswered: Tổng số câu hỏi đã được trả lời (304)
+        // totalAnswers: Tổng số lượt trả lời (1728) - 1 câu hỏi có thể trả lời nhiều lần
+        const totalQuestions = mainStats?.totalQuestions || 0;
+        const totalQuestionsAnswered = mainStats?.totalQuestionsAnswered || 0;
+        const totalAnswers = mainStats?.totalAnswers || 0;
 
         // Xử lý recent activity data
         if (recentActivityData.status === 'fulfilled' && recentActivityData.value?.data) {
@@ -178,8 +173,8 @@ const HomeAdmin: React.FC = () => {
           activeStudentsCount,
           completionRate,
           averageScore,
-          totalQuestionsAnswered,
           totalQuestions,
+          totalQuestionsAnswered,
           totalAnswers
         });
 
@@ -192,6 +187,7 @@ const HomeAdmin: React.FC = () => {
           completionRate: completionRate,
           averageScore: averageScore,
           totalQuestions: totalQuestions,
+          totalQuestionsAnswered: totalQuestionsAnswered,
           totalAnswers: totalAnswers,
           trend: {
             students: 12.5,
@@ -218,6 +214,7 @@ const HomeAdmin: React.FC = () => {
           completionRate: 0,
           averageScore: 0,
           totalQuestions: 0,
+          totalQuestionsAnswered: 0,
           totalAnswers: 0,
           trend: {
             students: 0,
@@ -511,7 +508,7 @@ const HomeAdmin: React.FC = () => {
           </div>
 
           <div className="stat-item">
-            <div className="stat-number">{loading ? "..." : (stats.totalQuestions || 0).toLocaleString()}</div>
+            <div className="stat-number">{loading ? "..." : (stats.totalQuestionsAnswered || 0).toLocaleString()}</div>
             <div className="stat-label">Tổng câu hỏi đã trả lời</div>
             <div className={`stat-trend ${stats.trend?.questions && stats.trend.questions > 0 ? 'positive' : stats.trend?.questions === 0 ? 'neutral' : 'negative'}`}>
               {loading ? "..." : `${(stats.trend?.questions || 0) > 0 ? '+' : ''}${stats.trend?.questions || 0}`}
