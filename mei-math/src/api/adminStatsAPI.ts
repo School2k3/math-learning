@@ -19,6 +19,11 @@ export interface AdminStats {
     avgScore: number;
     totalExams: number;
   };
+  totalQuestions: number;
+  totalAnswers: number;
+  totalQuestionsAnswered: number;
+  averageExamScore: number;
+  lessonCompletionRate: number;
 }
 
 export interface StudentsCountByGrade {
