@@ -39,6 +39,17 @@ This is the backend for a math learning application that uses TypeScript, Node.j
    
    ⚠️ **Important**: Make sure to set a secure `JWT_SECRET` for production environments.
 
+   For the question text-to-speech feature, configure the following Gemini and Cloudinary variables:
+
+   ```
+   GEMINI_API_KEY="your_google_ai_studio_key"
+   GEMINI_TTS_MODEL="gemini-2.5-flash-preview-tts" # optional override
+   GEMINI_TTS_VOICE="Zephyr"                       # optional override
+   CLOUDINARY_CLOUD_NAME="..."
+   CLOUDINARY_API_KEY="..."
+   CLOUDINARY_API_SECRET="..."
+   ```
+
 3. Database setup - choose one method:
    
    **Using migrations** (recommended for production):
