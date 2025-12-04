@@ -14,7 +14,14 @@ const TrophyDisplay: React.FC = () => {
       
       try {
         const stats = await getUserStats(user.id);
-        setTrophyCount(stats.trophies || 0);
+        console.log("🏆 [TrophyDisplay] Full stats response:", stats);
+        console.log("🏆 [TrophyDisplay] Trophies from stats:", stats.trophies);
+        console.log("🏆 [TrophyDisplay] Trophies from stats.data:", stats.data?.trophies);
+        
+        const trophyValue = stats.data?.trophies || stats.trophies || 0;
+        console.log("🏆 [TrophyDisplay] Final trophy value:", trophyValue);
+        
+        setTrophyCount(trophyValue);
       } catch (error) {
         console.error("Error fetching trophies:", error);
         setTrophyCount(0);
