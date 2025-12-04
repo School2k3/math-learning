@@ -7,6 +7,7 @@ import { fetchAllChapters } from "../api/chapterAPI";
 import { createQuestionWithAnswers } from "../api/questionAPI";
 import { deleteQuestionById } from "../api/questionAPI";
 import { updateQuestionById } from "../api/questionAPI";
+import { downloadQuestionTemplate, importQuestionsFromExcel } from "../api/questionAPI";
 import { uploadImageFile, uploadAudioFile } from "../api/uploadAPI";
 
 interface Answer {
@@ -82,6 +83,16 @@ const QuestionAdmin: React.FC = () => {
   // Upload states for edit mode
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
   const [uploadingEditAudio, setUploadingEditAudio] = useState(false);
+
+  // Import/Export states
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    success: number; 
+    failed: number; 
+    total: number;
+    errors?: Array<{row: number; column?: string; error: string}>;
+  } | null>(null);
+  const [showImportResultModal, setShowImportResultModal] = useState(false);
 
   // Preview modal state
   const [previewMedia, setPreviewMedia] = useState<{type: 'image' | 'audio', url: string} | null>(null);
@@ -282,6 +293,75 @@ const QuestionAdmin: React.FC = () => {
           "Không thể xóa câu hỏi! Có thể câu hỏi này đã có đáp án hoặc xảy ra lỗi."
         );
       }
+    }
+  };
+
+  // Download Excel template
+  const handleDownloadTemplate = async () => {
+    try {
+      await downloadQuestionTemplate();
+      alert("Đã tải template thành công!");
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      alert("Không thể tải template. Vui lòng thử lại!");
+    }
+  };
+
+  // Import questions from Excel
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    console.log("📁 Selected file:", file.name, file.type, file.size);
+
+    // Validate file type
+    const validTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel'
+    ];
+    if (!validTypes.includes(file.type)) {
+      alert('Vui lòng chọn file Excel (.xlsx hoặc .xls)!');
+      return;
+    }
+
+    try {
+      setImporting(true);
+      setImportResult(null);
+      
+      console.log("🚀 Starting import...");
+      const result = await importQuestionsFromExcel(file);
+      console.log("📊 Import result:", result);
+      
+      if (result.success) {
+        const successCount = result.data.success?.length || 0;
+        const failedCount = result.data.failed?.length || 0;
+        const totalCount = result.data.total || 0;
+        
+        setImportResult({
+          success: successCount,
+          failed: failedCount,
+          total: totalCount,
+          errors: result.data.failed || []
+        });
+        
+        // Reload questions trước khi hiển thị alert
+        console.log("🔄 Reloading questions...");
+        await loadQuestions();
+        console.log("✅ Questions reloaded successfully");
+        
+        // Hiển thị modal kết quả thay vì alert
+        setShowImportResultModal(true);
+      } else {
+        // Nếu result.success = false nhưng vẫn có response
+        alert(`Import thất bại: ${result.message || 'Lỗi không xác định'}`);
+      }
+    } catch (error: any) {
+      console.error("❌ Error importing questions:", error);
+      alert(`Không thể import câu hỏi: ${error.message || 'Vui lòng thử lại!'}`);
+    } finally {
+      setImporting(false);
+      // Reset input
+      e.target.value = '';
     }
   };
 
@@ -680,6 +760,52 @@ const QuestionAdmin: React.FC = () => {
             >
               + Thêm mới câu hỏi
             </button>
+            
+            {/* Import/Export buttons */}
+            <button 
+              className="btn-export"
+              onClick={handleDownloadTemplate}
+              style={{
+                backgroundColor: "#28a745",
+                color: "white",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+                marginLeft: "10px"
+              }}
+            >
+              📥 Tải Template Excel
+            </button>
+            
+            <label 
+              htmlFor="import-excel"
+              style={{
+                backgroundColor: "#17a2b8",
+                color: "white",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                cursor: importing ? "not-allowed" : "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+                marginLeft: "10px",
+                display: "inline-block",
+                opacity: importing ? 0.6 : 1
+              }}
+            >
+              {importing ? "📤 Đang import..." : "📤 Import từ Excel"}
+              <input
+                id="import-excel"
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleImportExcel}
+                disabled={importing}
+                style={{ display: "none" }}
+              />
+            </label>
           </div>
         </div>
         {/* Filters */}
@@ -1362,6 +1488,128 @@ const QuestionAdmin: React.FC = () => {
                 <button className="btn-cancel" onClick={() => setShowAddForm(false)}>Hủy</button>
                 <button className="btn-save" onClick={handleCreateMultiple}>
                   Tạo {questionQuantity} câu hỏi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal kết quả Import */}
+        {showImportResultModal && importResult && (
+          <div className="modal-overlay" onClick={() => setShowImportResultModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '80vh', overflow: 'auto'}}>
+              <div className="modal-header">
+                <h2>
+                  {importResult.failed === 0 ? '✅' : importResult.success === 0 ? '❌' : '⚠️'} 
+                  {' '}Kết quả Import
+                </h2>
+                <button className="modal-close" onClick={() => setShowImportResultModal(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                {/* Summary */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '15px',
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '8px'
+                }}>
+                  <div style={{textAlign: 'center'}}>
+                    <div style={{fontSize: '24px', fontWeight: 'bold', color: '#28a745'}}>{importResult.success}</div>
+                    <div style={{fontSize: '14px', color: '#666'}}>Thành công</div>
+                  </div>
+                  <div style={{textAlign: 'center'}}>
+                    <div style={{fontSize: '24px', fontWeight: 'bold', color: '#dc3545'}}>{importResult.failed}</div>
+                    <div style={{fontSize: '14px', color: '#666'}}>Thất bại</div>
+                  </div>
+                  <div style={{textAlign: 'center'}}>
+                    <div style={{fontSize: '24px', fontWeight: 'bold', color: '#007bff'}}>{importResult.total}</div>
+                    <div style={{fontSize: '14px', color: '#666'}}>Tổng số</div>
+                  </div>
+                </div>
+
+                {/* Error details */}
+                {importResult.failed > 0 && importResult.errors && importResult.errors.length > 0 && (
+                  <>
+                    <h3 style={{marginTop: '20px', marginBottom: '15px', fontSize: '16px', fontWeight: '600'}}>
+                      📋 Chi tiết lỗi ({importResult.errors.length} lỗi)
+                    </h3>
+                    <div style={{
+                      maxHeight: '300px',
+                      overflow: 'auto',
+                      border: '1px solid #dee2e6',
+                      borderRadius: '8px'
+                    }}>
+                      <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                        <thead style={{position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 1}}>
+                          <tr>
+                            <th style={{padding: '12px', textAlign: 'left', borderBottom: '2px solid #dee2e6', width: '60px'}}>STT</th>
+                            <th style={{padding: '12px', textAlign: 'left', borderBottom: '2px solid #dee2e6', width: '80px'}}>Dòng</th>
+                            <th style={{padding: '12px', textAlign: 'left', borderBottom: '2px solid #dee2e6', width: '120px'}}>Cột</th>
+                            <th style={{padding: '12px', textAlign: 'left', borderBottom: '2px solid #dee2e6'}}>Lỗi</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {importResult.errors.map((error, index) => (
+                            <tr key={index} style={{backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa'}}>
+                              <td style={{padding: '10px', borderBottom: '1px solid #dee2e6'}}>{index + 1}</td>
+                              <td style={{padding: '10px', borderBottom: '1px solid #dee2e6', fontWeight: '600', color: '#dc3545'}}>{error.row}</td>
+                              <td style={{padding: '10px', borderBottom: '1px solid #dee2e6', fontFamily: 'monospace', fontSize: '13px', color: '#495057'}}>
+                                {error.column || '-'}
+                              </td>
+                              <td style={{padding: '10px', borderBottom: '1px solid #dee2e6', fontSize: '14px'}}>{error.error}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Validation rules */}
+                    <div style={{
+                      marginTop: '20px',
+                      padding: '15px',
+                      backgroundColor: '#fff3cd',
+                      borderLeft: '4px solid #ffc107',
+                      borderRadius: '4px'
+                    }}>
+                      <h4 style={{margin: '0 0 10px 0', fontSize: '14px', fontWeight: '600', color: '#856404'}}>
+                        💡 Quy tắc Validation
+                      </h4>
+                      <ul style={{margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#856404', lineHeight: '1.8'}}>
+                        <li><strong>Bắt buộc:</strong> questionText, grade, type, answerType, answer1, answer2, correctAnswer</li>
+                        <li><strong>grade:</strong> Phải là 1, 2, 3, 4, hoặc 5</li>
+                        <li><strong>type:</strong> "practice" hoặc "exam" (phân biệt hoa thường)</li>
+                        <li><strong>answerType:</strong> "choice", "text", hoặc "combobox"</li>
+                        <li><strong>lessonId:</strong> Phải tồn tại trong database</li>
+                        <li><strong>correctAnswer:</strong> Phải khớp <em>chính xác</em> với một trong answer1-4</li>
+                      </ul>
+                    </div>
+                  </>
+                )}
+
+                {/* Success message */}
+                {importResult.failed === 0 && (
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '15px',
+                    backgroundColor: '#d4edda',
+                    borderLeft: '4px solid #28a745',
+                    borderRadius: '4px',
+                    color: '#155724'
+                  }}>
+                    <strong>✅ Hoàn tất!</strong> Đã import thành công {importResult.success} câu hỏi.
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer" style={{display: 'flex', justifyContent: 'flex-end', gap: '10px'}}>
+                <button 
+                  className="btn-cancel" 
+                  onClick={() => setShowImportResultModal(false)}
+                  style={{padding: '10px 20px'}}
+                >
+                  Đóng
                 </button>
               </div>
             </div>

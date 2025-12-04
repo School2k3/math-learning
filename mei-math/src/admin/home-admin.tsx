@@ -62,7 +62,6 @@ const HomeAdmin: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
-  const [questionsData, setQuestionsData] = useState<any>(null);
   
   // Thêm state cho date range
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -149,22 +148,25 @@ const HomeAdmin: React.FC = () => {
           : null;
 
         // Lấy completionRate và averageScore từ mainStats
-        const completionRate = mainStats?.lessonCompletionRate || 0;
-        const averageScore = mainStats?.averageExamScore || 0;
+        const completionRate = mainStats?.lessonCompletion?.percentage || 0;
+        const averageScore = mainStats?.examPerformance?.avgScore || 0;
 
         // Xử lý questions data
         const totalQuestionsAnswered = questionsData.status === 'fulfilled'
           ? questionsData.value?.totalAnswers || 0
-          : mainStats?.totalQuestionsAnswered || 0;
+          : 0;
+
+        const totalQuestions = questionsData.status === 'fulfilled'
+          ? questionsData.value?.totalQuestions || 0
+          : 0;
+
+        const totalAnswers = questionsData.status === 'fulfilled'
+          ? questionsData.value?.totalAnswers || 0
+          : 0;
 
         // Xử lý recent activity data
         if (recentActivityData.status === 'fulfilled' && recentActivityData.value?.data) {
           setRecentActivities(recentActivityData.value.data);
-        }
-
-        // Lưu questions data để sử dụng ở nơi khác
-        if (questionsData.status === 'fulfilled') {
-          setQuestionsData(questionsData.value);
         }
 
         console.log("📊 Processed data:", {
@@ -176,7 +178,9 @@ const HomeAdmin: React.FC = () => {
           activeStudentsCount,
           completionRate,
           averageScore,
-          totalQuestionsAnswered
+          totalQuestionsAnswered,
+          totalQuestions,
+          totalAnswers
         });
 
         setStats({
@@ -187,8 +191,8 @@ const HomeAdmin: React.FC = () => {
           activeStudents: mainStats?.activeStudents?.count || activeStudentsCount,
           completionRate: completionRate,
           averageScore: averageScore,
-          totalQuestions: mainStats?.totalQuestions || 0,
-          totalAnswers: mainStats?.totalAnswers || 0,
+          totalQuestions: totalQuestions,
+          totalAnswers: totalAnswers,
           trend: {
             students: 12.5,
             completion: 5.2,
@@ -214,6 +218,7 @@ const HomeAdmin: React.FC = () => {
           completionRate: 0,
           averageScore: 0,
           totalQuestions: 0,
+          totalAnswers: 0,
           trend: {
             students: 0,
             completion: 0,

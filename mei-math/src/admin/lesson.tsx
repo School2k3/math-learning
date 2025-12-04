@@ -278,7 +278,8 @@ const LessonAdmin: React.FC = () => {
           const res = await createLesson(lessonData);
           if (res.success) {
             successCount++;
-            console.log(`✅ Tạo thành công bài học ${i + 1}`);
+            const lessonId = res.data?.lesson?.id || res.data?.id || res.lesson?.id || res.id;
+            console.log(`✅ Tạo thành công bài học ${i + 1} - ID: ${lessonId}`);
           } else {
             console.error(`❌ Lỗi tạo bài học ${i + 1}:`, res.message);
           }

@@ -59,6 +59,7 @@ export async function createLesson(lessonData: {
   }
 
   const data = await response.json();
+  console.log("createLesson response:", data);
   return data;
 }
 
