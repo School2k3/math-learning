@@ -29,6 +29,7 @@ const Exams: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [showReview, setShowReview] = useState(false);
+  const [timeSpent, setTimeSpent] = useState(0); // Lưu thời gian đã làm khi nộp bài
 
   // KHÔNG tự động finish exam khi user thoát
   // Chỉ finish khi:
@@ -129,12 +130,12 @@ const Exams: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (secondsLeft <= 0) return;
-    const timer = setInterval(() => {
+    if (secondsLeft <= 0 || showResult) return; // Dừng đếm khi hiển thị kết quả
+    const t = setInterval(() => {
       setSecondsLeft(sec => sec - 1);
     }, 1000);
-    return () => clearInterval(timer);
-  }, [secondsLeft]);
+    return () => clearInterval(t);
+  }, [secondsLeft, showResult]);
 
   // Tính trạng thái cho từng câu hỏi
   const getStatus = (idx: number): Status => {
@@ -241,6 +242,10 @@ const Exams: React.FC = () => {
 
   const handleSubmitExam = async () => {
     console.log("🎯 Submitting exam...");
+    
+    // Lưu thời gian đã làm ngay khi nộp bài
+    const spentTime = durationMinutes * 60 - secondsLeft;
+    setTimeSpent(spentTime);
     
     // Tính điểm local
     let correct = 0;
@@ -530,7 +535,25 @@ const Exams: React.FC = () => {
               <div style={{ fontSize: "24px", fontWeight: 700, margin: "24px 0" }}>
                 Điểm số của bạn: {Math.round(score / examQuestions.length * 100)}/100
               </div>
-              <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
+              <div style={{ marginTop: "16px", fontSize: "18px", color: "#667eea", fontWeight: "600" }}>
+                ⏱️ Thời gian làm bài: <b>{formatTime(timeSpent)}</b>
+              </div>
+              {Math.round(score / examQuestions.length * 100) >= 80 && (
+                <div style={{ 
+                  marginTop: "16px", 
+                  fontSize: "20px", 
+                  fontWeight: "bold",
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  padding: "12px 24px",
+                  borderRadius: "12px",
+                  display: "inline-block",
+                  color: "white",
+                  boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)"
+                }}>
+                  🏆 Chúc mừng! Bạn đã nhận được 1 cúp!
+                </div>
+              )}
+              <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginTop: "24px" }}>
                 <button
                   style={{
                     background: "#4caf50", color: "#fff", fontWeight: 600, fontSize: "18px",

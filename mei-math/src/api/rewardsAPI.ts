@@ -11,6 +11,7 @@ export type Reward = {
 };
 
 export type UserReward = {
+  id: number; // userRewardId từ backend
   userId: number;
   rewardId: number;
   reward: Reward;
