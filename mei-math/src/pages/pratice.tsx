@@ -598,6 +598,25 @@ const Pratice: React.FC = () => {
                 <br />
                 Số câu đúng: <b style={{ color: "#4CAF50" }}>{correctCount}</b> &nbsp;|&nbsp; Số câu sai:{" "}
                 <b style={{ color: "#F44336" }}>{incorrectCount}</b>
+                <br />
+                <div style={{ marginTop: "16px", fontSize: "18px", color: "#667eea", fontWeight: "600" }}>
+                  ⏱️ Thời gian hoàn thành: <b>{formatTime(elapsedTime)}</b>
+                </div>
+                {score >= 100 && (
+                  <div style={{ 
+                    marginTop: "16px", 
+                    fontSize: "20px", 
+                    fontWeight: "bold",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    padding: "12px 24px",
+                    borderRadius: "12px",
+                    display: "inline-block",
+                    color: "white",
+                    boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)"
+                  }}>
+                    🏆 Chúc mừng! Bạn đã nhận được 1 cúp!
+                  </div>
+                )}
               </div>
               
               {/* Nút về trang học tập */}
