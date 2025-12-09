@@ -16,7 +16,7 @@ const RewardsPage: React.FC = () => {
   const [trophies, setTrophies] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [equipping, setEquipping] = useState<number | null>(null);
-  const [selectedType, setSelectedType] = useState<'avatar' | 'badge' | 'item' | 'decoration'>('avatar');
+  const [selectedType, setSelectedType] = useState<'avatar'>('avatar');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -229,32 +229,6 @@ const RewardsPage: React.FC = () => {
       <div className="avatar-selection-section">
         <div className="section-header">
           <h2>AVATAR SỰ KIỆN</h2>
-          <div className="type-tabs">
-            <button 
-              className={`type-tab ${selectedType === 'avatar' ? 'active' : ''}`}
-              onClick={() => setSelectedType('avatar')}
-            >
-              Avatar
-            </button>
-            <button 
-              className={`type-tab ${selectedType === 'badge' ? 'active' : ''}`}
-              onClick={() => setSelectedType('badge')}
-            >
-              Huy hiệu
-            </button>
-            <button 
-              className={`type-tab ${selectedType === 'item' ? 'active' : ''}`}
-              onClick={() => setSelectedType('item')}
-            >
-              Vật phẩm
-            </button>
-            <button 
-              className={`type-tab ${selectedType === 'decoration' ? 'active' : ''}`}
-              onClick={() => setSelectedType('decoration')}
-            >
-              Trang trí
-            </button>
-          </div>
         </div>
 
         <div className="avatar-grid">

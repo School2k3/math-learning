@@ -37,6 +37,8 @@ const DashUser: React.FC = () => {
   const [wrongAnswers, setWrongAnswers] = useState<WrongAnswerQuestion[]>([]);
   const [loadingWrongAnswers, setLoadingWrongAnswers] = useState(false);
   const [wrongAnswersLimit, setWrongAnswersLimit] = useState(10);
+  const [selectedQuestion, setSelectedQuestion] = useState<WrongAnswerQuestion | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   
   // State cho thống kê
   const [statsData, setStatsData] = useState({
@@ -527,19 +529,21 @@ const DashUser: React.FC = () => {
         <div className="wrong-answers-section">
           <div className="section-header">
             <h2 className="section-title">Các câu hỏi bạn hay sai nhất</h2>
-            <div className="limit-selector">
-              <label htmlFor="limit-select">Hiển thị:</label>
-              <select 
-                id="limit-select"
-                value={wrongAnswersLimit}
-                onChange={(e) => setWrongAnswersLimit(Number(e.target.value))}
-                className="limit-select"
-              >
-                <option value={5}>5 câu</option>
-                <option value={10}>10 câu</option>
-                <option value={15}>15 câu</option>
-                <option value={20}>20 câu</option>
-              </select>
+            <div className="filters-container">
+              <div className="filter-group">
+                <label htmlFor="limit-select">Hiển thị:</label>
+                <select 
+                  id="limit-select"
+                  value={wrongAnswersLimit}
+                  onChange={(e) => setWrongAnswersLimit(Number(e.target.value))}
+                  className="filter-select"
+                >
+                  <option value={5}>5 câu</option>
+                  <option value={10}>10 câu</option>
+                  <option value={15}>15 câu</option>
+                  <option value={20}>20 câu</option>
+                </select>
+              </div>
             </div>
           </div>
           
@@ -567,16 +571,20 @@ const DashUser: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="card-body">
+                  <div 
+                    className="card-body"
+                    onClick={() => {
+                      setSelectedQuestion(item);
+                      setShowDetailModal(true);
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="lesson-info">
                       <span className="lesson-badge grade-badge">Lớp {item.grade}</span>
                       <span className="chapter-badge" title={item.lesson.chapter.title}>
-                        📚 {item.lesson.chapter.title.length > 30 
-                          ? item.lesson.chapter.title.substring(0, 30) + '...' 
+                        📚 {item.lesson.chapter.title.length > 25 
+                          ? item.lesson.chapter.title.substring(0, 25) + '...' 
                           : item.lesson.chapter.title}
-                      </span>
-                      <span className="lesson-name" title={item.lesson.title}>
-                        📖 {item.lesson.title}
                       </span>
                     </div>
                     
@@ -586,7 +594,7 @@ const DashUser: React.FC = () => {
                         <img 
                           src={item.questionImage} 
                           alt="Câu hỏi"
-                          className="question-image"
+                          className="question-image-preview"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
@@ -595,62 +603,13 @@ const DashUser: React.FC = () => {
                       )}
                     </div>
                     
-                    {/* Thống kê */}
-                    <div className="question-stats">
-                      <div className="stat-item">
-                        <span className="stat-label">Tỷ lệ sai:</span>
-                        <span className="stat-value error">{item.wrongPercentage.toFixed(1)}%</span>
-                      </div>
-                      <div className="stat-item">
-                        <span className="stat-label">Số lần làm:</span>
-                        <span className="stat-value">{item.totalAttempts}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Đáp án đúng */}
-                    <div className="correct-answer">
-                      <span className="answer-label">✅ Đáp án đúng:</span>
-                      <span className="answer-text">{item.correctAnswer.answerText}</span>
-                    </div>
-                    
-                    {/* Đáp án sai phổ biến */}
-                    {item.commonWrongAnswers && item.commonWrongAnswers.length > 0 && (
-                      <div className="wrong-answers-list">
-                        <span className="answers-label">❌ Đáp án sai thường gặp:</span>
-                        <div className="answers-grid">
-                          {item.commonWrongAnswers.map((ans) => (
-                            <div key={ans.id} className="wrong-answer-item">
-                              <span className="wrong-answer-text">{ans.answerText}</span>
-                              <span className="wrong-answer-count">({ans.count} lần - {ans.percentage}%)</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Giải thích */}
-                    {item.explanationText && (
-                      <div className="explanation">
-                        <span className="explanation-label">💡 Giải thích:</span>
-                        <p className="explanation-text">{item.explanationText}</p>
-                        {item.explanationImg && (
-                          <img 
-                            src={item.explanationImg} 
-                            alt="Giải thích"
-                            className="explanation-image"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                            }}
-                          />
-                        )}
-                      </div>
-                    )}
+                    <div className="click-hint">👆 Click để xem chi tiết</div>
                   </div>
                   
                   <button 
                     className="practice-again-btn"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       // Tìm chapterId từ lessonsMap hoặc từ item.lesson.chapter.id
                       const lesson = lessonsMap[item.lesson.id];
                       const chapterId = item.lesson.chapter.id || lesson?.chapterId;
@@ -901,6 +860,119 @@ const DashUser: React.FC = () => {
           {renderContent()}
         </div>
       </div>
+      
+      {/* Modal chi tiết câu hỏi */}
+      {showDetailModal && selectedQuestion && (
+        <div className="question-detail-modal" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowDetailModal(false)}>✕</button>
+            
+            <div className="modal-header">
+              <h3>Chi tiết câu hỏi</h3>
+              <div className="modal-badges">
+                <span className="badge grade">Lớp {selectedQuestion.grade}</span>
+                <span className="badge chapter">{selectedQuestion.lesson.chapter.title}</span>
+                <span className="badge lesson">{selectedQuestion.lesson.title}</span>
+              </div>
+            </div>
+            
+            <div className="modal-body">
+              {/* Câu hỏi */}
+              <div className="modal-section">
+                <h4>📝 Câu hỏi</h4>
+                <p className="question-text-large">{selectedQuestion.questionText}</p>
+                {selectedQuestion.questionImage && (
+                  <img 
+                    src={selectedQuestion.questionImage} 
+                    alt="Câu hỏi"
+                    className="question-image-large"
+                  />
+                )}
+              </div>
+              
+              {/* Thống kê */}
+              <div className="modal-section stats-section">
+                <h4>📊 Thống kê</h4>
+                <div className="stats-grid">
+                  <div className="stat-box error">
+                    <div className="stat-number">{selectedQuestion.wrongCount}</div>
+                    <div className="stat-label">Số lần sai</div>
+                  </div>
+                  <div className="stat-box">
+                    <div className="stat-number">{selectedQuestion.totalAttempts}</div>
+                    <div className="stat-label">Tổng số lần làm</div>
+                  </div>
+                  <div className="stat-box warning">
+                    <div className="stat-number">{selectedQuestion.wrongPercentage.toFixed(1)}%</div>
+                    <div className="stat-label">Tỷ lệ sai</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Đáp án đúng */}
+              <div className="modal-section correct-section">
+                <h4>✅ Đáp án đúng</h4>
+                <div className="answer-box correct">
+                  {selectedQuestion.correctAnswer.answerText}
+                </div>
+              </div>
+              
+              {/* Đáp án sai phổ biến */}
+              {selectedQuestion.commonWrongAnswers && selectedQuestion.commonWrongAnswers.length > 0 && (
+                <div className="modal-section wrong-section">
+                  <h4>❌ Đáp án sai thường gặp</h4>
+                  <div className="wrong-answers-modal-list">
+                    {selectedQuestion.commonWrongAnswers.map((ans) => (
+                      <div key={ans.id} className="answer-box wrong">
+                        <span className="answer-text">{ans.answerText}</span>
+                        <span className="answer-stats">{ans.count} lần ({ans.percentage}%)</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Giải thích */}
+              {selectedQuestion.explanationText && (
+                <div className="modal-section explanation-section">
+                  <h4>💡 Giải thích</h4>
+                  <p className="explanation-text-large">{selectedQuestion.explanationText}</p>
+                  {selectedQuestion.explanationImg && (
+                    <img 
+                      src={selectedQuestion.explanationImg} 
+                      alt="Giải thích"
+                      className="explanation-image-large"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                className="modal-btn secondary"
+                onClick={() => setShowDetailModal(false)}
+              >
+                Đóng
+              </button>
+              <button 
+                className="modal-btn primary"
+                onClick={() => {
+                  const lesson = lessonsMap[selectedQuestion.lesson.id];
+                  const chapterId = selectedQuestion.lesson.chapter.id || lesson?.chapterId;
+                  const chapter = chapterId ? chapters.find(c => c.id === chapterId) : null;
+                  const semester = chapter?.volume || 1;
+                  
+                  setShowDetailModal(false);
+                  navigate(`/study?gradeId=${selectedQuestion.grade}&semester=${semester}&chapterId=${chapterId}`);
+                }}
+              >
+                Luyện tập lại
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

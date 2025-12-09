@@ -52,12 +52,34 @@ const PracticeContinue: React.FC = () => {
       
       console.log("Raw practice data from API:", allPractices);
       
+      // Fetch lesson progress để kiểm tra bài nào đã từng hoàn thành
+      const lessonIds = [...new Set(allPractices.map((p: any) => p.lessonId).filter(Boolean))];
+      const lessonProgressMap: {[key: number]: number} = {};
+      
+      // Lấy progress của từng lesson
+      await Promise.all(lessonIds.map(async (lessonId: number) => {
+        try {
+          const historyData = await fetchPracticeHistoryByUser(user.id);
+          const sessions = historyData.practiceHistory.filter((s: any) => s.lessonId === lessonId);
+          const latestSession = sessions.sort((a: any, b: any) => 
+            new Date(b.finishedAt || 0).getTime() - new Date(a.finishedAt || 0).getTime()
+          )[0];
+          const completed = latestSession ? latestSession.finishedAt !== null : false;
+          lessonProgressMap[lessonId] = completed ? 100 : (latestSession?.score || 0);
+        } catch {
+          lessonProgressMap[lessonId] = 0;
+        }
+      }));
+      
       // Lọc các practice sessions chưa hoàn thành (score < 100 hoặc completed = false)
+      // VÀ chỉ hiển thị những bài chưa từng đạt 100%
       const incomplete = allPractices.filter((practice: any) => {
         const isIncomplete = !practice.completed || (practice.score !== undefined && practice.score < 100);
         const hasStarted = practice.startedAt && !practice.finishedAt;
-        console.log("Practice item:", practice, "isIncomplete:", isIncomplete, "hasStarted:", hasStarted);
-        return isIncomplete && hasStarted;
+        const hasNeverCompleted = !practice.lessonId || (lessonProgressMap[practice.lessonId] || 0) < 100;
+        
+        console.log("Practice item:", practice, "isIncomplete:", isIncomplete, "hasStarted:", hasStarted, "hasNeverCompleted:", hasNeverCompleted);
+        return isIncomplete && hasStarted && hasNeverCompleted;
       });
 
       console.log("Filtered incomplete practices:", incomplete);

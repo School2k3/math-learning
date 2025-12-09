@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Header from "../components/header";
 import ProgressCircle from "../components/ProgressCircle";
 import ChatBotButton from "../components/ChatBot/ChatBotButton";
@@ -29,6 +29,7 @@ const StudyPage: React.FC = () => {
   const [selectedSemester, setSelectedSemester] = useState("Học kỳ 1");
   const [topics, setTopics] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const chapterRefs = useRef<{[key: number]: HTMLDivElement | null}>({});
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
 const [lessons, setLessons] = useState<any[]>([]);
 const [loadingLessons, setLoadingLessons] = useState(false);
@@ -36,6 +37,7 @@ const [loadingLessons, setLoadingLessons] = useState(false);
 const [loadingExams, setLoadingExams] = useState(false);
 const [lessonProgress, setLessonProgress] = useState<{[key: number]: {progress: number, completed: boolean}}>({});
 const [examCompletion, setExamCompletion] = useState<{[key: number]: boolean}>({});
+const [examLatestScores, setExamLatestScores] = useState<{[key: number]: number | null}>({});
 const [showExamModal, setShowExamModal] = useState(false);
 const [pendingExam, setPendingExam] = useState<any>(null);
 const [activeExamResult, setActiveExamResult] = useState<any>(null);
@@ -58,10 +60,16 @@ const [showPracticeBanner, setShowPracticeBanner] = useState(false);
           const allPractices = response.practiceHistory || response.sessions || [];
           
           // Lọc các practice sessions chưa hoàn thành (score < 100 hoặc completed = false)
+          // VÀ chỉ hiển thị những bài chưa từng đạt 100% (lessonProgress < 100)
           const incomplete = allPractices.filter((practice: any) => {
             const isIncomplete = !practice.completed || practice.score < 100;
             const hasStarted = practice.startedAt && !practice.finishedAt;
-            return isIncomplete && hasStarted;
+            
+            // Kiểm tra xem bài học này đã từng hoàn thành chưa (progress = 100%)
+            const lessonId = practice.lessonId;
+            const hasNeverCompleted = !lessonProgress[lessonId] || lessonProgress[lessonId].progress < 100;
+            
+            return isIncomplete && hasStarted && hasNeverCompleted;
           });
 
           setIncompletePractices(incomplete);
@@ -75,7 +83,7 @@ const [showPracticeBanner, setShowPracticeBanner] = useState(false);
     };
 
     loadIncompletePractices();
-  }, [user?.id]);
+  }, [user?.id, lessonProgress]);
 
   // Kiểm tra xem lớp đang chọn có phù hợp với lớp của học sinh không
   const selectedGrade = Number(selectedClass.replace("Lớp ", ""));
@@ -133,6 +141,18 @@ const [showPracticeBanner, setShowPracticeBanner] = useState(false);
       .catch(() => setTopics([]))
       .finally(() => setLoading(false));
   }, [selectedClass, selectedSemester, searchParams]);
+
+  // Scroll to selected chapter when it changes (from URL)
+  useEffect(() => {
+    if (selectedChapterId && chapterRefs.current[selectedChapterId]) {
+      setTimeout(() => {
+        chapterRefs.current[selectedChapterId]?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }, 300); // Delay để đảm bảo DOM đã render
+    }
+  }, [selectedChapterId, topics]);
 
   useEffect(() => {
     if (selectedChapterId) {
@@ -194,13 +214,14 @@ const [showPracticeBanner, setShowPracticeBanner] = useState(false);
           const examsData = data.exams ?? [];
           setExams(examsData);
           
-          // Fetch exam results để kiểm tra exam nào đã hoàn thành
+          // Fetch exam results để kiểm tra exam nào đã hoàn thành và điểm gần nhất
           const userId = user?.id || 1;
           try {
-            // Tạo map để đánh dấu exam nào đã hoàn thành
+            // Tạo map để đánh dấu exam nào đã hoàn thành và lưu điểm gần nhất
             const completionMap: {[key: number]: boolean} = {};
+            const latestScoresMap: {[key: number]: number | null} = {};
             
-            // Kiểm tra từng exam xem user đã làm chưa
+            // Kiểm tra từng exam xem user đã làm chưa và lấy điểm gần nhất
             const checkPromises = examsData.map(async (exam: any) => {
               try {
                 const resultsData = await fetchExamResultsByExamId(exam.id, {
@@ -214,15 +235,28 @@ const [showPracticeBanner, setShowPracticeBanner] = useState(false);
                 );
                 
                 completionMap[exam.id] = userResults && userResults.length > 0;
+                
+                // Lấy điểm của lần làm bài gần nhất (sort theo finishedAt)
+                if (userResults && userResults.length > 0) {
+                  const sortedResults = userResults.sort((a: any, b: any) => 
+                    new Date(b.finishedAt).getTime() - new Date(a.finishedAt).getTime()
+                  );
+                  latestScoresMap[exam.id] = sortedResults[0].score ?? null;
+                } else {
+                  latestScoresMap[exam.id] = null;
+                }
               } catch (error) {
                 console.error(`Error checking exam ${exam.id}:`, error);
                 completionMap[exam.id] = false;
+                latestScoresMap[exam.id] = null;
               }
             });
             
             await Promise.all(checkPromises);
             console.log("Exam Completion Map:", completionMap);
+            console.log("Exam Latest Scores Map:", latestScoresMap);
             setExamCompletion(completionMap);
+            setExamLatestScores(latestScoresMap);
           } catch (error) {
             console.error("Error fetching exam completion:", error);
             setExamCompletion({});
@@ -300,6 +334,7 @@ const [showPracticeBanner, setShowPracticeBanner] = useState(false);
               topics.map((topic: any) => (
                 <div
                   key={topic.id}
+                  ref={(el) => chapterRefs.current[topic.id] = el}
                   className={`study-topic-item${selectedChapterId === topic.id ? " active" : ""}`}
                   onClick={() => {
                     setSelectedChapterId(topic.id);
@@ -671,8 +706,8 @@ const [showPracticeBanner, setShowPracticeBanner] = useState(false);
                       </div>
                     )}
                     <div className="study-card-img">
-                      <img src="/mei-is.png" alt="card" />
-                      <div className="study-card-label">UX/UI</div>
+                      <img src="/test.png" alt="exam" />
+                      <div className="study-card-label">TEST</div>
                     </div>
                     <div
                       className="study-card-title"
@@ -697,6 +732,19 @@ const [showPracticeBanner, setShowPracticeBanner] = useState(false);
                         <div style={{ color: "#888" }}>Thời gian làm bài</div>
                         <div style={{ fontWeight: "bold" }}>
                           {exam.durationMinutes ?? "--"} phút
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ color: "#888" }}>Điểm gần nhất</div>
+                        <div style={{ 
+                          fontWeight: "bold",
+                          color: examLatestScores[exam.id] !== null && examLatestScores[exam.id] !== undefined
+                            ? (examLatestScores[exam.id]! >= 80 ? "#4CAF50" : examLatestScores[exam.id]! >= 50 ? "#FF9800" : "#F44336")
+                            : "#888"
+                        }}>
+                          {examLatestScores[exam.id] !== null && examLatestScores[exam.id] !== undefined
+                            ? `${examLatestScores[exam.id]} điểm`
+                            : "Chưa làm"}
                         </div>
                       </div>
                     </div>
