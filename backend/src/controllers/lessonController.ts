@@ -9,6 +9,7 @@ import {
   sendBadRequestResponse
 } from '../utils/apiResponse.js';
 import { CreateLessonInput, UpdateLessonInput } from '../schemas/lesson.schema.js';
+import * as XLSX from 'xlsx';
 
 interface LessonQuery {
   chapterId?: string;
@@ -257,7 +258,84 @@ const lessonController: Controller = {
       console.error('Error deleting lesson:', error);
       sendErrorResponse(res, 'Failed to delete lesson');
     }
-  }
+  },
+
+  // Export all lessons to Excel
+  exportLessons: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { chapterId, grade } = req.query;
+      
+      const whereClause: any = {};
+      
+      if (chapterId) {
+        whereClause.chapterId = parseInt(chapterId as string);
+      }
+      
+      if (grade) {
+        whereClause.chapter = {
+          grade: parseInt(grade as string)
+        };
+      }
+      
+      const lessons = await prisma.lesson.findMany({
+        where: whereClause,
+        include: {
+          chapter: true,
+        },
+        orderBy: [
+          { chapterId: 'asc' },
+          { id: 'asc' },
+        ],
+      });
+
+      // Prepare data for Excel
+      const exportData = lessons.map(lesson => ({
+        'ID': lesson.id,
+        'ID Chương': lesson.chapterId,
+        'Tên Chương': lesson.chapter.title,
+        'Lớp': lesson.chapter.grade,
+        'Tập': lesson.chapter.volume,
+        'Tiêu đề Bài học': lesson.title,
+        'URL Video': lesson.videoUrl || '',
+        'URL Hình ảnh': lesson.imageUrl || '',
+      }));
+
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // Set column widths
+      worksheet['!cols'] = [
+        { wch: 10 }, // ID
+        { wch: 12 }, // ID Chương
+        { wch: 40 }, // Tên Chương
+        { wch: 10 }, // Lớp
+        { wch: 10 }, // Tập
+        { wch: 50 }, // Tiêu đề Bài học
+        { wch: 50 }, // URL Video
+        { wch: 50 }, // URL Hình ảnh
+      ];
+      
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Lessons');
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set headers and send file
+      const filename = chapterId 
+        ? `lessons_chapter${chapterId}.xlsx`
+        : grade 
+        ? `lessons_grade${grade}.xlsx`
+        : 'lessons_all.xlsx';
+      
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error exporting lessons:', error);
+      sendErrorResponse(res, 'Failed to export lessons');
+    }
+  },
 };
 
 export default lessonController;

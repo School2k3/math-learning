@@ -779,15 +779,16 @@ generateQuestionAudio: async (req: Request, res: Response): Promise<void> => {
   // Download Excel template
   downloadExcelTemplate: async (req: Request, res: Response): Promise<void> => {
     try {
+      const { type = 'practice' } = req.query;
+      const questionType = type === 'exam' ? 'exam' : 'practice';
+      const questionTypeVi = questionType === 'exam' ? 'thi' : 'luyện tập';
+      
       // Create instruction sheet data
       const instructions = [
-        { Field: 'HƯỚNG DẪN NHẬP CÂU HỎI', Description: '' },
+        { Field: `HƯỚNG DẪN NHẬP CÂU HỎI ${questionTypeVi.toUpperCase()}`, Description: '' },
         { Field: '', Description: '' },
         { Field: '📋 CÁC TRƯỜNG BẮT BUỘC (Không được để trống):', Description: '' },
         { Field: '  • questionText', Description: 'Nội dung câu hỏi' },
-        { Field: '  • grade', Description: 'Phải là 1, 2, 3, 4, hoặc 5' },
-        { Field: '  • type', Description: 'Phải là "practice" hoặc "exam"' },
-        { Field: '  • answerType', Description: 'Phải là "choice", "text", hoặc "combobox"' },
         { Field: '  • answer1', Description: 'Đáp án thứ nhất (bắt buộc)' },
         { Field: '  • answer2', Description: 'Đáp án thứ hai (bắt buộc)' },
         { Field: '  • correctAnswer', Description: 'PHẢI khớp chính xác với NỘI DUNG của answer1-4 (không phải số thứ tự!)' },
@@ -797,16 +798,17 @@ generateQuestionAudio: async (req: Request, res: Response): Promise<void> => {
         { Field: '  • audioUrl', Description: 'URL âm thanh câu hỏi' },
         { Field: '  • explanationText', Description: 'Giải thích đáp án bằng văn bản' },
         { Field: '  • explanationImg', Description: 'URL hình ảnh giải thích' },
-        { Field: '  • lessonId', Description: 'ID bài học (phải tồn tại trong cơ sở dữ liệu nếu được cung cấp)' },
         { Field: '  • answer3', Description: 'Đáp án thứ ba (tùy chọn)' },
         { Field: '  • answer4', Description: 'Đáp án thứ tư (tùy chọn)' },
         { Field: '', Description: '' },
+        { Field: '⚠️ LƯU Ý QUAN TRỌNG:', Description: '' },
+        { Field: '  • Lớp (grade) và Bài học (lessonId) sẽ được chọn từ giao diện', Description: '' },
+        { Field: '  • Loại câu hỏi đã được xác định là: ' + questionTypeVi, Description: '' },
+        { Field: '  • Loại đáp án luôn là "choice" (trắc nghiệm)', Description: '' },
+        { Field: '', Description: '' },
         { Field: '⚠️ QUY TẮC KIỂM TRA:', Description: '' },
-        { Field: '  1. Grade', Description: 'Phải là số từ 1 đến 5' },
-        { Field: '  2. Type', Description: 'Chỉ được là "practice" hoặc "exam" (không phân biệt hoa thường)' },
-        { Field: '  3. AnswerType', Description: 'Chỉ được là "choice", "text", hoặc "combobox" (không phân biệt hoa thường)' },
-        { Field: '  4. LessonId', Description: 'Nếu được cung cấp, phải tồn tại trong cơ sở dữ liệu' },
-        { Field: '  5. CorrectAnswer', Description: 'PHẢI khớp chính xác với NỘI DUNG của answer1, answer2, answer3, hoặc answer4' },
+        { Field: '  1. CorrectAnswer', Description: 'PHẢI khớp chính xác với NỘI DUNG của answer1, answer2, answer3, hoặc answer4' },
+        { Field: '  2. Answer1 & Answer2', Description: 'Bắt buộc phải có ít nhất 2 đáp án' },
         { Field: '', Description: '' },
         { Field: '✅ VÍ DỤ ĐÚNG:', Description: '' },
         { Field: '  answer1: "London"', Description: '' },
@@ -829,22 +831,19 @@ generateQuestionAudio: async (req: Request, res: Response): Promise<void> => {
         { Field: '📤 CÁCH NHẬP:', Description: '' },
         { Field: '  1. Điền câu hỏi của bạn vào sheet Questions', Description: '' },
         { Field: '  2. Lưu file', Description: '' },
-        { Field: '  3. Tải lên qua: POST /api/questions/import', Description: '' },
-        { Field: '  4. Kiểm tra kết quả trả về để xem các dòng thành công/thất bại', Description: '' }
+        { Field: '  3. Chọn lớp (grade) và bài học (lessonId) trên giao diện', Description: '' },
+        { Field: `  4. Tải lên qua: POST /api/questions/import/${questionType}?grade=X&lessonId=Y`, Description: '' },
+        { Field: '  5. Kiểm tra kết quả trả về để xem các dòng thành công/thất bại', Description: '' }
       ];
 
-      // Create template data
+      // Create template data (simplified - no grade, lessonId, answerType, type)
       const templateData = [
         {
-          questionText: 'Tính 2 + 2 = ?',
+          questionText: '2 + 2 bằng mấy?',
           imageUrl: '',
           audioUrl: '',
-          explanationText: 'Addition of two numbers',
+          explanationText: 'Phép cộng hai số',
           explanationImg: '',
-          grade: 1,
-          type: 'practice',
-          answerType: 'choice',
-          lessonId: '8',
           answer1: '3',
           answer2: '4',
           answer3: '5',
@@ -852,15 +851,11 @@ generateQuestionAudio: async (req: Request, res: Response): Promise<void> => {
           correctAnswer: '4'
         },
         {
-          questionText: 'Tính 5 - 3 = ?',
+          questionText: '5 - 3 bằng mấy?',
           imageUrl: '',
           audioUrl: '',
-          explanationText: 'Subtraction example',
+          explanationText: 'Phép trừ hai số',
           explanationImg: '',
-          grade: 1,
-          type: 'exam',
-          answerType: 'choice',
-          lessonId: '',
           answer1: '1',
           answer2: '2',
           answer3: '3',
@@ -888,10 +883,6 @@ generateQuestionAudio: async (req: Request, res: Response): Promise<void> => {
         { wch: 40 }, // audioUrl
         { wch: 50 }, // explanationText
         { wch: 40 }, // explanationImg
-        { wch: 10 }, // grade
-        { wch: 15 }, // type
-        { wch: 15 }, // answerType
-        { wch: 10 }, // lessonId
         { wch: 30 }, // answer1
         { wch: 30 }, // answer2
         { wch: 30 }, // answer3
@@ -904,12 +895,626 @@ generateQuestionAudio: async (req: Request, res: Response): Promise<void> => {
       const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
       // Set headers and send file
-      res.setHeader('Content-Disposition', 'attachment; filename=questions_template.xlsx');
+      res.setHeader('Content-Disposition', `attachment; filename=questions_${questionType}_template.xlsx`);
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.send(buffer);
     } catch (error) {
       console.error('Error generating template:', error);
       sendErrorResponse(res, 'Failed to generate template');
+    }
+  },
+
+  // Import practice questions from Excel file
+  importPracticeQuestionsFromExcel: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { grade, lessonId } = req.query;
+      
+      // Validate grade parameter
+      if (!grade) {
+        sendBadRequestResponse(res, 'Grade is required');
+        return;
+      }
+      
+      const gradeNum = parseInt(grade as string);
+      if (isNaN(gradeNum) || gradeNum < 1 || gradeNum > 5) {
+        sendBadRequestResponse(res, 'Grade must be a number between 1 and 5');
+        return;
+      }
+
+      // Validate lessonId if provided
+      let lessonIdNum: number | null = null;
+      if (lessonId) {
+        lessonIdNum = parseInt(lessonId as string);
+        if (isNaN(lessonIdNum)) {
+          sendBadRequestResponse(res, 'LessonId must be a valid number');
+          return;
+        }
+
+        const lessonExists = await prisma.lesson.findUnique({
+          where: { id: lessonIdNum }
+        });
+
+        if (!lessonExists) {
+          sendBadRequestResponse(res, `Lesson with ID ${lessonIdNum} does not exist`);
+          return;
+        }
+      }
+
+      if (!req.file) {
+        sendBadRequestResponse(res, 'No file uploaded');
+        return;
+      }
+
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames.find(name => name === 'Questions') || workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      // Convert to JSON
+      const data: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+      if (data.length === 0) {
+        sendBadRequestResponse(res, 'Excel file is empty');
+        return;
+      }
+
+      const results = {
+        success: [] as any[],
+        failed: [] as any[],
+        total: data.length
+      };
+
+      // Process each row
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        const rowNumber = i + 2;
+        
+        try {
+          // 1. Validate required fields
+          const requiredFields = {
+            questionText: row.questionText,
+            answer1: row.answer1,
+            answer2: row.answer2,
+            correctAnswer: row.correctAnswer
+          };
+
+          const missingFields: string[] = [];
+          for (const [field, value] of Object.entries(requiredFields)) {
+            if (value === undefined || value === null || value.toString().trim() === '') {
+              missingFields.push(field);
+            }
+          }
+
+          if (missingFields.length > 0) {
+            results.failed.push({
+              row: rowNumber,
+              error: `Missing required fields: ${missingFields.join(', ')}`,
+              data: row
+            });
+            continue;
+          }
+
+          // 2. Collect all answers
+          const answers: { text: string; index: number }[] = [];
+          for (let j = 1; j <= 4; j++) {
+            const answerKey = `answer${j}`;
+            if (row[answerKey] && row[answerKey].toString().trim() !== '') {
+              answers.push({
+                text: row[answerKey].toString().trim(),
+                index: j
+              });
+            }
+          }
+
+          if (answers.length < 2) {
+            results.failed.push({
+              row: rowNumber,
+              error: 'At least 2 answers are required',
+              data: row
+            });
+            continue;
+          }
+
+          // 3. Validate correctAnswer
+          const correctAnswerValue = row.correctAnswer.toString().trim();
+          const matchingAnswer = answers.find(a => a.text === correctAnswerValue);
+
+          if (!matchingAnswer) {
+            results.failed.push({
+              row: rowNumber,
+              error: `correctAnswer "${correctAnswerValue}" must match one of the answer values`,
+              data: row
+            });
+            continue;
+          }
+
+          // Create question with answers in transaction
+          const question = await prisma.$transaction(async (tx) => {
+            const newQuestion = await tx.question.create({
+              data: {
+                questionText: row.questionText.toString().trim(),
+                imageUrl: row.imageUrl?.toString().trim() || null,
+                audioUrl: row.audioUrl?.toString().trim() || null,
+                explanationText: row.explanationText?.toString().trim() || null,
+                explanationImg: row.explanationImg?.toString().trim() || null,
+                grade: gradeNum,
+                type: 'practice',
+                answerType: 'choice',
+                lessonId: lessonIdNum
+              }
+            });
+
+            await tx.answer.createMany({
+              data: answers.map(answer => ({
+                questionId: newQuestion.id,
+                answerText: answer.text,
+                isCorrect: answer.text === correctAnswerValue
+              }))
+            });
+
+            return newQuestion;
+          });
+
+          results.success.push({
+            row: rowNumber,
+            questionId: question.id,
+            questionText: question.questionText
+          });
+
+        } catch (error: any) {
+          results.failed.push({
+            row: rowNumber,
+            error: error.message || 'Failed to create question',
+            data: row
+          });
+        }
+      }
+
+      sendSuccessResponse(res, results, `Import completed: ${results.success.length} succeeded, ${results.failed.length} failed`);
+    } catch (error) {
+      console.error('Error importing practice questions:', error);
+      sendErrorResponse(res, 'Failed to import practice questions from Excel');
+    }
+  },
+
+  // Import exam questions from Excel file
+  importExamQuestionsFromExcel: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { grade, lessonId } = req.query;
+      
+      // Validate grade parameter
+      if (!grade) {
+        sendBadRequestResponse(res, 'Grade is required');
+        return;
+      }
+      
+      const gradeNum = parseInt(grade as string);
+      if (isNaN(gradeNum) || gradeNum < 1 || gradeNum > 5) {
+        sendBadRequestResponse(res, 'Grade must be a number between 1 and 5');
+        return;
+      }
+
+      // Validate lessonId if provided
+      let lessonIdNum: number | null = null;
+      if (lessonId) {
+        lessonIdNum = parseInt(lessonId as string);
+        if (isNaN(lessonIdNum)) {
+          sendBadRequestResponse(res, 'LessonId must be a valid number');
+          return;
+        }
+
+        const lessonExists = await prisma.lesson.findUnique({
+          where: { id: lessonIdNum }
+        });
+
+        if (!lessonExists) {
+          sendBadRequestResponse(res, `Lesson with ID ${lessonIdNum} does not exist`);
+          return;
+        }
+      }
+
+      if (!req.file) {
+        sendBadRequestResponse(res, 'No file uploaded');
+        return;
+      }
+
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames.find(name => name === 'Questions') || workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      // Convert to JSON
+      const data: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+      if (data.length === 0) {
+        sendBadRequestResponse(res, 'Excel file is empty');
+        return;
+      }
+
+      const results = {
+        success: [] as any[],
+        failed: [] as any[],
+        total: data.length
+      };
+
+      // Process each row
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        const rowNumber = i + 2;
+        
+        try {
+          // 1. Validate required fields
+          const requiredFields = {
+            questionText: row.questionText,
+            answer1: row.answer1,
+            answer2: row.answer2,
+            correctAnswer: row.correctAnswer
+          };
+
+          const missingFields: string[] = [];
+          for (const [field, value] of Object.entries(requiredFields)) {
+            if (value === undefined || value === null || value.toString().trim() === '') {
+              missingFields.push(field);
+            }
+          }
+
+          if (missingFields.length > 0) {
+            results.failed.push({
+              row: rowNumber,
+              error: `Missing required fields: ${missingFields.join(', ')}`,
+              data: row
+            });
+            continue;
+          }
+
+          // 2. Collect all answers
+          const answers: { text: string; index: number }[] = [];
+          for (let j = 1; j <= 4; j++) {
+            const answerKey = `answer${j}`;
+            if (row[answerKey] && row[answerKey].toString().trim() !== '') {
+              answers.push({
+                text: row[answerKey].toString().trim(),
+                index: j
+              });
+            }
+          }
+
+          if (answers.length < 2) {
+            results.failed.push({
+              row: rowNumber,
+              error: 'At least 2 answers are required',
+              data: row
+            });
+            continue;
+          }
+
+          // 3. Validate correctAnswer
+          const correctAnswerValue = row.correctAnswer.toString().trim();
+          const matchingAnswer = answers.find(a => a.text === correctAnswerValue);
+
+          if (!matchingAnswer) {
+            results.failed.push({
+              row: rowNumber,
+              error: `correctAnswer "${correctAnswerValue}" must match one of the answer values`,
+              data: row
+            });
+            continue;
+          }
+
+          // Create question with answers in transaction
+          const question = await prisma.$transaction(async (tx) => {
+            const newQuestion = await tx.question.create({
+              data: {
+                questionText: row.questionText.toString().trim(),
+                imageUrl: row.imageUrl?.toString().trim() || null,
+                audioUrl: row.audioUrl?.toString().trim() || null,
+                explanationText: row.explanationText?.toString().trim() || null,
+                explanationImg: row.explanationImg?.toString().trim() || null,
+                grade: gradeNum,
+                type: 'exam',
+                answerType: 'choice',
+                lessonId: lessonIdNum
+              }
+            });
+
+            await tx.answer.createMany({
+              data: answers.map(answer => ({
+                questionId: newQuestion.id,
+                answerText: answer.text,
+                isCorrect: answer.text === correctAnswerValue
+              }))
+            });
+
+            return newQuestion;
+          });
+
+          results.success.push({
+            row: rowNumber,
+            questionId: question.id,
+            questionText: question.questionText
+          });
+
+        } catch (error: any) {
+          results.failed.push({
+            row: rowNumber,
+            error: error.message || 'Failed to create question',
+            data: row
+          });
+        }
+      }
+
+      sendSuccessResponse(res, results, `Import completed: ${results.success.length} succeeded, ${results.failed.length} failed`);
+    } catch (error) {
+      console.error('Error importing exam questions:', error);
+      sendErrorResponse(res, 'Failed to import exam questions from Excel');
+    }
+  },
+
+  // Export practice questions to Excel (compatible with import format)
+  exportPracticeQuestions: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { grade, lessonId } = req.query;
+      
+      const whereClause: any = {
+        type: 'practice'
+      };
+      
+      if (grade) {
+        whereClause.grade = parseInt(grade as string);
+      }
+      
+      if (lessonId) {
+        whereClause.lessonId = parseInt(lessonId as string);
+      }
+      
+      const questions = await prisma.question.findMany({
+        where: whereClause,
+        include: {
+          answers: {
+            orderBy: { id: 'asc' }
+          },
+          lesson: {
+            include: {
+              chapter: true
+            }
+          }
+        },
+        orderBy: [
+          { grade: 'asc' },
+          { lessonId: 'asc' },
+          { id: 'asc' }
+        ]
+      });
+
+      // Prepare data for Excel in import-compatible format
+      const exportData = questions.map(question => {
+        const correctAnswer = question.answers.find(a => a.isCorrect);
+        
+        return {
+          questionText: question.questionText,
+          imageUrl: question.imageUrl || '',
+          audioUrl: question.audioUrl || '',
+          explanationText: question.explanationText || '',
+          explanationImg: question.explanationImg || '',
+          answer1: question.answers[0]?.answerText || '',
+          answer2: question.answers[1]?.answerText || '',
+          answer3: question.answers[2]?.answerText || '',
+          answer4: question.answers[3]?.answerText || '',
+          correctAnswer: correctAnswer?.answerText || ''
+        };
+      });
+
+      // Create instructions sheet
+      const instructions = [
+        { Field: 'HƯỚNG DẪN NHẬP CÂU HỎI LUYỆN TẬP', Description: '' },
+        { Field: '', Description: '' },
+        { Field: '📋 CÁC TRƯỜNG BẮT BUỘC (Không được để trống):', Description: '' },
+        { Field: '  • questionText', Description: 'Nội dung câu hỏi' },
+        { Field: '  • answer1', Description: 'Đáp án thứ nhất (bắt buộc)' },
+        { Field: '  • answer2', Description: 'Đáp án thứ hai (bắt buộc)' },
+        { Field: '  • correctAnswer', Description: 'PHẢI khớp chính xác với NỘI DUNG của answer1-4 (không phải số thứ tự!)' },
+        { Field: '', Description: '' },
+        { Field: '📝 CÁC TRƯỜNG TÙY CHỌN (Có thể để trống):', Description: '' },
+        { Field: '  • imageUrl', Description: 'URL hình ảnh câu hỏi' },
+        { Field: '  • audioUrl', Description: 'URL âm thanh câu hỏi' },
+        { Field: '  • explanationText', Description: 'Giải thích đáp án bằng văn bản' },
+        { Field: '  • explanationImg', Description: 'URL hình ảnh giải thích' },
+        { Field: '  • answer3', Description: 'Đáp án thứ ba (tùy chọn)' },
+        { Field: '  • answer4', Description: 'Đáp án thứ tư (tùy chọn)' },
+        { Field: '', Description: '' },
+        { Field: '⚠️ LƯU Ý QUAN TRỌNG:', Description: '' },
+        { Field: '  • File này đã được xuất từ hệ thống', Description: '' },
+        { Field: '  • Có thể chỉnh sửa và nhập lại vào hệ thống', Description: '' },
+        { Field: '  • Lớp (grade) và Bài học (lessonId) sẽ được chọn khi nhập', Description: '' },
+        { Field: '  • Loại câu hỏi: luyện tập', Description: '' },
+        { Field: '  • Loại đáp án: choice (trắc nghiệm)', Description: '' },
+        { Field: '', Description: '' },
+        { Field: '📤 CÁCH NHẬP LẠI:', Description: '' },
+        { Field: '  1. Chỉnh sửa dữ liệu nếu cần', Description: '' },
+        { Field: '  2. Lưu file', Description: '' },
+        { Field: '  3. Chọn lớp (grade) và bài học (lessonId) trên giao diện', Description: '' },
+        { Field: '  4. Tải lên qua: POST /api/questions/import/practice?grade=X&lessonId=Y', Description: '' }
+      ];
+
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      
+      // Add Instructions sheet first
+      const instructionSheet = XLSX.utils.json_to_sheet(instructions);
+      instructionSheet['!cols'] = [
+        { wch: 50 },
+        { wch: 80 }
+      ];
+      XLSX.utils.book_append_sheet(workbook, instructionSheet, 'Instructions');
+
+      // Add Questions sheet
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      worksheet['!cols'] = [
+        { wch: 50 }, // questionText
+        { wch: 40 }, // imageUrl
+        { wch: 40 }, // audioUrl
+        { wch: 50 }, // explanationText
+        { wch: 40 }, // explanationImg
+        { wch: 30 }, // answer1
+        { wch: 30 }, // answer2
+        { wch: 30 }, // answer3
+        { wch: 30 }, // answer4
+        { wch: 30 }  // correctAnswer
+      ];
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set headers and send file
+      const filename = grade && lessonId 
+        ? `practice_questions_grade${grade}_lesson${lessonId}.xlsx`
+        : grade 
+        ? `practice_questions_grade${grade}.xlsx`
+        : lessonId
+        ? `practice_questions_lesson${lessonId}.xlsx`
+        : 'practice_questions_all.xlsx';
+      
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error exporting practice questions:', error);
+      sendErrorResponse(res, 'Failed to export practice questions');
+    }
+  },
+
+  // Export exam questions to Excel (compatible with import format)
+  exportExamQuestions: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { grade, lessonId } = req.query;
+      
+      const whereClause: any = {
+        type: 'exam'
+      };
+      
+      if (grade) {
+        whereClause.grade = parseInt(grade as string);
+      }
+      
+      if (lessonId) {
+        whereClause.lessonId = parseInt(lessonId as string);
+      }
+      
+      const questions = await prisma.question.findMany({
+        where: whereClause,
+        include: {
+          answers: {
+            orderBy: { id: 'asc' }
+          },
+          lesson: {
+            include: {
+              chapter: true
+            }
+          }
+        },
+        orderBy: [
+          { grade: 'asc' },
+          { lessonId: 'asc' },
+          { id: 'asc' }
+        ]
+      });
+
+      // Prepare data for Excel in import-compatible format
+      const exportData = questions.map(question => {
+        const correctAnswer = question.answers.find(a => a.isCorrect);
+        
+        return {
+          questionText: question.questionText,
+          imageUrl: question.imageUrl || '',
+          audioUrl: question.audioUrl || '',
+          explanationText: question.explanationText || '',
+          explanationImg: question.explanationImg || '',
+          answer1: question.answers[0]?.answerText || '',
+          answer2: question.answers[1]?.answerText || '',
+          answer3: question.answers[2]?.answerText || '',
+          answer4: question.answers[3]?.answerText || '',
+          correctAnswer: correctAnswer?.answerText || ''
+        };
+      });
+
+      // Create instructions sheet
+      const instructions = [
+        { Field: 'HƯỚNG DẪN NHẬP CÂU HỎI THI', Description: '' },
+        { Field: '', Description: '' },
+        { Field: '📋 CÁC TRƯỜNG BẮT BUỘC (Không được để trống):', Description: '' },
+        { Field: '  • questionText', Description: 'Nội dung câu hỏi' },
+        { Field: '  • answer1', Description: 'Đáp án thứ nhất (bắt buộc)' },
+        { Field: '  • answer2', Description: 'Đáp án thứ hai (bắt buộc)' },
+        { Field: '  • correctAnswer', Description: 'PHẢI khớp chính xác với NỘI DUNG của answer1-4 (không phải số thứ tự!)' },
+        { Field: '', Description: '' },
+        { Field: '📝 CÁC TRƯỜNG TÙY CHỌN (Có thể để trống):', Description: '' },
+        { Field: '  • imageUrl', Description: 'URL hình ảnh câu hỏi' },
+        { Field: '  • audioUrl', Description: 'URL âm thanh câu hỏi' },
+        { Field: '  • explanationText', Description: 'Giải thích đáp án bằng văn bản' },
+        { Field: '  • explanationImg', Description: 'URL hình ảnh giải thích' },
+        { Field: '  • answer3', Description: 'Đáp án thứ ba (tùy chọn)' },
+        { Field: '  • answer4', Description: 'Đáp án thứ tư (tùy chọn)' },
+        { Field: '', Description: '' },
+        { Field: '⚠️ LƯU Ý QUAN TRỌNG:', Description: '' },
+        { Field: '  • File này đã được xuất từ hệ thống', Description: '' },
+        { Field: '  • Có thể chỉnh sửa và nhập lại vào hệ thống', Description: '' },
+        { Field: '  • Lớp (grade) và Bài học (lessonId) sẽ được chọn khi nhập', Description: '' },
+        { Field: '  • Loại câu hỏi: thi', Description: '' },
+        { Field: '  • Loại đáp án: choice (trắc nghiệm)', Description: '' },
+        { Field: '', Description: '' },
+        { Field: '📤 CÁCH NHẬP LẠI:', Description: '' },
+        { Field: '  1. Chỉnh sửa dữ liệu nếu cần', Description: '' },
+        { Field: '  2. Lưu file', Description: '' },
+        { Field: '  3. Chọn lớp (grade) và bài học (lessonId) trên giao diện', Description: '' },
+        { Field: '  4. Tải lên qua: POST /api/questions/import/exam?grade=X&lessonId=Y', Description: '' }
+      ];
+
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      
+      // Add Instructions sheet first
+      const instructionSheet = XLSX.utils.json_to_sheet(instructions);
+      instructionSheet['!cols'] = [
+        { wch: 50 },
+        { wch: 80 }
+      ];
+      XLSX.utils.book_append_sheet(workbook, instructionSheet, 'Instructions');
+
+      // Add Questions sheet
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      worksheet['!cols'] = [
+        { wch: 50 }, // questionText
+        { wch: 40 }, // imageUrl
+        { wch: 40 }, // audioUrl
+        { wch: 50 }, // explanationText
+        { wch: 40 }, // explanationImg
+        { wch: 30 }, // answer1
+        { wch: 30 }, // answer2
+        { wch: 30 }, // answer3
+        { wch: 30 }, // answer4
+        { wch: 30 }  // correctAnswer
+      ];
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set headers and send file
+      const filename = grade && lessonId 
+        ? `exam_questions_grade${grade}_lesson${lessonId}.xlsx`
+        : grade 
+        ? `exam_questions_grade${grade}.xlsx`
+        : lessonId
+        ? `exam_questions_lesson${lessonId}.xlsx`
+        : 'exam_questions_all.xlsx';
+      
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error exporting exam questions:', error);
+      sendErrorResponse(res, 'Failed to export exam questions');
     }
   }
 
