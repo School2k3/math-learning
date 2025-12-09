@@ -40,6 +40,37 @@ router.get('/', examController.getAllExams);
 
 /**
  * @swagger
+ * /api/exams/export:
+ *   get:
+ *     summary: Export exams to Excel
+ *     tags: [Exams]
+ *     description: Export all exams to an Excel file with optional filtering by grade and chapter.
+ *     parameters:
+ *       - in: query
+ *         name: grade
+ *         schema:
+ *           type: integer
+ *         description: Filter by grade level (1-5)
+ *       - in: query
+ *         name: chapterId
+ *         schema:
+ *           type: integer
+ *         description: Filter by chapter ID
+ *     responses:
+ *       200:
+ *         description: Excel file with exams data
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       500:
+ *         description: Server error
+ */
+router.get('/export', examController.exportExams);
+
+/**
+ * @swagger
  * /api/exams/grade/{grade}:
  *   get:
  *     summary: Get exams by grade

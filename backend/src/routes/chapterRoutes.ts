@@ -47,6 +47,37 @@ router.get('/', chapterController.getAllChapters);
 
 /**
  * @swagger
+ * /api/chapters/export:
+ *   get:
+ *     summary: Export chapters to Excel
+ *     tags: [Chapters]
+ *     description: Export all chapters to an Excel file with optional filtering by grade and volume.
+ *     parameters:
+ *       - in: query
+ *         name: grade
+ *         schema:
+ *           type: integer
+ *         description: Filter by grade level (1-5)
+ *       - in: query
+ *         name: volume
+ *         schema:
+ *           type: integer
+ *         description: Filter by volume (1 or 2)
+ *     responses:
+ *       200:
+ *         description: Excel file with chapters data
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       500:
+ *         description: Server error
+ */
+router.get('/export', chapterController.exportChapters);
+
+/**
+ * @swagger
  * /api/chapters/{id}:
  *   get:
  *     summary: Get a chapter by ID

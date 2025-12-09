@@ -74,6 +74,14 @@ router.get('/', questionController.getAllQuestions);
  *     summary: Download Excel template for importing questions
  *     tags: [Questions]
  *     description: Download an Excel template file with example questions to use for bulk import.
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [practice, exam]
+ *         required: false
+ *         description: Type of questions (practice or exam). Defaults to practice.
  *     responses:
  *       200:
  *         description: Excel template file
@@ -89,11 +97,26 @@ router.get('/import/template', questionController.downloadExcelTemplate);
 
 /**
  * @swagger
- * /api/questions/import:
+ * /api/questions/import/practice:
  *   post:
- *     summary: Import questions from Excel file
+ *     summary: Import practice questions from Excel file
  *     tags: [Questions]
- *     description: Upload an Excel file to import multiple questions at once. The file should follow the template format.
+ *     description: Upload an Excel file to import multiple practice questions at once.
+ *     parameters:
+ *       - in: query
+ *         name: grade
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 5
+ *         required: true
+ *         description: Grade level for all questions (1-5)
+ *       - in: query
+ *         name: lessonId
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Lesson ID for all questions (optional)
  *     requestBody:
  *       required: true
  *       content:
@@ -106,7 +129,7 @@ router.get('/import/template', questionController.downloadExcelTemplate);
  *               file:
  *                 type: string
  *                 format: binary
- *                 description: Excel file (.xlsx or .xls) containing questions
+ *                 description: Excel file (.xlsx or .xls) containing practice questions
  *     responses:
  *       200:
  *         description: Import completed with results
@@ -151,7 +174,158 @@ router.get('/import/template', questionController.downloadExcelTemplate);
  *       500:
  *         description: Server error
  */
-router.post('/import', upload.single('file'), questionController.importQuestionsFromExcel);
+router.post('/import/practice', upload.single('file'), questionController.importPracticeQuestionsFromExcel);
+
+/**
+ * @swagger
+ * /api/questions/import/exam:
+ *   post:
+ *     summary: Import exam questions from Excel file
+ *     tags: [Questions]
+ *     description: Upload an Excel file to import multiple exam questions at once.
+ *     parameters:
+ *       - in: query
+ *         name: grade
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 5
+ *         required: true
+ *         description: Grade level for all questions (1-5)
+ *       - in: query
+ *         name: lessonId
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Lesson ID for all questions (optional)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Excel file (.xlsx or .xls) containing exam questions
+ *     responses:
+ *       200:
+ *         description: Import completed with results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     success:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           row:
+ *                             type: integer
+ *                           questionId:
+ *                             type: integer
+ *                           questionText:
+ *                             type: string
+ *                     failed:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           row:
+ *                             type: integer
+ *                           error:
+ *                             type: string
+ *                           data:
+ *                             type: object
+ *                     total:
+ *                       type: integer
+ *       400:
+ *         description: Bad request - No file uploaded or invalid file
+ *       500:
+ *         description: Server error
+ */
+router.post('/import/exam', upload.single('file'), questionController.importExamQuestionsFromExcel);
+
+/**
+ * @swagger
+ * /api/questions/export/practice:
+ *   get:
+ *     summary: Export practice questions to Excel
+ *     tags: [Questions]
+ *     description: Export practice questions in import-compatible format with optional filtering.
+ *     parameters:
+ *       - in: query
+ *         name: grade
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 5
+ *         required: false
+ *         description: Filter by grade level (1-5)
+ *       - in: query
+ *         name: lessonId
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Filter by lesson ID
+ *     responses:
+ *       200:
+ *         description: Excel file with practice questions
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       500:
+ *         description: Server error
+ */
+router.get('/export/practice', questionController.exportPracticeQuestions);
+
+/**
+ * @swagger
+ * /api/questions/export/exam:
+ *   get:
+ *     summary: Export exam questions to Excel
+ *     tags: [Questions]
+ *     description: Export exam questions in import-compatible format with optional filtering.
+ *     parameters:
+ *       - in: query
+ *         name: grade
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 5
+ *         required: false
+ *         description: Filter by grade level (1-5)
+ *       - in: query
+ *         name: lessonId
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Filter by lesson ID
+ *     responses:
+ *       200:
+ *         description: Excel file with exam questions
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       500:
+ *         description: Server error
+ */
+router.get('/export/exam', questionController.exportExamQuestions);
 
 /**
  * @swagger
