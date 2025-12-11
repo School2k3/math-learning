@@ -446,16 +446,13 @@ const LessonAdmin: React.FC = () => {
                   👥 Học sinh
                 </Link>
               </li>
-              <li>📈 Báo cáo học tập</li>
             </ul>
           </div>
 
           <div className="nav-section">
             <h4>HỆ THỐNG</h4>
             <ul>
-              <li>⚙️ Cài đặt</li>
-              <li>🔐 Bảo mật</li>
-              <li>📊 Thống kê</li>
+            
             </ul>
           </div>
         </nav>

@@ -209,6 +209,129 @@ export async function downloadQuestionTemplate() {
 }
 
 /**
+ * Export practice questions to Excel
+ * GET /api/questions/export/practice?grade=1&lessonId=5
+ */
+export async function exportPracticeQuestionsToExcel(
+  grade: number,
+  lessonId?: number
+) {
+  try {
+    let url = `/api/questions/export/practice?grade=${grade}`;
+    if (lessonId) {
+      url += `&lessonId=${lessonId}`;
+    }
+    const fullUrl = buildApiUrl(url);
+
+    console.log("🔵 Export practice questions URL:", fullUrl);
+    console.log("📝 Grade:", grade, "LessonId:", lessonId || "not provided");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await fetch(fullUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("🟢 Export practice response status:", response.status);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to export practice questions: ${response.status}`
+      );
+    }
+
+    // Get blob from response
+    const blob = await response.blob();
+
+    // Create download link
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `practice_questions_grade${grade}${
+      lessonId ? `_lesson${lessonId}` : ""
+    }_${new Date().getTime()}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+
+    console.log("✅ Practice questions exported successfully");
+    return {
+      success: true,
+      message: "Practice questions exported successfully",
+    };
+  } catch (error) {
+    console.error("🔴 Error exporting practice questions:", error);
+    throw error;
+  }
+}
+
+/**
+ * Export exam questions to Excel
+ * GET /api/questions/export/exam?grade=1&lessonId=5
+ */
+export async function exportExamQuestionsToExcel(
+  grade: number,
+  lessonId?: number
+) {
+  try {
+    let url = `/api/questions/export/exam?grade=${grade}`;
+    if (lessonId) {
+      url += `&lessonId=${lessonId}`;
+    }
+    const fullUrl = buildApiUrl(url);
+
+    console.log("🔵 Export exam questions URL:", fullUrl);
+    console.log("📝 Grade:", grade, "LessonId:", lessonId || "not provided");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await fetch(fullUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("🟢 Export exam response status:", response.status);
+
+    if (!response.ok) {
+      throw new Error(`Failed to export exam questions: ${response.status}`);
+    }
+
+    // Get blob from response
+    const blob = await response.blob();
+
+    // Create download link
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `exam_questions_grade${grade}${
+      lessonId ? `_lesson${lessonId}` : ""
+    }_${new Date().getTime()}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+
+    console.log("✅ Exam questions exported successfully");
+    return { success: true, message: "Exam questions exported successfully" };
+  } catch (error) {
+    console.error("🔴 Error exporting exam questions:", error);
+    throw error;
+  }
+}
+
+/**
  * Import questions from Excel file (deprecated - use specific import functions)
  * POST /api/questions/import
  */

@@ -354,33 +354,13 @@ const HomeAdmin: React.FC = () => {
                   👥 Học sinh
                 </Link>
               </li>
-              
-              <li>
-                <Link to="/admin/reports" style={{ textDecoration: "none", color: "inherit" }}>
-                  📈 Báo cáo học tập
-                </Link>
-              </li>
             </ul>
           </div>
           
           <div className="nav-section">
             <h4>Hệ thống</h4>
             <ul>
-              <li>
-                <Link to="/admin/settings" style={{ textDecoration: "none", color: "inherit" }}>
-                  ⚙️ Cài đặt
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/security" style={{ textDecoration: "none", color: "inherit" }}>
-                  🔐 Bảo mật
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/statistics" style={{ textDecoration: "none", color: "inherit" }}>
-                  📊 Thống kê
-                </Link>
-              </li>
+             
               <li>
                 <button 
                   onClick={handleLogout}

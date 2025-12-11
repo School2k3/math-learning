@@ -7,8 +7,9 @@ import { fetchAllChapters } from "../api/chapterAPI";
 import { createQuestionWithAnswers } from "../api/questionAPI";
 import { deleteQuestionById } from "../api/questionAPI";
 import { updateQuestionById } from "../api/questionAPI";
-import { downloadQuestionTemplate, importPracticeQuestionsFromExcel } from "../api/questionAPI";
+import { downloadQuestionTemplate, importPracticeQuestionsFromExcel, exportPracticeQuestionsToExcel, exportExamQuestionsToExcel } from "../api/questionAPI";
 import { uploadImageFile, uploadAudioFile } from "../api/uploadAPI";
+import { useAuth } from "../contexts/AuthContext";
 
 interface Answer {
   id: number;
@@ -57,6 +58,7 @@ const QuestionAdmin: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newQuestion, setNewQuestion] = useState<Partial<Question>>({});
   const [questionQuantity, setQuestionQuantity] = useState(1);
+  const { logout } = useAuth();
   
   // State cho multiple questions - mỗi câu có form riêng
   const [multipleQuestions, setMultipleQuestions] = useState<{
@@ -86,6 +88,7 @@ const QuestionAdmin: React.FC = () => {
 
   // Import/Export states
   const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [importResult, setImportResult] = useState<{
     success: number; 
     failed: number; 
@@ -93,6 +96,7 @@ const QuestionAdmin: React.FC = () => {
     errors?: Array<{row: number; column?: string; error: string}>;
   } | null>(null);
   const [showImportResultModal, setShowImportResultModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Preview modal state
   const [previewMedia, setPreviewMedia] = useState<{type: 'image' | 'audio', url: string} | null>(null);
@@ -307,6 +311,67 @@ const QuestionAdmin: React.FC = () => {
     }
   };
 
+  // Mở modal chọn loại export
+  const handleExportClick = () => {
+    // Kiểm tra người dùng đã chọn lớp và bài học chưa
+    if (filterGrade === 'all') {
+      alert('⚠️ Vui lòng chọn lớp trước khi export câu hỏi!');
+      return;
+    }
+
+    if (filterLesson === 'all') {
+      alert('⚠️ Vui lòng chọn bài học trước khi export câu hỏi!');
+      return;
+    }
+
+    // Mở modal để chọn loại export
+    setShowExportModal(true);
+  };
+
+  // Export câu hỏi practice
+  const handleExportPractice = async () => {
+    try {
+      setExporting(true);
+      setShowExportModal(false);
+      
+      const gradeValue = Number(filterGrade);
+      const lessonIdValue = Number(filterLesson);
+      
+      console.log("🚀 Exporting practice questions...");
+      console.log("📝 Grade:", gradeValue, "LessonId:", lessonIdValue);
+      
+      await exportPracticeQuestionsToExcel(gradeValue, lessonIdValue);
+      alert("✅ Đã export câu hỏi thực hành thành công!");
+    } catch (error: any) {
+      console.error("❌ Error exporting practice questions:", error);
+      alert(`Không thể export câu hỏi thực hành: ${error.message || 'Vui lòng thử lại!'}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Export câu hỏi exam
+  const handleExportExam = async () => {
+    try {
+      setExporting(true);
+      setShowExportModal(false);
+      
+      const gradeValue = Number(filterGrade);
+      const lessonIdValue = Number(filterLesson);
+      
+      console.log("🚀 Exporting exam questions...");
+      console.log("📝 Grade:", gradeValue, "LessonId:", lessonIdValue);
+      
+      await exportExamQuestionsToExcel(gradeValue, lessonIdValue);
+      alert("✅ Đã export câu hỏi kiểm tra thành công!");
+    } catch (error: any) {
+      console.error("❌ Error exporting exam questions:", error);
+      alert(`Không thể export câu hỏi kiểm tra: ${error.message || 'Vui lòng thử lại!'}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Kiểm tra trước khi mở file dialog
   const handleImportClick = (e: React.MouseEvent<HTMLLabelElement>) => {
     // Kiểm tra người dùng đã chọn lớp và bài học chưa
@@ -438,6 +503,12 @@ const QuestionAdmin: React.FC = () => {
     setEditData({});
     setShowAddForm(false);
     setNewQuestion({});
+  };
+  const handleLogout = () => {
+    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+      logout();
+      navigate("/auth/login");
+    }
   };
 
   // Tạo nhiều câu hỏi cùng lúc
@@ -725,17 +796,31 @@ const QuestionAdmin: React.FC = () => {
                   👥 Học sinh
                 </Link>
               </li>
-
-              <li>📈 Báo cáo học tập</li>
             </ul>
           </div>
 
           <div className="nav-section">
             <h4>HỆ THỐNG</h4>
             <ul>
-              <li>⚙️ Cài đặt</li>
-              <li>🔐 Bảo mật</li>
-              <li>📊 Thống kê</li>
+              <li>
+                <button
+                  onClick={handleLogout}
+                  className="logout-btn"
+                  style={{
+                    background: "none",
+                    backgroundColor: "red",
+                    border: "none",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    color: "white",
+                    width: "100%",
+                    padding: "8px",
+                    borderRadius: "4px",
+                  }}
+                >
+                  🚪 Đăng xuất
+                </button>
+              </li>
             </ul>
           </div>
         </nav>
@@ -832,6 +917,26 @@ const QuestionAdmin: React.FC = () => {
                 style={{ display: "none" }}
               />
             </label>
+
+            <button 
+              className="btn-export"
+              onClick={handleExportClick}
+              disabled={exporting}
+              style={{
+                backgroundColor: "#ff9800",
+                color: "white",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "6px",
+                cursor: exporting ? "not-allowed" : "pointer",
+                fontSize: "14px",
+                fontWeight: "500",
+                marginLeft: "10px",
+                opacity: exporting ? 0.6 : 1
+              }}
+            >
+              {exporting ? "📁 Đang export..." : "📁 Export câu hỏi"}
+            </button>
           </div>
         </div>
         {/* Filters */}
@@ -1656,6 +1761,72 @@ const QuestionAdmin: React.FC = () => {
                 ) : (
                   <audio controls src={previewMedia.url} style={{width: '100%'}} autoPlay />
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal chọn loại export */}
+        {showExportModal && (
+          <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '500px'}}>
+              <div className="modal-header">
+                <h2>📁 Chọn loại câu hỏi cần export</h2>
+                <button className="modal-close" onClick={() => setShowExportModal(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <p style={{marginBottom: '20px', color: '#666'}}>
+                  Bạn muốn export câu hỏi loại nào?
+                </p>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                  <button
+                    onClick={handleExportPractice}
+                    style={{
+                      backgroundColor: '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      padding: '15px 20px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      transition: 'all 0.3s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
+                  >
+                    <span>✏️</span>
+                    <span>Export câu hỏi Thực hành</span>
+                  </button>
+                  
+                  <button
+                    onClick={handleExportExam}
+                    style={{
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      padding: '15px 20px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      transition: 'all 0.3s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#007bff'}
+                  >
+                    <span>📝</span>
+                    <span>Export câu hỏi Kiểm tra</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

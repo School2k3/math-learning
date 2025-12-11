@@ -334,7 +334,7 @@ const [showPracticeBanner, setShowPracticeBanner] = useState(false);
               topics.map((topic: any) => (
                 <div
                   key={topic.id}
-                  ref={(el) => chapterRefs.current[topic.id] = el}
+                  ref={(el) => { chapterRefs.current[topic.id] = el; }}
                   className={`study-topic-item${selectedChapterId === topic.id ? " active" : ""}`}
                   onClick={() => {
                     setSelectedChapterId(topic.id);

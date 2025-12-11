@@ -16,7 +16,7 @@ const RewardsPage: React.FC = () => {
   const [trophies, setTrophies] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [equipping, setEquipping] = useState<number | null>(null);
-  const [selectedType, setSelectedType] = useState<'avatar'>('avatar');
+  const [selectedType] = useState<'avatar'>('avatar');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');

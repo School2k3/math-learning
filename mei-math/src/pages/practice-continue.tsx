@@ -53,7 +53,7 @@ const PracticeContinue: React.FC = () => {
       console.log("Raw practice data from API:", allPractices);
       
       // Fetch lesson progress để kiểm tra bài nào đã từng hoàn thành
-      const lessonIds = [...new Set(allPractices.map((p: any) => p.lessonId).filter(Boolean))];
+      const lessonIds = [...new Set(allPractices.map((p: any) => p.lessonId).filter(Boolean))] as number[];
       const lessonProgressMap: {[key: number]: number} = {};
       
       // Lấy progress của từng lesson
