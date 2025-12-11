@@ -332,7 +332,7 @@ router.get('/trophies/:userId', getUserTrophies);
  * @swagger
  * /api/auth/users/{userId}:
  *   put:
- *     summary: Update user profile
+ *     summary: Update user name
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -347,26 +347,12 @@ router.get('/trophies/:userId', getUserTrophies);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - fullName
  *             properties:
  *               fullName:
  *                 type: string
  *                 example: John Doe Updated
- *               email:
- *                 type: string
- *                 format: email
- *                 example: newemail@example.com
- *               grade:
- *                 type: integer
- *                 minimum: 1
- *                 maximum: 5
- *                 example: 4
- *               avatarUrl:
- *                 type: string
- *                 example: https://example.com/avatar.jpg
- *               password:
- *                 type: string
- *                 format: password
- *                 example: NewPassword123
  *     responses:
  *       200:
  *         description: User updated successfully

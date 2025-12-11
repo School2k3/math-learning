@@ -412,13 +412,17 @@ export const getUserTrophies = async (req: Request, res: Response) => {
  * 
  * @route PUT /api/auth/users/:userId
  * @param {number} req.params.userId - User ID
- * @param {Object} req.body - Updated user data
+ * @param {string} req.body.fullName - Updated full name
  * @returns {Object} Updated user data
  */
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
-    const { fullName, email, grade, avatarUrl, password } = req.body;
+    const { fullName } = req.body;
+
+    if (!fullName) {
+      return sendBadRequestResponse(res, 'Full name is required');
+    }
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -429,78 +433,16 @@ export const updateUser = async (req: Request, res: Response) => {
       return sendBadRequestResponse(res, 'User not found');
     }
 
-    // Prepare update data
-    const updateData: any = {};
-
-    if (fullName !== undefined) {
-      updateData.fullName = fullName;
-    }
-
-    if (email !== undefined) {
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return sendBadRequestResponse(res, 'Invalid email format');
-      }
-
-      // Check if email is already used by another user
-      const emailExists = await prisma.user.findFirst({
-        where: {
-          email,
-          id: { not: parseInt(userId) }
-        }
-      });
-
-      if (emailExists) {
-        return sendBadRequestResponse(res, 'Email already in use');
-      }
-
-      updateData.email = email;
-      // If email is changed, set isVerified to false and send new OTP
-      if (email !== existingUser.email) {
-        updateData.isVerified = false;
-        
-        // Generate and send OTP
-        const otp = generateOtp();
-        saveOtp(email, otp);
-        
-        try {
-          await sendOtpEmail(email, otp);
-        } catch (emailError) {
-          console.error('Failed to send OTP email:', emailError);
-        }
-      }
-    }
-
-    if (grade !== undefined) {
-      updateData.grade = grade;
-    }
-
-    if (avatarUrl !== undefined) {
-      updateData.avatarUrl = avatarUrl;
-    }
-
-    if (password !== undefined && password.trim() !== '') {
-      // Hash new password
-      updateData.passwordHash = await hashPassword(password);
-    }
-
     // Update user
     const updatedUser = await prisma.user.update({
       where: { id: parseInt(userId) },
-      data: updateData
+      data: { fullName }
     });
 
     // Remove sensitive information
     const { passwordHash, ...userWithoutPassword } = updatedUser;
 
-    sendSuccessResponse(
-      res, 
-      userWithoutPassword, 
-      email !== existingUser.email 
-        ? 'User updated successfully. Please verify your new email with the OTP sent.'
-        : 'User updated successfully'
-    );
+    sendSuccessResponse(res, userWithoutPassword, 'User updated successfully');
   } catch (error) {
     console.error('Update user error:', error);
     sendErrorResponse(res, 'Failed to update user');
