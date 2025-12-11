@@ -2,6 +2,7 @@ import prisma from '../prisma/prisma.js';
 import { Request, Response } from 'express';
 import { Controller, RequestWithQuery, ChapterQuery } from '../types/index.js';
 import { CreateChapterInput, UpdateChapterInput } from '../schemas/chapter.schema.js';
+import * as XLSX from 'xlsx';
 
 const chapterController: Controller = {
   // Create a new chapter
@@ -200,6 +201,77 @@ const chapterController: Controller = {
       res.status(500).json({ 
         success: false, 
         message: 'Error deleting chapter', 
+        error: (error as Error).message 
+      });
+    }
+  },
+
+  // Export all chapters to Excel
+  exportChapters: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { grade, volume } = req.query;
+      
+      const whereClause: {
+        grade?: number;
+        volume?: number;
+      } = {};
+      
+      if (grade) {
+        whereClause.grade = parseInt(grade as string);
+      }
+      
+      if (volume) {
+        whereClause.volume = parseInt(volume as string);
+      }
+      
+      const chapters = await prisma.chapter.findMany({
+        where: whereClause,
+        orderBy: [
+          { grade: 'asc' },
+          { volume: 'asc' },
+        ],
+      });
+
+      // Prepare data for Excel
+      const exportData = chapters.map(chapter => ({
+        'ID': chapter.id,
+        'Lớp': chapter.grade,
+        'Tập': chapter.volume,
+        'Tiêu đề': chapter.title,
+      }));
+
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // Set column widths
+      worksheet['!cols'] = [
+        { wch: 10 }, // ID
+        { wch: 10 }, // Lớp
+        { wch: 10 }, // Tập
+        { wch: 50 }, // Tiêu đề
+      ];
+      
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Chapters');
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set headers and send file
+      const filename = grade && volume 
+        ? `chapters_grade${grade}_vol${volume}.xlsx`
+        : grade 
+        ? `chapters_grade${grade}.xlsx`
+        : 'chapters_all.xlsx';
+      
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error exporting chapters:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error exporting chapters', 
         error: (error as Error).message 
       });
     }

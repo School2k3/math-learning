@@ -8,7 +8,10 @@ import {
   requestOtp,
   verifyOtp,
   getUserTrophies,
-  updateUser
+  updateUser,
+  forgotPassword,
+  resetPassword,
+  changePassword
 } from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -329,7 +332,7 @@ router.get('/trophies/:userId', getUserTrophies);
  * @swagger
  * /api/auth/users/{userId}:
  *   put:
- *     summary: Update user profile
+ *     summary: Update user name
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -344,26 +347,12 @@ router.get('/trophies/:userId', getUserTrophies);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - fullName
  *             properties:
  *               fullName:
  *                 type: string
  *                 example: John Doe Updated
- *               email:
- *                 type: string
- *                 format: email
- *                 example: newemail@example.com
- *               grade:
- *                 type: integer
- *                 minimum: 1
- *                 maximum: 5
- *                 example: 4
- *               avatarUrl:
- *                 type: string
- *                 example: https://example.com/avatar.jpg
- *               password:
- *                 type: string
- *                 format: password
- *                 example: NewPassword123
  *     responses:
  *       200:
  *         description: User updated successfully
@@ -405,5 +394,114 @@ router.get('/trophies/:userId', getUserTrophies);
  *         description: Server error
  */
 router.put('/users/:userId', updateUser);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset (Forgot Password)
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Password reset OTP sent to email
+ *       400:
+ *         description: Invalid email format
+ *       500:
+ *         description: Server error
+ */
+router.post('/forgot-password', forgotPassword);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password with OTP verification
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *               - newPassword
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: NewPassword123
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Invalid OTP or input
+ *       500:
+ *         description: Server error
+ */
+router.post('/reset-password', resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   post:
+ *     summary: Change password (requires old password verification)
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - oldPassword
+ *               - newPassword
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: "1"
+ *               oldPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: CurrentPassword123
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: NewPassword123
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       400:
+ *         description: Invalid input or incorrect old password
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.post('/change-password', authenticate, changePassword);
 
 export default router;

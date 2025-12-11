@@ -1,6 +1,7 @@
 import prisma from '../prisma/prisma.js';
 import { Request, Response } from 'express';
 import { Controller, RequestWithQuery } from '../types/index.js';
+import * as XLSX from 'xlsx';
 
 const examController: Controller = {
   // Get all exams with optional filtering
@@ -1145,6 +1146,94 @@ const examController: Controller = {
     } catch (error) {
       console.error('Error removing question from exam:', error);
       res.status(500).json({ message: 'Error removing question from exam', error: (error as Error).message });
+    }
+  },
+
+  // Export all exams to Excel
+  exportExams: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { grade, chapterId } = req.query;
+      
+      const whereClause: {
+        grade?: number;
+        chapterId?: number;
+      } = {};
+      
+      if (grade) {
+        whereClause.grade = parseInt(grade as string);
+      }
+      
+      if (chapterId) {
+        whereClause.chapterId = parseInt(chapterId as string);
+      }
+      
+      const exams = await prisma.exam.findMany({
+        where: whereClause,
+        include: {
+          chapter: true,
+          examQuestions: {
+            include: {
+              question: true,
+            },
+          },
+        },
+        orderBy: [
+          { grade: 'asc' },
+          { createdAt: 'desc' },
+        ],
+      });
+
+      // Prepare data for Excel
+      const exportData = exams.map(exam => ({
+        'ID': exam.id,
+        'Tiêu đề': exam.title,
+        'Lớp': exam.grade,
+        'ID Chương': exam.chapterId || '',
+        'Tên Chương': exam.chapter?.title || '',
+        'Thời gian (phút)': exam.durationMinutes,
+        'Số câu hỏi': exam.examQuestions.length,
+        'Ngày tạo': exam.createdAt.toISOString().split('T')[0],
+      }));
+
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // Set column widths
+      worksheet['!cols'] = [
+        { wch: 10 }, // ID
+        { wch: 50 }, // Tiêu đề
+        { wch: 10 }, // Lớp
+        { wch: 12 }, // ID Chương
+        { wch: 40 }, // Tên Chương
+        { wch: 15 }, // Thời gian
+        { wch: 12 }, // Số câu hỏi
+        { wch: 15 }, // Ngày tạo
+      ];
+      
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Exams');
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set headers and send file
+      const filename = grade && chapterId 
+        ? `exams_grade${grade}_chapter${chapterId}.xlsx`
+        : grade 
+        ? `exams_grade${grade}.xlsx`
+        : chapterId
+        ? `exams_chapter${chapterId}.xlsx`
+        : 'exams_all.xlsx';
+      
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error exporting exams:', error);
+      res.status(500).json({ 
+        message: 'Error exporting exams', 
+        error: (error as Error).message 
+      });
     }
   }
 };

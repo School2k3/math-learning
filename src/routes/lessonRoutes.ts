@@ -43,6 +43,37 @@ router.get('/', lessonController.getAllLessons);
 
 /**
  * @swagger
+ * /api/lessons/export:
+ *   get:
+ *     summary: Export lessons to Excel
+ *     tags: [Lessons]
+ *     description: Export all lessons to an Excel file with optional filtering by chapter or grade.
+ *     parameters:
+ *       - in: query
+ *         name: chapterId
+ *         schema:
+ *           type: integer
+ *         description: Filter by chapter ID
+ *       - in: query
+ *         name: grade
+ *         schema:
+ *           type: integer
+ *         description: Filter by grade level (1-5)
+ *     responses:
+ *       200:
+ *         description: Excel file with lessons data
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       500:
+ *         description: Server error
+ */
+router.get('/export', lessonController.exportLessons);
+
+/**
+ * @swagger
  * /api/lessons/{id}:
  *   get:
  *     summary: Get a lesson by ID
