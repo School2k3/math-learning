@@ -209,7 +209,7 @@ export async function downloadQuestionTemplate() {
 }
 
 /**
- * Import questions from Excel file
+ * Import questions from Excel file (deprecated - use specific import functions)
  * POST /api/questions/import
  */
 export async function importQuestionsFromExcel(file: File) {
@@ -250,6 +250,114 @@ export async function importQuestionsFromExcel(file: File) {
     return result;
   } catch (error) {
     console.error("🔴 Error importing questions:", error);
+    throw error;
+  }
+}
+
+/**
+ * Import practice questions from Excel file
+ * POST /api/questions/import/practice
+ */
+export async function importPracticeQuestionsFromExcel(
+  file: File,
+  grade: number,
+  lessonId?: number
+) {
+  try {
+    // Build URL with query parameters
+    let url = `/api/questions/import/practice?grade=${grade}`;
+    if (lessonId) {
+      url += `&lessonId=${lessonId}`;
+    }
+    const fullUrl = buildApiUrl(url);
+
+    console.log("🔵 Import practice questions URL:", fullUrl);
+    console.log("📤 File:", file.name, file.size, "bytes");
+    console.log("📝 Grade:", grade, "LessonId:", lessonId || "not provided");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(fullUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    console.log("🟢 Import practice response status:", response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Import practice failed:", errorData);
+      throw new Error(errorData.message || `Import failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("✅ Import practice result:", result);
+    return result;
+  } catch (error) {
+    console.error("🔴 Error importing practice questions:", error);
+    throw error;
+  }
+}
+
+/**
+ * Import exam questions from Excel file
+ * POST /api/questions/import/exam
+ */
+export async function importExamQuestionsFromExcel(
+  file: File,
+  grade: number,
+  lessonId?: number
+) {
+  try {
+    // Build URL with query parameters
+    let url = `/api/questions/import/exam?grade=${grade}`;
+    if (lessonId) {
+      url += `&lessonId=${lessonId}`;
+    }
+    const fullUrl = buildApiUrl(url);
+
+    console.log("🔵 Import exam questions URL:", fullUrl);
+    console.log("📤 File:", file.name, file.size, "bytes");
+    console.log("📝 Grade:", grade, "LessonId:", lessonId || "not provided");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(fullUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    console.log("🟢 Import exam response status:", response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Import exam failed:", errorData);
+      throw new Error(errorData.message || `Import failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log("✅ Import exam result:", result);
+    return result;
+  } catch (error) {
+    console.error("🔴 Error importing exam questions:", error);
     throw error;
   }
 }

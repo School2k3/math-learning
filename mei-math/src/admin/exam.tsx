@@ -11,7 +11,7 @@ import {
   removeQuestionFromExam
 } from "../api/examAPI";
 import { fetchAllChapters } from "../api/chapterAPI";
-import { fetchAllQuestions, createQuestionWithAnswers, downloadQuestionTemplate, importQuestionsFromExcel } from "../api/questionAPI";
+import { fetchAllQuestions, createQuestionWithAnswers, downloadQuestionTemplate, importExamQuestionsFromExcel } from "../api/questionAPI";
 import { fetchAllLessons } from "../api/lessonAPI";
 import { uploadImageFile } from "../api/uploadAPI";
 
@@ -411,18 +411,27 @@ const ExamAdmin: React.FC = () => {
 
     setImporting(true);
     try {
-      console.log('Starting import from Excel...');
-      const result = await importQuestionsFromExcel(file);
+      // Lấy grade từ exam đã chọn
+      const gradeValue = selectedExamGrade || 1;
+      
+      // Lấy lessonId đầu tiên từ các bài học thuộc chapter của exam (nếu có)
+      const examLessons = lessons.filter(l => l.chapterId === selectedExamChapter);
+      const lessonIdValue = examLessons.length > 0 ? examLessons[0].id : undefined;
+      
+      console.log('Starting import exam questions from Excel...');
+      console.log("📝 Grade:", gradeValue, "ChapterId:", selectedExamChapter, "LessonId:", lessonIdValue || "not found");
+      
+      const result = await importExamQuestionsFromExcel(file, gradeValue, lessonIdValue);
       console.log('Import result:', result);
 
       setImportResult(result);
       setShowImportResultModal(true);
 
-      // Reload ngân hàng câu hỏi để hiển thị câu hỏi mới
-      if (result.success && result.success.length > 0) {
-        const questionsRes = await fetchAllQuestions();
-        setAllQuestions(questionsRes.data?.questions || questionsRes.questions || []);
-      }
+      // Reload ngân hàng câu hỏi để hiển thị câu hỏi mới ngay lập tức
+      console.log('🔄 Reloading question bank...');
+      const questionsRes = await fetchAllQuestions();
+      setAllQuestions(questionsRes.data?.questions || questionsRes.questions || []);
+      console.log('✅ Question bank reloaded:', questionsRes.data?.questions?.length || questionsRes.questions?.length || 0, 'questions');
 
     } catch (error: any) {
       console.error('Import error:', error);

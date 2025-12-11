@@ -7,7 +7,7 @@ import { fetchAllChapters } from "../api/chapterAPI";
 import { createQuestionWithAnswers } from "../api/questionAPI";
 import { deleteQuestionById } from "../api/questionAPI";
 import { updateQuestionById } from "../api/questionAPI";
-import { downloadQuestionTemplate, importQuestionsFromExcel } from "../api/questionAPI";
+import { downloadQuestionTemplate, importPracticeQuestionsFromExcel } from "../api/questionAPI";
 import { uploadImageFile, uploadAudioFile } from "../api/uploadAPI";
 
 interface Answer {
@@ -307,6 +307,22 @@ const QuestionAdmin: React.FC = () => {
     }
   };
 
+  // Kiểm tra trước khi mở file dialog
+  const handleImportClick = (e: React.MouseEvent<HTMLLabelElement>) => {
+    // Kiểm tra người dùng đã chọn lớp và bài học chưa
+    if (filterGrade === 'all') {
+      e.preventDefault();
+      alert('⚠️ Vui lòng chọn lớp trước khi import câu hỏi!');
+      return;
+    }
+
+    if (filterLesson === 'all') {
+      e.preventDefault();
+      alert('⚠️ Vui lòng chọn bài học trước khi import câu hỏi!');
+      return;
+    }
+  };
+
   // Import questions from Excel
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -321,6 +337,7 @@ const QuestionAdmin: React.FC = () => {
     ];
     if (!validTypes.includes(file.type)) {
       alert('Vui lòng chọn file Excel (.xlsx hoặc .xls)!');
+      e.target.value = '';
       return;
     }
 
@@ -328,8 +345,16 @@ const QuestionAdmin: React.FC = () => {
       setImporting(true);
       setImportResult(null);
       
-      console.log("🚀 Starting import...");
-      const result = await importQuestionsFromExcel(file);
+      // Lấy grade từ filter
+      const gradeValue = Number(filterGrade);
+      
+      // Lấy lessonId từ filter
+      const lessonIdValue = Number(filterLesson);
+      
+      console.log("🚀 Starting import practice questions...");
+      console.log("📝 Grade:", gradeValue, "LessonId:", lessonIdValue || "not selected");
+      
+      const result = await importPracticeQuestionsFromExcel(file, gradeValue, lessonIdValue);
       console.log("📊 Import result:", result);
       
       if (result.success) {
@@ -782,6 +807,7 @@ const QuestionAdmin: React.FC = () => {
             
             <label 
               htmlFor="import-excel"
+              onClick={handleImportClick}
               style={{
                 backgroundColor: "#17a2b8",
                 color: "white",
