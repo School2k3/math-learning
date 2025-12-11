@@ -506,3 +506,185 @@ export const updateUser = async (req: Request, res: Response) => {
     sendErrorResponse(res, 'Failed to update user');
   }
 };
+
+/**
+ * Request password reset (Forgot Password)
+ * 
+ * @route POST /api/auth/forgot-password
+ * @param {string} req.body.email - User email
+ * @returns {Object} Success message
+ */
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return sendBadRequestResponse(res, 'Email is required');
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return sendBadRequestResponse(res, 'Invalid email format');
+    }
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return sendSuccessResponse(
+        res,
+        {},
+        'If an account with that email exists, a password reset OTP has been sent.'
+      );
+    }
+
+    // Generate and send OTP
+    const otp = generateOtp();
+    saveOtp(email, otp);
+    
+    try {
+      await sendOtpEmail(email, otp);
+    } catch (emailError) {
+      console.error('Failed to send password reset OTP email:', emailError);
+      return sendErrorResponse(res, 'Failed to send password reset email');
+    }
+
+    sendSuccessResponse(
+      res,
+      {},
+      'If an account with that email exists, a password reset OTP has been sent.'
+    );
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    sendErrorResponse(res, 'Failed to process password reset request');
+  }
+};
+
+/**
+ * Reset password with OTP verification
+ * 
+ * @route POST /api/auth/reset-password
+ * @param {string} req.body.email - User email
+ * @param {string} req.body.otp - OTP code
+ * @param {string} req.body.newPassword - New password
+ * @returns {Object} Success message
+ */
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return sendBadRequestResponse(res, 'Email, OTP, and new password are required');
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return sendBadRequestResponse(res, 'Invalid email format');
+    }
+
+    // Validate password strength (minimum 6 characters)
+    if (newPassword.length < 6) {
+      return sendBadRequestResponse(res, 'Password must be at least 6 characters long');
+    }
+
+    // Verify OTP
+    const isOtpValid = validateOtp(email, otp);
+    if (!isOtpValid) {
+      return sendBadRequestResponse(res, 'Invalid or expired OTP');
+    }
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return sendBadRequestResponse(res, 'User not found');
+    }
+
+    // Hash new password
+    const passwordHash = await hashPassword(newPassword);
+
+    // Update password
+    await prisma.user.update({
+      where: { email },
+      data: { passwordHash }
+    });
+
+    sendSuccessResponse(
+      res,
+      {},
+      'Password reset successfully. You can now login with your new password.'
+    );
+  } catch (error) {
+    console.error('Reset password error:', error);
+    sendErrorResponse(res, 'Failed to reset password');
+  }
+};
+
+/**
+ * Change password (requires old password verification)
+ * 
+ * @route POST /api/auth/change-password
+ * @param {string} req.body.userId - User ID
+ * @param {string} req.body.oldPassword - Current password
+ * @param {string} req.body.newPassword - New password
+ * @returns {Object} Success message
+ */
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const { userId, oldPassword, newPassword } = req.body;
+
+    if (!userId || !oldPassword || !newPassword) {
+      return sendBadRequestResponse(res, 'User ID, old password, and new password are required');
+    }
+
+    // Validate password strength
+    if (newPassword.length < 6) {
+      return sendBadRequestResponse(res, 'New password must be at least 6 characters long');
+    }
+
+    // Check if old and new passwords are the same
+    if (oldPassword === newPassword) {
+      return sendBadRequestResponse(res, 'New password must be different from old password');
+    }
+
+    // Get user
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) }
+    });
+
+    if (!user) {
+      return sendBadRequestResponse(res, 'User not found');
+    }
+
+    // Verify old password
+    const isPasswordValid = await comparePassword(oldPassword, user.passwordHash);
+    if (!isPasswordValid) {
+      return sendBadRequestResponse(res, 'Current password is incorrect');
+    }
+
+    // Hash new password
+    const passwordHash = await hashPassword(newPassword);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: { passwordHash }
+    });
+
+    sendSuccessResponse(
+      res,
+      {},
+      'Password changed successfully'
+    );
+  } catch (error) {
+    console.error('Change password error:', error);
+    sendErrorResponse(res, 'Failed to change password');
+  }
+};
