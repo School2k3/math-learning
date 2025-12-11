@@ -542,6 +542,7 @@ const DashUser: React.FC = () => {
                   <option value={10}>10 câu</option>
                   <option value={15}>15 câu</option>
                   <option value={20}>20 câu</option>
+                  <option value={999}>Tất cả</option>
                 </select>
               </div>
             </div>
