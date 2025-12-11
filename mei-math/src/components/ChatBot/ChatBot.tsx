@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import ChatHistory from "./ChatHistory";
 import Loading from "./Loading";
 import { trackChatBotMessage } from "../GoogleAnalytics";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import "./ChatBot.css";
 
 interface ChatBotProps {
@@ -20,8 +21,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ visible, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Gemini API key and endpoint
-  const API_KEY = "AIzaSyD7JMxHcpIhUUWe-Q-RDJ1mgJs4TGCHTk0";
-  const API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
+  const API_KEY = "AIzaSyAS4oLkNE5Q6UY18_75fpasyai1DDK9GjQ";
 
   // Load chat history from localStorage when component mounts
   useEffect(() => {
@@ -105,59 +105,16 @@ Bây giờ hãy trả lời câu hỏi sau của học sinh:
 
 `;
 
-      // Build request payload với system prompt
-      const payload = {
-        contents: [
-          {
-            parts: [{ text: systemPrompt + userInput }],
-          },
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
-        safetySettings: [
-          {
-            category: "HARM_CATEGORY_HARASSMENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_HATE_SPEECH",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          },
-          {
-            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-            threshold: "BLOCK_MEDIUM_AND_ABOVE"
-          }
-        ]
-      };
-
-      // Make HTTP request to Gemini API
-      const response = await fetch(`${API_URL}?key=${API_KEY}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("API response:", data);
-
-      // Extract text response from the API response
-      const botResponse =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "Xin lỗi, tôi không thể tạo phản hồi.";
+      // Sử dụng Google Generative AI SDK chính thức
+      const genAI = new GoogleGenerativeAI(API_KEY);
+      
+      // Sử dụng model mới nhất: Gemini 2.5 Flash (nhanh và miễn phí)
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      
+      const fullPrompt = systemPrompt + "\n\n" + userInput;
+      const result = await model.generateContent(fullPrompt);
+      const response = await result.response;
+      const botResponse = response.text() || "Xin lỗi, tôi không thể tạo phản hồi.";
 
       // Create updated chat history
       const updatedHistory = [
