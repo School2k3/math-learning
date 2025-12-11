@@ -45,6 +45,36 @@ export interface GetUserByIdResponse {
   };
 }
 
+export interface ChangePasswordRequest {
+  userId: string;
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface UpdateUserNameRequest {
+  fullName: string;
+}
+
+export interface UpdateUserNameResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    id: number;
+    username: string;
+    email: string;
+    fullName: string;
+    grade: number;
+    avatarUrl?: string;
+    isVerified: boolean;
+    trophies: number;
+  };
+}
+
 export interface UpdateUserRequest {
   username?: string;
   email?: string;
@@ -262,6 +292,93 @@ export const toggleUserVerification = async (
     return result;
   } catch (error) {
     console.error("🔴 Lỗi khi gọi API toggle verification:", error);
+    throw error;
+  }
+};
+
+/**
+ * Change user password
+ * POST /api/auth/change-password
+ */
+export const changePassword = async (
+  data: ChangePasswordRequest
+): Promise<ChangePasswordResponse> => {
+  try {
+    const url = buildApiUrl("/api/auth/change-password");
+    console.log("🔵 Change Password API URL:", url);
+    console.log("📤 Request data:", { userId: data.userId });
+
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshToken}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    console.log("🟢 Change Password response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Change Password failed:", response.status, errorText);
+      throw new Error(`Change Password failed: ${response.status}`);
+    }
+
+    const result: ChangePasswordResponse = await response.json();
+    console.log("✅ changePassword response:", result);
+    return result;
+  } catch (error) {
+    console.error("🔴 Lỗi khi gọi API change password:", error);
+    throw error;
+  }
+};
+
+/**
+ * Update user name
+ * PUT /api/auth/users/{userId}
+ */
+export const updateUserName = async (
+  userId: string,
+  data: UpdateUserNameRequest
+): Promise<UpdateUserNameResponse> => {
+  try {
+    const url = buildApiUrl(`/api/auth/users/${userId}`);
+    console.log("🔵 Update User Name API URL:", url);
+    console.log("📤 Request data:", data);
+
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshToken}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    console.log("🟢 Update User Name response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Update User Name failed:", response.status, errorText);
+      throw new Error(`Update User Name failed: ${response.status}`);
+    }
+
+    const result: UpdateUserNameResponse = await response.json();
+    console.log("✅ updateUserName response:", result);
+    return result;
+  } catch (error) {
+    console.error("🔴 Lỗi khi gọi API update user name:", error);
     throw error;
   }
 };

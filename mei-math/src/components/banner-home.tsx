@@ -1,7 +1,21 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "../css/banner-home.css";
 
 const BannerHome: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleLearnNow = () => {
+    navigate("/study");
+  };
+
+  const handleAbout = () => {
+    const aboutSection = document.getElementById("about-section");
+    if (aboutSection) {
+      aboutSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section className="banner-home">
       <div className="banner-home__content">
@@ -14,8 +28,10 @@ const BannerHome: React.FC = () => {
           cách sinh động và dễ hiểu hơn.
         </p>
         <div className="banner-home__actions">
-          <button className="banner-home__btn-primary">Học thử ngay</button>
-          <button className="banner-home__btn-secondary">
+          <button className="banner-home__btn-primary" onClick={handleLearnNow}>
+            Học thử ngay
+          </button>
+          <button className="banner-home__btn-secondary" onClick={handleAbout}>
             Giới thiệu về MEI
           </button>
         </div>

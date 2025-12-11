@@ -84,3 +84,97 @@ export const getUserInfo = async () => {
     throw error;
   }
 };
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+/**
+ * Forgot Password - Send OTP to email
+ * POST /api/auth/forgot-password
+ */
+export const forgotPasswordAPI = async (
+  email: string
+): Promise<ForgotPasswordResponse> => {
+  try {
+    const url = buildApiUrl("/api/auth/forgot-password");
+    console.log("🔵 Forgot Password API URL:", url);
+    console.log("📤 Request data:", { email });
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    console.log("🟢 Forgot Password response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Forgot Password failed:", response.status, errorText);
+      throw new Error(`Forgot Password failed: ${response.status}`);
+    }
+
+    const result: ForgotPasswordResponse = await response.json();
+    console.log("✅ forgotPasswordAPI response:", result);
+    return result;
+  } catch (error) {
+    console.error("🔴 Lỗi khi gọi API forgot password:", error);
+    throw error;
+  }
+};
+
+/**
+ * Reset Password with OTP verification
+ * POST /api/auth/reset-password
+ */
+export const resetPasswordAPI = async (
+  data: ResetPasswordRequest
+): Promise<ResetPasswordResponse> => {
+  try {
+    const url = buildApiUrl("/api/auth/reset-password");
+    console.log("🔵 Reset Password API URL:", url);
+    console.log("📤 Request data:", { email: data.email, otp: data.otp });
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    console.log("🟢 Reset Password response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("❌ Reset Password failed:", response.status, errorText);
+      throw new Error(`Reset Password failed: ${response.status}`);
+    }
+
+    const result: ResetPasswordResponse = await response.json();
+    console.log("✅ resetPasswordAPI response:", result);
+    return result;
+  } catch (error) {
+    console.error("🔴 Lỗi khi gọi API reset password:", error);
+    throw error;
+  }
+};

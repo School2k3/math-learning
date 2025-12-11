@@ -3,7 +3,7 @@ import "../css/info-home.css";
 
 const InfoHome: React.FC = () => {
   return (
-    <div className="info-home-container">
+    <div className="info-home-container" id="about-section">
       <div className="info-home-stats">
         <div className="info-home-stat">
           <div className="info-home-stat-number">15</div>

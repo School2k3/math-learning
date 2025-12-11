@@ -47,7 +47,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ visible, onClose }) => {
       'đơn vị', 'giải', 'tìm', 'so sánh', 'lớn', 'nhỏ', 'bằng', 'kết quả',
       'đề bài', 'bài toán', 'hình học', 'góc', 'tam giác', 'vuông', 'tròn',
       'kg', 'km', 'cm', 'm', 'dm', 'mm', 'lít', 'tấn', 'giờ', 'phút',
-      'math', 'number', 'calculate', 'equation', 'problem'
+      'math', 'number', 'calculate', 'equation', 'problem','+', '-', '*', '/', '=', '<', '>','0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
     ];
     
     const lowerText = text.toLowerCase();

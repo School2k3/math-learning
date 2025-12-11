@@ -794,7 +794,7 @@ const Pratice: React.FC = () => {
                     }}
                   >
                     <img
-                      src="/public/incorrect.png"
+                      src="/incorrect.png"
                       alt="incorrect"
                       style={{ width: "40px" }}
                     />
