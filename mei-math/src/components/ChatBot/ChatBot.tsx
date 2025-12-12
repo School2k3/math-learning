@@ -20,8 +20,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ visible, onClose }) => {
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Gemini API key and endpoint
-  const API_KEY = "AIzaSyAS4oLkNE5Q6UY18_75fpasyai1DDK9GjQ";
+  // Gemini API key from environment variable
+  const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY;
 
   // Load chat history from localStorage when component mounts
   useEffect(() => {
